@@ -1,0 +1,11 @@
+GET http://en.wikipedia.org/w/index.php?title=MediaWiki:Common.css&usemsgcache=yes&ctype=text%2Fcss&smaxage=2678400&action=raw&maxage=2678400 HTTP/1.1 
+Host: en.wikipedia.org 
+User-Agent: Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.6) Gecko/2009011912 Firefox/3.0.6
+Accept: text/css,*/*;q=0.1
+Accept-Language: en-us,en;q=0.5
+Accept-Encoding: gzip,deflate
+Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+Keep-Alive: 300
+Proxy-Connection: keep-alive
+Referer: http://en.wikipedia.org/wiki/Interrupt
+
