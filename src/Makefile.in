@@ -41,7 +41,7 @@ LIB_SRC_FOLDERS = net       \
                   eds       \
                   eds/http
 
-LIB_SRCS     = $(foreach obj, $(patsubst %.cpp,%.o,$(LIB_SRC_FOLDERS)/*.cpp), $(OUTPUT_DIR)/$(obj))
+LIB_SRCS     := $(foreach dir,$(_SOURCE_DIRS),$(shell find $(dir)/*.cpp -printf "%p " 2> /dev/null))
 
 # 
 # Corresponding obj files
@@ -82,6 +82,7 @@ install: shared static
 
 base:
 	@mkdir -p "$(OUTPUT_DIR)"
+	cd $(OUTPUT_DIR) ; mkdir -p $(SRC_FOLDERS)
 
 .PHONY: clean cleanall distclean
 clean:

@@ -29,14 +29,14 @@ BIN_INSTALL_DIR         = @prefix@/bin
 # 
 # Sources
 #
-LPTEST_SRCS     = commands.cpp
+HALLEYTEST_SRCS     = halley.cpp
 
 # 
 # Corresponding obj files
 #
-LPTEST_OBJS     = $(foreach obj, $(patsubst %.cpp,%.o,$(LPTEST_SRCS)), $(OUTPUT_DIR)/$(obj))
+HALLEYTEST_OBJS     = $(foreach obj, $(patsubst %.cpp,%.o,$(HALLEYTEST_SRCS)), $(OUTPUT_DIR)/$(obj))
 
-MAIN_OBJS       = $(LPTEST_OBJS) $(OUTPUT_DIR)/test.o
+MAIN_OBJS       = $(HALLEYTEST_OBJS) $(OUTPUT_DIR)/test.o
 
 MAIN_OUTPUT     = $(OUTPUT_DIR)/$(MAIN_EXE_NAME)
 
@@ -97,5 +97,5 @@ help:
 	@echo   "       help:       Prints help information about targets and options"
 
 dep:
-	makedepend -Y -p"$(OUTPUT_DIR)/" -I../src   -- $(LPTEST_SRCS)
+	makedepend -Y -p"$(OUTPUT_DIR)/" -I../src   -- $(HALLEYTEST_SRCS)
 

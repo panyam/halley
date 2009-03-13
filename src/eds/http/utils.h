@@ -41,6 +41,8 @@
 #define iscontrol(ch)       ( ((ch) == 127) || (((ch) >= 0) && ((ch) <= 31)))
 
 std::string ReadTillCrLf(std::istream &input);
+std::string base64_encode(unsigned char const* , unsigned int len);
+std::string base64_decode(std::string const& s);
 
 #endif
 
