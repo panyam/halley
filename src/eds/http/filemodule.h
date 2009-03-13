@@ -34,7 +34,19 @@ public:
     {
         if (lhs.entStat.st_mode == rhs.entStat.st_mode)
         {
-            return strcmp(lhs.entName.c_str(), rhs.entName.c_str()) < 0;
+            const char *pLhs = lhs.entName.c_str();
+            const char *pRhs = rhs.entName.c_str();
+            if (pLhs == NULL)
+                return true;
+            else if (pRhs == NULL)
+                return false;
+            else
+                return strcmp(pLhs, pRhs) < 0;
+        }
+        else
+        {
+            // if one is a directory it is lower in the list
+            // if ((lhs.entStat.st_mode & S_IFDIR) == 0) return true;
         }
         return lhs.entStat.st_mode > rhs.entStat.st_mode;
     }

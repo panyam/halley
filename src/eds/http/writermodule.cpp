@@ -97,13 +97,16 @@ void SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
         respHeaders.HeaderIfExists("Connection", closehdr);
         if (strcasecmp(closehdr.c_str(), "close") == 0)
         {
+            std::cerr << "  === WriterModule - " << "Closing Connection" << std::endl;
             pStage->CloseConnection(pConnection);
         }
         else
         {
+            std::cerr << "  === WriterModule - " << "Destroying Request" << std::endl;
             // remove and destroy the request from the queue
             // Note this destroys pRequest - dont use pRequest 
             // after this
+            outStream.flush();
             pHandlerData->DestroyRequest();
 
             // Trigger the handling of the next request

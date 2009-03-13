@@ -339,13 +339,12 @@ std::string SFileModule::PrintDirContents(const std::string &docroot, const std:
             output << prefix;
             // if (dirname[0] != '/') output << "/";
             output << dirname;
-            if (dirnamelen > 0 && dirname[dirnamelen - 1] != '/')
-                output << "/";
+            if (dirnamelen > 0 && dirname[dirnamelen - 1] != '/') output << "/";
             output << iter->entName << "\">";
 
             if (isdir)
             {
-                output << "[" << docroot << iter->entName << "]</a></td>";
+                output << "[" << iter->entName << "]</a></td>";
                 output << "<td>---</td>";
             }
             else
