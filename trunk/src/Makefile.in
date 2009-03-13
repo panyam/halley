@@ -60,29 +60,32 @@ all: base static shared
 	@echo INCLUDE_INSTALL_DIR = $(INCLUDE_INSTALL_DIR)
 
 shared: base $(LIB_OBJS)
-	$(GPP) -shared $(CXXFLAGS) $(LIB_OBJS) -o "$(SHARED_LIB_OUTPUT)" $(LIBS) -lstdc++
-	rm -f "$(OUTPUT_DIR)/lib$(PRODUCT_NAME).so"
-	ln -s "$(SHARED_LIB_NAME)" "$(OUTPUT_DIR)/lib$(PRODUCT_NAME).so"
+	@echo Creating Shared Library ...
+	@$(GPP) -shared $(CXXFLAGS) $(LIB_OBJS) -o "$(SHARED_LIB_OUTPUT)" $(LIBS) -lstdc++
+	@rm -f "$(OUTPUT_DIR)/lib$(PRODUCT_NAME).so"
+	@ln -s "$(SHARED_LIB_NAME)" "$(OUTPUT_DIR)/lib$(PRODUCT_NAME).so"
 
 static: base $(LIB_OBJS)
-	ar rcs "$(STATIC_LIB_OUTPUT)" $(LIB_OBJS)
-	rm -f "$(OUTPUT_DIR)/lib$(PRODUCT_NAME).a"
-	ln -s "$(STATIC_LIB_NAME)" "$(OUTPUT_DIR)/lib$(PRODUCT_NAME).a"
+	@echo Creating Static Library ...
+	@ar rcs "$(STATIC_LIB_OUTPUT)" $(LIB_OBJS)
+	@rm -f "$(OUTPUT_DIR)/lib$(PRODUCT_NAME).a"
+	@ln -s "$(STATIC_LIB_NAME)" "$(OUTPUT_DIR)/lib$(PRODUCT_NAME).a"
 
 install: shared static
 	@echo "Copying library files..."
-	mkdir -p "$(LIB_INSTALL_DIR)"
-	mkdir -p "$(INCLUDE_INSTALL_DIR)/lunarprobe"
-	cp -f "$(SHARED_LIB_OUTPUT)" "$(LIB_INSTALL_DIR)"
-	cp -f "$(STATIC_LIB_OUTPUT)" "$(LIB_INSTALL_DIR)"
-	rm -f "$(LIB_INSTALL_DIR)/lib$(PRODUCT_NAME).so"
-	ln -s "$(LIB_INSTALL_DIR)/$(SHARED_LIB_NAME)" "$(LIB_INSTALL_DIR)/lib$(PRODUCT_NAME).so"
+	@mkdir -p "$(LIB_INSTALL_DIR)"
+	@mkdir -p "$(INCLUDE_INSTALL_DIR)/lunarprobe"
+	@cp -f "$(SHARED_LIB_OUTPUT)" "$(LIB_INSTALL_DIR)"
+	@cp -f "$(STATIC_LIB_OUTPUT)" "$(LIB_INSTALL_DIR)"
+	@rm -f "$(LIB_INSTALL_DIR)/lib$(PRODUCT_NAME).so"
+	@ln -s "$(LIB_INSTALL_DIR)/$(SHARED_LIB_NAME)" "$(LIB_INSTALL_DIR)/lib$(PRODUCT_NAME).so"
 	@echo "Copying header files..."
-	cp -f *.h $(INCLUDE_INSTALL_DIR)/lunarprobe
+	@cp -f *.h $(INCLUDE_INSTALL_DIR)/lunarprobe
 
 base:
+	@echo Building output directories...
 	@mkdir -p "$(OUTPUT_DIR)"
-	cd $(OUTPUT_DIR) ; mkdir -p $(SRC_FOLDERS)
+	@cd $(OUTPUT_DIR) ; mkdir -p $(SRC_FOLDERS)
 
 .PHONY: clean cleanall distclean
 clean:

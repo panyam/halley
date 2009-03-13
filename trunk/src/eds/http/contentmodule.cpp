@@ -98,7 +98,6 @@ void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData,
         // necessary and send to next module
         SHttpRequest *  pRequest    = pHandlerData->Request();
         SHttpResponse * pResponse   = pRequest->Response();
-        int             contLength  = pResponse->ContentLength();
         if (!pResponse->IsMultipart())
         {
             SHeaderTable &  respHeaders = pResponse->Headers();
@@ -109,11 +108,47 @@ void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData,
                 int bodySize    = pBodyPart->Size();
                 if (bodySize > 0)
                 {
-                    if (contLength < 0)
-                        contLength = bodySize;
-                    else
-                        contLength += bodySize;
-                    respHeaders.SetIntHeader("Content-Length", contLength);
+                    int contLength = -1;
+                    std::string hdrContLength;
+                    if (respHeaders.HeaderIfExists("Content-Length", hdrContLength))
+                    {
+                        contLength  = atoi(hdrContLength.c_str());
+                    }
+
+                    // there are 2 issues here... who should be doing the
+                    // caching?  Consider following scenarious:
+                    //
+                    // App sends cont-block1 to this module (block size =
+                    // 10)
+                    //
+                    //      1. contLength is set
+                    //      2. contLength is not set
+                    //
+                    // App now sends cont-block2 to this module (say with
+                    // block size of 20)
+                    //
+                    // What should contLength of the response be?
+                    //
+                    // This is related to who should be doing the caching.
+                    // If this module is doing the caching (for singlepart
+                    // messages) then it can:
+                    //
+                    // set the contlength header only if it is missing (ie
+                    // not explicitly sent by child modules)
+                    //
+                    // or it can cache all body parts for a single part
+                    // message and calculate teh contentLength at the end
+                    // after accumulating all body parts before being sent
+                    // out to the next module
+                    //
+                    // For now do the former - set the contlength header to
+                    // be what ever the body size is and not worry about
+                    // caching.  The application or lower layers MUST do
+                    // the caching.
+                    if (bodySize != contLength)
+                    {
+                        respHeaders.SetIntHeader("Content-Length", bodySize);
+                    }
                 }
             }
         }
