@@ -22,10 +22,10 @@ include Makefile.common
 all: libs test
 
 libs:
-	cd src ; make static shared
+	@cd src ; make static shared
 
 test: libs
-	cd test ; make
+	@cd test ; make
 
 install: 
 	@cd src ; make install

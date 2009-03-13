@@ -30,10 +30,11 @@ public:
     }
 
     //! Compares two directory entries
-    static bool DirEntCmp(const struct DirEnt &lhs, const struct DirEnt &rhs)
+    static bool DirEntCmp(const DirEnt &lhs, const DirEnt &rhs)
     {
         if (lhs.entStat.st_mode == rhs.entStat.st_mode)
         {
+            /*
             const char *pLhs = lhs.entName.c_str();
             const char *pRhs = rhs.entName.c_str();
             if (pLhs == NULL)
@@ -42,6 +43,11 @@ public:
                 return false;
             else
                 return strcmp(pLhs, pRhs) < 0;
+            */
+
+            return std::lexicographical_compare(
+                        lhs.entName.begin(), lhs.entName.end(),
+                        rhs.entName.begin(), rhs.entName.end());
         }
         else
         {
