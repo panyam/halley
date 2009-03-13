@@ -18,7 +18,7 @@
 include ../Makefile.common
 
 ifeq ($(MAIN_EXE_NAME),)
-    MAIN_EXE_NAME     =   lptest
+    MAIN_EXE_NAME     =   halley
 endif
 
 ####    Installation Directories    ####
@@ -36,7 +36,7 @@ HALLEYTEST_SRCS     = halley.cpp
 #
 HALLEYTEST_OBJS     = $(foreach obj, $(patsubst %.cpp,%.o,$(HALLEYTEST_SRCS)), $(OUTPUT_DIR)/$(obj))
 
-MAIN_OBJS       = $(HALLEYTEST_OBJS) $(OUTPUT_DIR)/test.o
+MAIN_OBJS       = $(HALLEYTEST_OBJS)
 
 MAIN_OUTPUT     = $(OUTPUT_DIR)/$(MAIN_EXE_NAME)
 
