@@ -13,6 +13,14 @@
 
 #include "mimetypes.h"
 
+//! Get singleton instance.
+SMimeTypes *SMimeTypes::GetInstance()
+{
+    static SMimeTypes theMimeTypes;
+
+    return &theMimeTypes;
+}
+
 //! Create a server and initialise mime tables
 SMimeTypes::SMimeTypes()
 {

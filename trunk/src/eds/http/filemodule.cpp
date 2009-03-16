@@ -337,10 +337,13 @@ std::string SFileModule::PrintDirContents(const std::string &docroot, const std:
 
             output << "<td><a href=\"";
             output << prefix;
-            // if (dirname[0] != '/') output << "/";
-            output << dirname;
+            output << (dirname[0] == '/' ? dirname.c_str() + 1 : dirname.c_str());
+            // output << dirname;
             if (dirnamelen > 0 && dirname[dirnamelen - 1] != '/') output << "/";
-            output << iter->entName << "\">";
+            output << (iter->entName[0] == '/' ? iter->entName.c_str() + 1 : iter->entName.c_str());
+            output << "\">";
+
+            // if (dirname[0] != '/') output << "/";
 
             if (isdir)
             {
