@@ -31,6 +31,9 @@ public:
 
     std::string GetMimeType(const std::string &filename);
 
+    //! Get singleton instance.
+    static SMimeTypes *GetInstance();
+
 protected:
     typedef std::map<std::string, std::string> MimeTable;
     MimeTable    mimeTypes;
