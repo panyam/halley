@@ -9,6 +9,7 @@
 #include "eds/http/handlerstage.h"
 #include "eds/http/urlrouter.h"
 #include "eds/http/filemodule.h"
+#include "eds/http/bayeuxmodule.h"
 #include "eds/http/contentmodule.h"
 #include "eds/http/transfermodule.h"
 #include "eds/http/writermodule.h"
@@ -28,6 +29,34 @@ public:
                              SBodyPart *            pBodyPart);
 };
 
+//! A data source that sends data to the data source module
+class SDataSource
+{
+public:
+    //! Creates a data source
+    SDataSource(const std::string &name, SHttpHandlerStage *pStage)
+        : name(n), pHandlerStage(pStage) { }
+
+    void AddDSModule(SBayeuxModule *pModule)
+    {
+        if (find(bayeuxModules.begin(), bayeuxModules.end(), pModule) == bayeuxModules.end())
+        {
+            bayeuxModules.push_back(pModule);
+        }
+    }
+
+public:
+    //! Name of the data source
+    std::string                     name;
+
+    //! The handler stage which will be notified when new data has arrived
+    SHttpHandlerStage *             pHandlerStage;
+
+    //! The data source modules to which this data source will send data
+    // when new data is ready.
+    std::list<SBayeuxModule *>  bayeuxModules;
+};
+
 // This is what drives the server and loads modules depending on how we
 // want it.
 int main(int argc, char *argv[])
@@ -38,14 +67,17 @@ int main(int argc, char *argv[])
     SWriterModule       writerModule;
     // STransferModule     transferModule(&writerModule);
     SContentModule      contentModule(&writerModule);
+    SBayeuxModule       bayeuxModule(&contentModule);
     SFileModule         rootFileModule(&contentModule, true);
     SMyModule           myModule(&contentModule);
     SUrlRouter          urlRouter(&myModule);
-    SContainsUrlMatcher containsUrlMatch("/static/", SContainsUrlMatcher::PREFIX_MATCH, &rootFileModule);
+    SContainsUrlMatcher staticUrlMatch("/static/", SContainsUrlMatcher::PREFIX_MATCH, &rootFileModule);
+    SContainsUrlMatcher dsUrlMatch("/ds/", SContainsUrlMatcher::PREFIX_MATCH, &dsmModule);
 
     rootFileModule.AddDocRoot("/static/", "/");
 
-    urlRouter.AddUrlMatch(&containsUrlMatch);
+    urlRouter.AddUrlMatch(&staticUrlMatch);
+    urlRouter.AddUrlMatch(&dsUrlMatch);
 
     requestReader.SetHandlerStage(&requestHandler);
     requestHandler.SetRootModule(&urlRouter);
