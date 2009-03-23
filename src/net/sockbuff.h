@@ -28,7 +28,8 @@ using namespace std;
 class SSocketBuff : public std::streambuf
 {
 public:
-    SSocketBuff(int sockHandle);
+    SSocketBuff(int sockHandle, size_t bsize = DEFAULT_BUFFER_SIZE + 1);
+    ~SSocketBuff();
 
 protected:
     int_type    overflow(int_type c);
@@ -36,10 +37,11 @@ protected:
     int         sync();
 
 protected:
-    enum { BUFFER_SIZE    = (1 << 15) };
+    enum { DEFAULT_BUFFER_SIZE    = (1 << 15) };
     int     sockHandle;
-    char    pReadBuffer[BUFFER_SIZE + 1];
-    char    pWriteBuffer[BUFFER_SIZE + 1];
+    size_t  buffSize;
+    char    *pReadBuffer;
+    char    *pWriteBuffer;
 };
 
 #endif

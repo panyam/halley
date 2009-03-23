@@ -15,7 +15,9 @@
 #include <sstream>
 #include <string.h>
 #include <errno.h>
+#include <assert.h>
 #include <sys/types.h>
+#include <sys/epoll.h>
 #include <sys/socket.h>
 
 #include "net/sockbuff.h"
@@ -29,10 +31,29 @@
  *        Created.
  *
  *****************************************************************************/
-SSocketBuff::SSocketBuff(int sock) : sockHandle(sock)
+SSocketBuff::SSocketBuff(int sock, size_t bsize) :
+    sockHandle(sock),
+    buffSize(bsize),
+    pReadBuffer(new char[buffSize + 1]),
+    pWriteBuffer(new char[buffSize + 1])
 {
     // set up the output buffer to leave at least one space empty:
-    setp(pWriteBuffer, pWriteBuffer + BUFFER_SIZE - 1);
+    setp(pWriteBuffer, pWriteBuffer + buffSize - 1);
+}
+
+//*****************************************************************************
+/*!
+ *  \brief  Destructor
+ *
+ *  \version
+ *      - Sri Panyam      23/03/2009
+ *        Created.
+ *
+ *****************************************************************************/
+SSocketBuff::~SSocketBuff()
+{
+    if (pReadBuffer) delete pReadBuffer;
+    if (pWriteBuffer) delete pWriteBuffer;
 }
 
 //*****************************************************************************
@@ -79,20 +100,50 @@ int SSocketBuff::sync()
         numWritten = send(sockHandle, pbase() + offset, count, MSG_NOSIGNAL);
         if (numWritten < 0)
         {
-            cerr << "Write Error: " << errno << " - " << strerror(errno) << endl;
+            // block till written! - not good need to palm this off to
+            // another thread - but how do we handle memory for this
+            // block?
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            {
+                // create structures to allow async writing
+                int kdpfd   = epoll_create(1);
+                int currfds = 1;
+                struct epoll_event ev;
+                struct epoll_event events[1];
+                ev.events   = EPOLLOUT | EPOLLET;
+                ev.data.fd  = sockHandle;
+                if (epoll_ctl(kdpfd, EPOLL_CTL_ADD, sockHandle, &ev) < 0)
+                {
+                    std::cerr << "WRITE ERROR: epoll_ctl error: [" << errno << "]: " << strerror(errno) << std::endl;
+                    return -1;
+                }
 
-            // TODO: We are currently clearing out things we arent sending,
-            // should we cache it somehow depending on the error?
-            // count   =   0;
-            // offset  +=  count;
-            return -1;
+                while (count > 0)
+                {
+                    int nfds = epoll_wait(kdpfd, events, currfds, -1);
+                    if (nfds < 0)
+                    {
+                        std::cerr << "WRITE ERROR: epoll_wait error: [" << errno << "]: " << strerror(errno) << std::endl;
+                        return -1;
+                    }
+
+                    assert("Too many fds found!!!" && nfds == 1);
+
+                    numWritten = send(sockHandle, pbase() + offset, count, MSG_NOSIGNAL);
+                    count -= numWritten;
+                    offset += numWritten;
+                }
+            }
         }
-        count -= numWritten;
-        offset += numWritten;
+        else
+        {
+            count -= numWritten;
+            offset += numWritten;
+        }
     }
 
     // reset the write buffer
-    setp(pWriteBuffer, pWriteBuffer + BUFFER_SIZE - 1);
+    setp(pWriteBuffer, pWriteBuffer + buffSize - 1);
 
     return 0;
 }
@@ -108,7 +159,7 @@ int SSocketBuff::sync()
  *****************************************************************************/
 SSocketBuff::int_type SSocketBuff::underflow()
 {
-    int rc = recv(sockHandle, pReadBuffer, BUFFER_SIZE, 0);
+    int rc = recv(sockHandle, pReadBuffer, buffSize, 0);
 
     if (rc <= 0)
         return traits_type::eof();
