@@ -27,6 +27,7 @@ bool SHeaderTable::WriteHeaders(std::ostream &output)
     }
     // and an extra CRLF
     output << CRLF;
+    output.flush();
 
     return true;
 }

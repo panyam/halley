@@ -53,7 +53,6 @@ void SWriterModule::ProcessOutput(SHttpHandlerData *    pHandlerData,
                   << pResponse->StatusCode() << " "
                   << pResponse->StatusMessage() << CRLF;
         respHeaders.WriteHeaders(outStream);
-        outStream.flush();
     }
 
     if (pBodyPart != NULL)
@@ -106,7 +105,6 @@ void SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
             // remove and destroy the request from the queue
             // Note this destroys pRequest - dont use pRequest 
             // after this
-            outStream.flush();
             pHandlerData->DestroyRequest();
 
             // Trigger the handling of the next request
@@ -117,7 +115,6 @@ void SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
     {
         std::cerr << "  === WriterModule - " << "Writing Message Body" << std::endl;
         pBodyPart->WriteMessageBody(outStream);
-        outStream.flush();
     }
 
     // now delete the body part - its no longer needed!
