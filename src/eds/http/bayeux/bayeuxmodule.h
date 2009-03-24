@@ -16,12 +16,23 @@
 #include "../httpmodule.h"
 #include "json/json.h"
 
+class SBayeuxChannel;
+
 //! A module that sends data as it comes from several data sources
 class SBayeuxModule : public SHttpModule
 {
 public:
     // Constructor
     SBayeuxModule(SHttpModule *pNext) : SHttpModule(pNext) { }
+
+    //! Registers a channel
+    virtual bool RegisterChannel(SBayeuxChannel *pChannel, bool replace = false);
+
+    //! Removes a channel
+    virtual bool UnregisterChannel(const SBayeuxChannel *pChannel);
+
+    //! Removes a channel by name
+    virtual bool UnregisterChannel(const std::string &name);
 
     //! Called to handle connections
     virtual void ProcessInput(SHttpHandlerData *    pHandlerData,
@@ -35,11 +46,16 @@ protected:
     bool ProcessDisconnect(const JsonNodePtr &message, JsonNodePtr &output);
     bool ProcessSubscribe(const JsonNodePtr &message, JsonNodePtr &output);
     bool ProcessUnsubscribe(const JsonNodePtr &message, JsonNodePtr &output);
-    bool ProcessMetaMessage(const JsonNodePtr &message, JsonNodePtr &output);
-    bool ProcessPublish(const JsonNodePtr &message, JsonNodePtr &output);
+    bool ProcessMetaMessage(const std::string &channel, const JsonNodePtr &message, JsonNodePtr &output);
+    bool ProcessPublish(const std::string &channel, const JsonNodePtr &message, JsonNodePtr &output);
 
 
 protected:
+    typedef std::map<std::string, SBayeuxChannel *> ChannelMap;
+
+    //! Channels that are currently registered
+    ChannelMap      channels;
+
     //! A list of data source subscriptions
     std::map<std::string, std::list<SConnection *> >    subscriptions;
 };

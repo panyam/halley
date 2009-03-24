@@ -11,6 +11,7 @@
  *****************************************************************************/
 
 #include "bayeuxmodule.h"
+#include "channel.h"
 #include "../handlerstage.h"
 #include "../request.h"
 #include "../response.h"
@@ -30,6 +31,38 @@ const char *FIELD_EXT                   = "ext";
 const char *FIELD_SUCCESSFUL            = "successful";
 const char *FIELD_AUTHSUCCESSFUL        = "authSuccessful";
 const char *FIELD_SUBSCRIPTION          = "subscription";
+
+//! Registers a channel
+bool SBayeuxModule::RegisterChannel(SBayeuxChannel *pChannel, bool replace)
+{
+    ChannelMap::iterator iter = channels.find(pChannel->Name());
+    if (iter != channels.end())
+    {
+        if (!replace) return false;
+
+        // TODO: should unregister be called instead?
+        channels.erase(iter);
+    }
+    channels.insert(std::pair<std::string, SBayeuxChannel *>(pChannel->Name(), pChannel));
+    return true;
+}
+
+//! Removes a channel by name
+bool SBayeuxModule::UnregisterChannel(const std::string &name)
+{
+    ChannelMap::iterator iter = channels.find(name);
+    if (iter == channels.end())
+        return false;
+
+    channels.erase(iter);
+    return true;
+}
+
+//! Removes a channel
+bool SBayeuxModule::UnregisterChannel(const SBayeuxChannel *pChannel)
+{
+    return UnregisterChannel(pChannel->Name());
+}
 
 //! returns true if a character is a hyphen
 bool equalsHyphen(const char &ch) { return ch == '-'; }
@@ -140,13 +173,13 @@ bool SBayeuxModule::ProcessMessage(const JsonNodePtr &message, JsonNodePtr &outp
         else
         {
             // other meta messages
-            return ProcessMetaMessage(message, output);
+            return ProcessMetaMessage(channel, message, output);
         }
     }
     else 
     {
         // message is for a channel
-        return ProcessPublish(message, output);
+        return ProcessPublish(channel, message, output);
     }
 }
 
@@ -286,13 +319,14 @@ bool SBayeuxModule::ProcessUnsubscribe(const JsonNodePtr &message, JsonNodePtr &
     return true;
 }
 
-bool SBayeuxModule::ProcessPublish(const JsonNodePtr &message, JsonNodePtr &output)
+bool SBayeuxModule::ProcessPublish(const std::string &channel, const JsonNodePtr &message, JsonNodePtr &output)
 {
+    // do all the stuff here
     output = JsonNodeFactory::StringNode("No handler for publish request found.");
     return false;
 }
 
-bool SBayeuxModule::ProcessMetaMessage(const JsonNodePtr &message, JsonNodePtr &output)
+bool SBayeuxModule::ProcessMetaMessage(const std::string &channel, const JsonNodePtr &message, JsonNodePtr &output)
 {
     output = JsonNodeFactory::StringNode("Invalid meta channel");
     return false;
