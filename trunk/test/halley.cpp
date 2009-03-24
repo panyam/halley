@@ -14,6 +14,9 @@
 #include "eds/http/contentmodule.h"
 #include "eds/http/transfermodule.h"
 #include "eds/http/writermodule.h"
+#include "net/connhandler.h"
+#include "net/connfactory.h"
+#include "net/server.h"
 #include <iostream>
 using namespace std;
 
@@ -30,8 +33,83 @@ public:
                              SBodyPart *            pBodyPart);
 };
 
-class MyBayeuxChannel : public SBayeuxChannel
+//! our bayeux connection handler
+class MyConnHandler : public SConnHandler
 {
+public:
+    MyConnHandler(SBayeuxChannel *pChannel, SBayeuxModule *pMod)
+        : pTheChannel(pChannel), pModule(pMod) { }
+
+protected:
+    //! handles a custom connection
+    virtual int Run()
+    {
+        while (!Stopped())
+        {
+            char buffer[1025];
+
+            clientInput->getline(buffer, 1025);
+
+            JsonNodePtr value = JsonNodeFactory::StringNode(buffer);
+            pModule->DeliverEvent(pTheChannel, value);
+        }
+
+        return 0;
+    }
+
+protected:
+    //! The channel which is controlling it
+    SBayeuxChannel * pTheChannel;
+
+    //! Module thorough which events are dispatched
+    SBayeuxModule *pModule;
+};
+
+class MyConnFactory : public SConnFactory
+{
+public:
+    MyConnFactory(SBayeuxChannel *pChannel, SBayeuxModule *pMod)
+        : pTheChannel(pChannel), pModule(pMod) { }
+
+    virtual ~MyConnFactory() { }
+
+    virtual SConnHandler *  NewHandler()  { return new MyConnHandler(pTheChannel, pModule); }
+    virtual void            ReleaseHandler(SConnHandler * handler) { delete handler; }
+
+protected:
+    //! The channel which is controlling it
+    SBayeuxChannel * pTheChannel;
+
+    //! Module thorough which events are dispatched
+    SBayeuxModule *pModule;
+};
+
+class MyBayeuxChannel : public virtual SBayeuxChannel, public virtual SServer
+{
+public:
+    //! Constructor
+    MyBayeuxChannel(SBayeuxModule *pMod, const std::string &name, int port) :
+        SBayeuxChannel(name), pModule(pMod), srvPort(port)
+    {
+        SetConnectionFactory(new MyConnFactory(this, pModule));
+    }
+
+protected:
+    //! Echo what ever is sent to the bayeux module as an event!
+    int Run()
+    {
+        return 0;
+    }
+
+    //! Does things when needed to stop the task
+    int RealStop() { return 0; }
+
+protected:
+    //! The bayeux module through which events are dispatched
+    SBayeuxModule * pModule;
+
+    //! Port on which commands are listened to
+    int             srvPort;
 };
 
 // This is what drives the server and loads modules depending on how we
@@ -44,12 +122,12 @@ int main(int argc, char *argv[])
     SWriterModule       writerModule;
     // STransferModule     transferModule(&writerModule);
     SContentModule      contentModule(&writerModule);
-    SBayeuxModule       dsmModule(&contentModule, "MyTestBoundary");
+    SBayeuxModule       bayeuxModule(&contentModule, "MyTestBoundary");
     SFileModule         rootFileModule(&contentModule, true);
     SMyModule           myModule(&contentModule);
     SUrlRouter          urlRouter(&myModule);
     SContainsUrlMatcher staticUrlMatch("/static/", SContainsUrlMatcher::PREFIX_MATCH, &rootFileModule);
-    SContainsUrlMatcher dsUrlMatch("/ds/", SContainsUrlMatcher::PREFIX_MATCH, &dsmModule);
+    SContainsUrlMatcher dsUrlMatch("/ds/", SContainsUrlMatcher::PREFIX_MATCH, &bayeuxModule);
 
     rootFileModule.AddDocRoot("/static/", "/");
 
@@ -64,6 +142,17 @@ int main(int argc, char *argv[])
 
     pServer.SetStage("RequestReader", &requestReader);
     pServer.SetStage("RequestHandler", &requestHandler);
+
+    for (int i = 0;i < 5;i++)
+    {
+        SStringStream sstr;
+        sstr << "channel" << (i + 1);
+        int port = 1010 + (i * 10);
+        MyBayeuxChannel *pChannel = new MyBayeuxChannel(&bayeuxModule, sstr.str(), port);
+        cerr << "Starting bayeux channel: " << sstr.str() << " on port: " << port << endl;
+        bayeuxModule.RegisterChannel(pChannel);
+        pChannel->Start();
+    }
 
     cerr << "Server Started on port: " << port << "..." << endl;
     pServer.Start();

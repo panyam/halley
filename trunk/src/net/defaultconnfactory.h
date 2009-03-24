@@ -11,7 +11,7 @@
  *  \brief  A factory for creating and destorying connection handlers.
  *
  *****************************************************************************/
-template <T>
+template <class T>
 class SDefaultConnFactory : public SConnFactory
 {
 public:
