@@ -17,6 +17,7 @@
 #include "net/connhandler.h"
 #include "net/connfactory.h"
 #include "net/server.h"
+#include "thread/thread.h"
 #include <iostream>
 using namespace std;
 
@@ -44,6 +45,7 @@ protected:
     //! handles a custom connection
     virtual int Run()
     {
+        cerr << "Accepting message from port: " << pServer->GetPort() << ", Socket: " << clientSocket << endl;
         while (!Stopped())
         {
             char buffer[1025];
@@ -89,20 +91,10 @@ class MyBayeuxChannel : public virtual SBayeuxChannel, public virtual SServer
 public:
     //! Constructor
     MyBayeuxChannel(SBayeuxModule *pMod, const std::string &name, int port) :
-        SBayeuxChannel(name), pModule(pMod), srvPort(port)
+        SBayeuxChannel(name), SServer(port), pModule(pMod)
     {
         SetConnectionFactory(new MyConnFactory(this, pModule));
     }
-
-protected:
-    //! Echo what ever is sent to the bayeux module as an event!
-    int Run()
-    {
-        return 0;
-    }
-
-    //! Does things when needed to stop the task
-    int RealStop() { return 0; }
 
 protected:
     //! The bayeux module through which events are dispatched
@@ -127,7 +119,7 @@ int main(int argc, char *argv[])
     SMyModule           myModule(&contentModule);
     SUrlRouter          urlRouter(&myModule);
     SContainsUrlMatcher staticUrlMatch("/static/", SContainsUrlMatcher::PREFIX_MATCH, &rootFileModule);
-    SContainsUrlMatcher dsUrlMatch("/ds/", SContainsUrlMatcher::PREFIX_MATCH, &bayeuxModule);
+    SContainsUrlMatcher dsUrlMatch("/bayeux/", SContainsUrlMatcher::PREFIX_MATCH, &bayeuxModule);
 
     rootFileModule.AddDocRoot("/static/", "/");
 
@@ -151,7 +143,8 @@ int main(int argc, char *argv[])
         MyBayeuxChannel *pChannel = new MyBayeuxChannel(&bayeuxModule, sstr.str(), port);
         cerr << "Starting bayeux channel: " << sstr.str() << " on port: " << port << endl;
         bayeuxModule.RegisterChannel(pChannel);
-        pChannel->Start();
+        SThread *pChannelThread = new SThread(pChannel);
+        pChannelThread->Start();
     }
 
     cerr << "Server Started on port: " << port << "..." << endl;

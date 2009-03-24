@@ -279,7 +279,7 @@ bool SThread::IsCurrent()
  *****************************************************************************/
 int SThread::WaitForThreadBegin()
 {
-    cerr << "INFO: Thread alreay started, waiting to get into RUNNING state..." << endl << endl;
+    cerr << "INFO: Thread already started, waiting to get into RUNNING state..." << endl << endl;
     return threadRunningCond.Wait();
 }
 

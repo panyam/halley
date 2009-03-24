@@ -85,11 +85,13 @@ int SServer::CreateSocket()
         return -errno;
     }
 
+    /*
     if (setnonblocking(newSocket))
     {
         cerr << "ERROR: Cannot make socket non blocking: [" << errno << "]: " << strerror(errno) << endl << endl;
         return -1;
     }
+    */
 
     // set it so we can reuse the socket immediately after closing it.
     int reuse = 1;
