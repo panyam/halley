@@ -100,8 +100,66 @@ bool SBayeuxModule::ProcessMessage(const JsonNodePtr &message, JsonNodePtr &outp
     // see what kind of message it is
     if (channel == "/meta/handshake")
     {
+        return ProcessHandshake(message, output);
     }
+    else if (channel == "/meta/connect")
+    {
+        return ProcessConnect(message, output);
+    }
+    else if (channel == "/meta/disconnect")
+    {
+        return ProcessDisconnect(message, output);
+    }
+    else if (channel == "/meta/subscribe")
+    {
+        return ProcessSubscribe(message, output);
+    }
+    else if (channel == "/meta/unsubscribe")
+    {
+        return ProcessUnsubscribe(message, output);
+    }
+    else if (strncmp(channel.c_str(), "/meta/", 6) == 0)
+    {
+        return ProcessMetaMessage(message, output);
+    }
+    else 
+    {
+        return ProcessPublish(message, output);
+    }
+}
 
+bool SBayeuxModule::ProcessHandshake(JsonNodePtr message, JsonNodePtr &output)
+{
+    return true;
+}
+
+bool SBayeuxModule::ProcessConnect(JsonNodePtr message, JsonNodePtr &output)
+{
+    return true;
+}
+
+bool SBayeuxModule::ProcessDisconnect(JsonNodePtr message, JsonNodePtr &output)
+{
+    return true;
+}
+
+bool SBayeuxModule::ProcessSubscribe(JsonNodePtr message, JsonNodePtr &output)
+{
+    return true;
+}
+
+bool SBayeuxModule::ProcessUnsubscribe(JsonNodePtr message, JsonNodePtr &output)
+{
+    return true;
+}
+
+bool SBayeuxModule::ProcessMetaMessage(JsonNodePtr message, JsonNodePtr &output)
+{
+    return true;
+}
+
+bool SBayeuxModule::ProcessPublish(JsonNodePtr message, JsonNodePtr &output)
+{
     return true;
 }
 
