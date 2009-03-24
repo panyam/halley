@@ -108,12 +108,6 @@ public:
     void * extra_data;
 };
 
-//! Holds the actual message body
-// A message body has several body parts.  Each body part is subject to 
-class SMessageBody
-{
-};
-
 //*****************************************************************************
 /*!
  *  \class  SHttpMessage
