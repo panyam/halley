@@ -21,6 +21,7 @@
 const char *FIELD_CHANNEL               = "channel";
 const char *FIELD_VERSION               = "version";
 const char *FIELD_MINVERSION            = "minimumVersion";
+const char *FIELD_CONNTYPE              = "connectionType";
 const char *FIELD_SUPPORTED_CONNTYPES   = "supportedConnectionTypes";
 const char *FIELD_CLIENTID              = "clientId";
 const char *FIELD_ADVICE                = "advice";
@@ -28,6 +29,7 @@ const char *FIELD_ID                    = "id";
 const char *FIELD_EXT                   = "ext";
 const char *FIELD_SUCCESSFUL            = "successful";
 const char *FIELD_AUTHSUCCESSFUL        = "authSuccessful";
+const char *FIELD_SUBSCRIPTION          = "subscription";
 
 //! returns true if a character is a hyphen
 bool equalsHyphen(const char &ch) { return ch == '-'; }
@@ -179,37 +181,120 @@ bool SBayeuxModule::ProcessHandshake(const JsonNodePtr &message, JsonNodePtr &ou
     output->Set(FIELD_CLIENTID, JsonNodeFactory::StringNode(uuid_string));
 
     // TODO: do something with the client id like registering it etc
+    //
+    // Override this, and extend to do things like handling auth and so on.
 
     return true;
 }
 
 bool SBayeuxModule::ProcessConnect(const JsonNodePtr &message, JsonNodePtr &output)
 {
+    std::string clientId(message->Get<std::string>(FIELD_CLIENTID, ""));
+    if (clientId == "")
+    {
+        output = JsonNodeFactory::StringNode("Client ID missing.");
+        return false;
+    }
+
+    std::string connectionType(message->Get<std::string>(FIELD_CONNTYPE, ""));
+    if (connectionType == "")
+    {
+        output = JsonNodeFactory::StringNode("connectionType missing.");
+        return false;
+    }
+
+    output = JsonNodeFactory::ObjectNode();
+    output->Set(FIELD_CHANNEL, JsonNodeFactory::StringNode("/meta/connect"));
+    output->Set(FIELD_SUCCESSFUL, JsonNodeFactory::BoolNode(true));
+    output->Set(FIELD_CLIENTID, JsonNodeFactory::StringNode(clientId));
+
+    // TODO: register this client and do things like handle "timeouts" with
+    // handshakes and so on...
+
     return true;
 }
 
 bool SBayeuxModule::ProcessDisconnect(const JsonNodePtr &message, JsonNodePtr &output)
 {
+    std::string clientId(message->Get<std::string>(FIELD_CLIENTID, ""));
+    if (clientId == "")
+    {
+        output = JsonNodeFactory::StringNode("Client ID missing.");
+        return false;
+    }
+
+    output = JsonNodeFactory::ObjectNode();
+    output->Set(FIELD_CHANNEL, JsonNodeFactory::StringNode("/meta/connect"));
+    output->Set(FIELD_SUCCESSFUL, JsonNodeFactory::BoolNode(true));
+    output->Set(FIELD_CLIENTID, JsonNodeFactory::StringNode(clientId));
+
+    // TODO: register this client and do things like handle "timeouts" with
+    // handshakes and so on...
+
     return true;
 }
 
 bool SBayeuxModule::ProcessSubscribe(const JsonNodePtr &message, JsonNodePtr &output)
 {
+    std::string clientId(message->Get<std::string>(FIELD_CLIENTID, ""));
+    if (clientId == "")
+    {
+        output = JsonNodeFactory::StringNode("Client ID missing.");
+        return false;
+    }
+
+    std::string subscription(message->Get<std::string>(FIELD_SUBSCRIPTION, ""));
+    if (subscription == "")
+    {
+        output = JsonNodeFactory::StringNode("subscription missing.");
+        return false;
+    }
+
+    output->Set(FIELD_CHANNEL, JsonNodeFactory::StringNode("/meta/connect"));
+    output->Set(FIELD_SUCCESSFUL, JsonNodeFactory::BoolNode(true));
+    output->Set(FIELD_CLIENTID, JsonNodeFactory::StringNode(clientId));
+    output->Set(FIELD_SUBSCRIPTION, JsonNodeFactory::StringNode(subscription));
+
+    // TODO: again handle all the "real" stuff below
+
     return true;
 }
 
 bool SBayeuxModule::ProcessUnsubscribe(const JsonNodePtr &message, JsonNodePtr &output)
 {
-    return true;
-}
+    std::string clientId(message->Get<std::string>(FIELD_CLIENTID, ""));
+    if (clientId == "")
+    {
+        output = JsonNodeFactory::StringNode("Client ID missing.");
+        return false;
+    }
 
-bool SBayeuxModule::ProcessMetaMessage(const JsonNodePtr &message, JsonNodePtr &output)
-{
+    std::string subscription(message->Get<std::string>(FIELD_SUBSCRIPTION, ""));
+    if (subscription == "")
+    {
+        output = JsonNodeFactory::StringNode("subscription missing.");
+        return false;
+    }
+
+    output->Set(FIELD_CHANNEL, JsonNodeFactory::StringNode("/meta/connect"));
+    output->Set(FIELD_SUCCESSFUL, JsonNodeFactory::BoolNode(true));
+    output->Set(FIELD_CLIENTID, JsonNodeFactory::StringNode(clientId));
+    output->Set(FIELD_SUBSCRIPTION, JsonNodeFactory::StringNode(subscription));
+
+    // TODO: again handle all the "real" stuff below
+
     return true;
 }
 
 bool SBayeuxModule::ProcessPublish(const JsonNodePtr &message, JsonNodePtr &output)
 {
-    return true;
+    output = JsonNodeFactory::StringNode("No handler for publish request found.");
+    return false;
+}
+
+bool SBayeuxModule::ProcessMetaMessage(const JsonNodePtr &message, JsonNodePtr &output)
+{
+    output = JsonNodeFactory::StringNode("Invalid meta channel");
+    return false;
 }
 
