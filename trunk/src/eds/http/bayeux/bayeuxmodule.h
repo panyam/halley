@@ -30,13 +30,13 @@ public:
 
 protected:
     bool ProcessMessage(const JsonNodePtr &node, JsonNodePtr &output);
-    bool ProcessHandshake(JsonNodePtr message, JsonNodePtr &output);
-    bool ProcessConnect(JsonNodePtr message, JsonNodePtr &output);
-    bool ProcessDisconnect(JsonNodePtr message, JsonNodePtr &output);
-    bool ProcessSubscribe(JsonNodePtr message, JsonNodePtr &output);
-    bool ProcessUnsubscribe(JsonNodePtr message, JsonNodePtr &output);
-    bool ProcessMetaMessage(JsonNodePtr message, JsonNodePtr &output);
-    bool ProcessPublish(JsonNodePtr message, JsonNodePtr &output);
+    bool ProcessHandshake(const JsonNodePtr &message, JsonNodePtr &output);
+    bool ProcessConnect(const JsonNodePtr &message, JsonNodePtr &output);
+    bool ProcessDisconnect(const JsonNodePtr &message, JsonNodePtr &output);
+    bool ProcessSubscribe(const JsonNodePtr &message, JsonNodePtr &output);
+    bool ProcessUnsubscribe(const JsonNodePtr &message, JsonNodePtr &output);
+    bool ProcessMetaMessage(const JsonNodePtr &message, JsonNodePtr &output);
+    bool ProcessPublish(const JsonNodePtr &message, JsonNodePtr &output);
 
 
 protected:

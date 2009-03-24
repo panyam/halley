@@ -18,6 +18,21 @@
 #include "json/tokenizer.h"
 #include <uuid/uuid.h>
 
+const char *FIELD_CHANNEL               = "channel";
+const char *FIELD_VERSION               = "version";
+const char *FIELD_MINVERSION            = "minimumVersion";
+const char *FIELD_SUPPORTED_CONNTYPES   = "supportedConnectionTypes";
+const char *FIELD_CLIENTID              = "clientId";
+const char *FIELD_ADVICE                = "advice";
+const char *FIELD_ID                    = "id";
+const char *FIELD_EXT                   = "ext";
+const char *FIELD_SUCCESSFUL            = "successful";
+const char *FIELD_AUTHSUCCESSFUL        = "authSuccessful";
+
+//! returns true if a character is a hyphen
+bool equalsHyphen(const char &ch) { return ch == '-'; }
+bool notAlpha(const char &ch) { return !isalnum(ch); }
+
 //! Called to handle subscriptions, unsubscriptions and callbacks
 //
 // Refer to http://svn.cometd.org/trunk/bayeux/bayeux.html for more details
@@ -98,67 +113,102 @@ bool SBayeuxModule::ProcessMessage(const JsonNodePtr &message, JsonNodePtr &outp
         output = JsonNodeFactory::ListNode();
 
     // see what kind of message it is
-    if (channel == "/meta/handshake")
+    if (strncmp(channel.c_str(), "/meta/", 6) == 0)
     {
-        return ProcessHandshake(message, output);
-    }
-    else if (channel == "/meta/connect")
-    {
-        return ProcessConnect(message, output);
-    }
-    else if (channel == "/meta/disconnect")
-    {
-        return ProcessDisconnect(message, output);
-    }
-    else if (channel == "/meta/subscribe")
-    {
-        return ProcessSubscribe(message, output);
-    }
-    else if (channel == "/meta/unsubscribe")
-    {
-        return ProcessUnsubscribe(message, output);
-    }
-    else if (strncmp(channel.c_str(), "/meta/", 6) == 0)
-    {
-        return ProcessMetaMessage(message, output);
+        if (channel == "/meta/handshake")
+        {
+            return ProcessHandshake(message, output);
+        }
+        else if (channel == "/meta/connect")
+        {
+            return ProcessConnect(message, output);
+        }
+        else if (channel == "/meta/disconnect")
+        {
+            return ProcessDisconnect(message, output);
+        }
+        else if (channel == "/meta/subscribe")
+        {
+            return ProcessSubscribe(message, output);
+        }
+        else if (channel == "/meta/unsubscribe")
+        {
+            return ProcessUnsubscribe(message, output);
+        }
+        else
+        {
+            // other meta messages
+            return ProcessMetaMessage(message, output);
+        }
     }
     else 
     {
+        // message is for a channel
         return ProcessPublish(message, output);
     }
 }
 
-bool SBayeuxModule::ProcessHandshake(JsonNodePtr message, JsonNodePtr &output)
+//! Processes a handshake.  Default is to simply return a true to accept
+// everything.  Override this to do multi-level handshakes and
+// authentication etc.
+bool SBayeuxModule::ProcessHandshake(const JsonNodePtr &message, JsonNodePtr &output)
+{
+    output = JsonNodeFactory::ObjectNode();
+    output->Set(FIELD_CHANNEL, JsonNodeFactory::StringNode("/meta/handshake"));
+    output->Set(FIELD_VERSION, JsonNodeFactory::StringNode("1.0"));
+    output->Set(FIELD_MINVERSION, JsonNodeFactory::StringNode("1.0"));
+    output->Set(FIELD_SUCCESSFUL, JsonNodeFactory::BoolNode(true));
+    output->Set(FIELD_AUTHSUCCESSFUL, JsonNodeFactory::BoolNode(true));
+
+    JsonNodePtr connTypes = JsonNodeFactory::ListNode();
+    connTypes->Add(JsonNodeFactory::StringNode("long-polling"));
+    connTypes->Add(JsonNodeFactory::StringNode("callback-polling"));
+    connTypes->Add(JsonNodeFactory::StringNode("iframe"));
+    output->Set(FIELD_SUPPORTED_CONNTYPES, connTypes);
+
+    // calculate the uuid
+    uuid_t uuid;
+    uuid_generate(uuid);
+    char uuid_str[40];
+    uuid_unparse(uuid, uuid_str);
+
+    // strip the "-"s from the uuid_str
+    std::string uuid_string(uuid_string);
+    uuid_string.erase(std::remove_if(uuid_string.begin(), uuid_string.end(), notAlpha), uuid_string.end());
+
+    output->Set(FIELD_CLIENTID, JsonNodeFactory::StringNode(uuid_string));
+
+    // TODO: do something with the client id like registering it etc
+
+    return true;
+}
+
+bool SBayeuxModule::ProcessConnect(const JsonNodePtr &message, JsonNodePtr &output)
 {
     return true;
 }
 
-bool SBayeuxModule::ProcessConnect(JsonNodePtr message, JsonNodePtr &output)
+bool SBayeuxModule::ProcessDisconnect(const JsonNodePtr &message, JsonNodePtr &output)
 {
     return true;
 }
 
-bool SBayeuxModule::ProcessDisconnect(JsonNodePtr message, JsonNodePtr &output)
+bool SBayeuxModule::ProcessSubscribe(const JsonNodePtr &message, JsonNodePtr &output)
 {
     return true;
 }
 
-bool SBayeuxModule::ProcessSubscribe(JsonNodePtr message, JsonNodePtr &output)
+bool SBayeuxModule::ProcessUnsubscribe(const JsonNodePtr &message, JsonNodePtr &output)
 {
     return true;
 }
 
-bool SBayeuxModule::ProcessUnsubscribe(JsonNodePtr message, JsonNodePtr &output)
+bool SBayeuxModule::ProcessMetaMessage(const JsonNodePtr &message, JsonNodePtr &output)
 {
     return true;
 }
 
-bool SBayeuxModule::ProcessMetaMessage(JsonNodePtr message, JsonNodePtr &output)
-{
-    return true;
-}
-
-bool SBayeuxModule::ProcessPublish(JsonNodePtr message, JsonNodePtr &output)
+bool SBayeuxModule::ProcessPublish(const JsonNodePtr &message, JsonNodePtr &output)
 {
     return true;
 }
