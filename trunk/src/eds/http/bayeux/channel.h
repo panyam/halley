@@ -26,6 +26,10 @@ public:
     const SString &Name() const { return name; }
 
 protected:
+    //! Constructor with name
+    SBayeuxChannel(const SString &n) : name(n) { }
+
+protected:
     SString name;
 };
 
