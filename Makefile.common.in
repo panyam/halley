@@ -77,5 +77,6 @@ GPP                     = g++
 
 # Implicit rule to build .o into the build directory from .cpp
 $(OUTPUT_DIR)/%.o : %.cpp
-	$(GPP) -c $(CXXFLAGS) $< -o $@
+	@echo Building $@
+	@$(GPP) -c $(CXXFLAGS) $< -o $@
 

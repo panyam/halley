@@ -42,6 +42,9 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
     DefaultJsonBuilder jbuilder;
     JsonNodePtr messages = jbuilder.Build(&instream);
 
+    JsonNodePtr output = JsonNodeFactory::ObjectNode();
+
+
     // see if it is a single message or a list of messages:
     if (messages->Type() == JNT_LIST)
     {

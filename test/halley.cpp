@@ -9,7 +9,7 @@
 #include "eds/http/handlerstage.h"
 #include "eds/http/urlrouter.h"
 #include "eds/http/filemodule.h"
-#include "eds/http/bayeuxmodule.h"
+#include "eds/http/bayeux/bayeuxmodule.h"
 #include "eds/http/contentmodule.h"
 #include "eds/http/transfermodule.h"
 #include "eds/http/writermodule.h"
