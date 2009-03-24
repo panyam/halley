@@ -14,6 +14,75 @@
 #define _GPJSON_TOKENIZER_H_
 
 #include <string>
+#include <iterator>
+
+//*****************************************************************************
+/*!
+ *  \class JsonInputStream
+ *
+ *  \brief Provides char getting and ungetting to the tokenizer.
+ *
+ *****************************************************************************/
+class JsonInputStream
+{
+public:
+    virtual ~JsonInputStream() { }
+    virtual int     GetChar()           = 0;
+    virtual void    UngetChar(int ch)   = 0;
+};
+
+//*****************************************************************************
+/*!
+ *  \class DefaultJsonInputStream
+ *
+ *  \brief
+ *  A JSON input stream interface that caters for arbitrary input
+ *  iterators.
+ *
+ *****************************************************************************/
+template <class InputIterator>
+class DefaultJsonInputStream : public JsonInputStream
+{
+public:
+    DefaultJsonInputStream(InputIterator start, InputIterator end)
+    {
+        pInputStart = start;
+        pInputEnd   = end;
+    }
+
+    //! Gets the next character
+    virtual int     GetChar()
+    {
+        int out = -1;
+        if (lastChar >= 0)
+        {
+            out = lastChar;
+            lastChar = -1;
+            return out;
+        }
+
+        // has iterator reached the end?
+        if (pInputStart == pInputEnd)
+            return -1;
+
+        out = *pInputStart;
+        pInputStart++;
+
+        return out;
+    }
+
+    //! Ungets the character
+    virtual void    UngetChar(int ch)
+    {
+        lastChar = ch;
+    }
+
+protected:
+    InputIterator   pInputStart;
+    InputIterator   pInputEnd;
+    int             lastChar;
+};
+
 
 //*****************************************************************************
 /*!
@@ -52,21 +121,18 @@ public:
 
 public:
     virtual ~JsonTokenizer()    { }
-    virtual void                Begin(std::istream &);
+    virtual void                Begin(JsonInputStream *);
     virtual JsonToken           NextToken();
     virtual const std::string & TokenText() const;
 
 protected:
     void        Reset();
-    int         GetChar();
-    void        UngetChar(int ch);
     JsonToken   RealToken();
 
 private:
-    int             lastChar;
-    std::istream *  input;
-    std::string     tokText;
-    JsonToken       laToken;
+    JsonInputStream *   pInputStream;
+    std::string         tokText;
+    JsonToken           laToken;
 };
 
 #endif

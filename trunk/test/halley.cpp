@@ -34,7 +34,7 @@ class SDataSource
 {
 public:
     //! Creates a data source
-    SDataSource(const std::string &name, SHttpHandlerStage *pStage)
+    SDataSource(const std::string &n, SHttpHandlerStage *pStage)
         : name(n), pHandlerStage(pStage) { }
 
     void AddDSModule(SBayeuxModule *pModule)
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
     SWriterModule       writerModule;
     // STransferModule     transferModule(&writerModule);
     SContentModule      contentModule(&writerModule);
-    SBayeuxModule       bayeuxModule(&contentModule);
+    SBayeuxModule       dsmModule(&contentModule);
     SFileModule         rootFileModule(&contentModule, true);
     SMyModule           myModule(&contentModule);
     SUrlRouter          urlRouter(&myModule);

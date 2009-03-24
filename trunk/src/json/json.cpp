@@ -1181,12 +1181,12 @@ AMFFormatter::encodeInt(int input, unsigned char *bytes)
  *
  *****************************************************************************/
 JsonNodePtr
-DefaultJsonBuilder::Build(std::istream &input)
+DefaultJsonBuilder::Build(JsonInputStream *pStream)
 {
     JsonNodePtr ReadNode(JsonTokenizer &tokenizer, JsonTokenizer::JsonToken *laToken = NULL);
 
     JsonTokenizer tokenizer;
-    tokenizer.Begin(input);
+    tokenizer.Begin(pStream);
 
     return ReadNode(tokenizer);
 }
