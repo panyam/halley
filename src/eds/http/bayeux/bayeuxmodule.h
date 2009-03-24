@@ -40,24 +40,33 @@ public:
                               SBodyPart *           pBodyPart);
 
 protected:
-    bool ProcessMessage(const JsonNodePtr & node,
+    int  ProcessMessage(const JsonNodePtr & node,
                         JsonNodePtr &       output,
                         SConnection *       pConnection);
-    bool ProcessHandshake(const JsonNodePtr &message, JsonNodePtr &output);
-    bool ProcessConnect(const JsonNodePtr &message, JsonNodePtr &output);
-    bool ProcessDisconnect(const JsonNodePtr &message, JsonNodePtr &output);
-    bool ProcessSubscribe(const JsonNodePtr &   message,
+
+    int  ProcessHandshake(const JsonNodePtr &message, JsonNodePtr &output);
+
+    int  ProcessConnect(const JsonNodePtr &message, JsonNodePtr &output);
+
+    int  ProcessDisconnect(const JsonNodePtr &message, JsonNodePtr &output);
+
+    int  ProcessSubscribe(const JsonNodePtr &   message,
                           JsonNodePtr &         output,
                           SConnection *         pConnection);
-    bool ProcessUnsubscribe(const JsonNodePtr & message,
+
+    int  ProcessUnsubscribe(const JsonNodePtr & message,
                             JsonNodePtr &       output,
                             SConnection *       pConnection);
-    bool ProcessMetaMessage(const SString & channel,
+
+    int  ProcessMetaMessage(const SString & channel,
                             const JsonNodePtr & message,
-                            JsonNodePtr &       output);
-    bool ProcessPublish(const SString &     channel,
+                            JsonNodePtr &       output,
+                            SConnection *       pConnection);
+
+    int  ProcessPublish(const SString &         channel,
                         const JsonNodePtr &     message,
-                        JsonNodePtr &           output);
+                        JsonNodePtr &           output,
+                        SConnection *           pConnection);
 
     bool AddSubscription(const SString &channel, SConnection *pConnection);
     bool RemoveSubscription(const SString &channel, SConnection *pConnection);
