@@ -28,7 +28,7 @@ void SSockWriterStage::WriteData(SJob *pJob, int sockHandle, char *data, size_t 
 }
 
 //! Runs a query
-void SSockWriterStage::RunQuery(SJob *pJob, const std::string &query)
+void SSockWriterStage::RunQuery(SJob *pJob, const SString &query)
 {
 }
 

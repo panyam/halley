@@ -51,7 +51,7 @@ public:
     virtual void WriteData(SJob *pJob, int sockHandle, char *data, size_t length);
 
     //! Runs a query
-    virtual void RunQuery(SJob *pJob, const std::string &query);
+    virtual void RunQuery(SJob *pJob, const SString &query);
 };
 
 #endif

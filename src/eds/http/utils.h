@@ -28,10 +28,7 @@
 #ifndef HTTP_UTILS_H
 #define HTTP_UTILS_H
 
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <string.h>
+#include "httpfwd.h"
 
 #define CR                  '\r'
 #define LF                  '\n'
@@ -40,9 +37,9 @@
 #define isseperator(ch)     (strchr(SEPARATORS, (ch)) != 0)
 #define iscontrol(ch)       ( ((ch) == 127) || (((ch) >= 0) && ((ch) <= 31)))
 
-std::string ReadTillCrLf(std::istream &input);
-std::string base64_encode(unsigned char const* , unsigned int len);
-std::string base64_decode(std::string const& s);
+SString ReadTillCrLf(std::istream &input);
+SString base64_encode(unsigned char const* , unsigned int len);
+SString base64_decode(SString const& s);
 
 #endif
 

@@ -37,31 +37,31 @@ SHttpRequest::~SHttpRequest()
 }
 
 // Gets the method
-const std::string &SHttpRequest::Method() const
+const SString &SHttpRequest::Method() const
 {
     return method;
 }
 
 // Sets the method
-void SHttpRequest::SetMethod(const std::string &m)
+void SHttpRequest::SetMethod(const SString &m)
 {
     method = m;
 }
 
 // Gets the method Resource
-const std::string &SHttpRequest::Resource() const
+const SString &SHttpRequest::Resource() const
 {
     return resource;
 }
 
 // Sets the request Resource
-void SHttpRequest::SetResource(const std::string &r)
+void SHttpRequest::SetResource(const SString &r)
 {
     resource = r;
 }
 
 //! Parses the first line
-bool SHttpRequest::ParseFirstLine(const std::string &line)
+bool SHttpRequest::ParseFirstLine(const SString &line)
 {
     const char *pStart  = line.c_str();
 
@@ -69,7 +69,7 @@ bool SHttpRequest::ParseFirstLine(const std::string &line)
     const char *pCurr = pStart;
     while (*pCurr && !isspace(*pCurr)) pCurr++;
     
-    method = std::string(pStart, pCurr - pStart);
+    method = SString(pStart, pCurr - pStart);
 
     pStart = pCurr;
     while (*pStart && isspace(*pStart)) pStart++;
@@ -78,7 +78,7 @@ bool SHttpRequest::ParseFirstLine(const std::string &line)
     pCurr = pStart;
     while (*pCurr && !isspace(*pCurr)) pCurr++;
 
-    resource = std::string(pStart, pCurr - pStart);
+    resource = SString(pStart, pCurr - pStart);
 
     // TODO: 
     //      Unescape the resource
@@ -87,7 +87,7 @@ bool SHttpRequest::ParseFirstLine(const std::string &line)
     pStart = pCurr;
     while (*pStart && isspace(*pStart)) pStart++;
     if (!pStart) return false;
-    version = std::string(pStart);
+    version = SString(pStart);
 
     return true;
 }
@@ -95,7 +95,7 @@ bool SHttpRequest::ParseFirstLine(const std::string &line)
 // Reads the request line
 bool SHttpRequest::ReadFirstLine(std::istream &input)
 {
-    std::string line = ReadTillCrLf(input);
+    SString line = ReadTillCrLf(input);
 
     return ParseFirstLine(line);
 

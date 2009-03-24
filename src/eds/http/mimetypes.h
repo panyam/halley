@@ -13,8 +13,7 @@
 #ifndef MIME_TYPE_H
 #define MIME_TYPE_H
 
-#include <map>
-#include <string>
+#include "httpfwd.h"
 
 //*****************************************************************************
 /*!
@@ -29,13 +28,13 @@ public:
     SMimeTypes();
     ~SMimeTypes();
 
-    std::string GetMimeType(const std::string &filename);
+    SString GetMimeType(const SString &filename);
 
     //! Get singleton instance.
     static SMimeTypes *GetInstance();
 
 protected:
-    typedef std::map<std::string, std::string> MimeTable;
+    typedef std::map<SString, SString> MimeTable;
     MimeTable    mimeTypes;
 };
 

@@ -64,7 +64,7 @@ void STransferModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
     SHttpRequest *pRequest      = pHandlerData->Request();
     SHttpResponse *pResponse    = pRequest->Response();
     SHeaderTable &respHeaders   = pResponse->Headers();
-    std::string transferEncoding    = respHeaders.Header("Transfer-Encoding");
+    SString transferEncoding    = respHeaders.Header("Transfer-Encoding");
 
     pBodyPart->bpIndex = pModData->lastBPSent++;
     if (pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION ||
@@ -78,7 +78,7 @@ void STransferModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
         unsigned size = pBodyPart->Size();
         if (transferEncoding == "chunked")
         {
-            std::stringstream sizestr;
+            SStringStream sizestr;
             sizestr << hex << size << CRLF;
             pBodyPart->PrependToBody(sizestr.str());
             pBodyPart->AppendToBody(CRLF, 2);

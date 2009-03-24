@@ -23,10 +23,10 @@ public:
     virtual ~SBayeuxChannel() { }
 
     //! Get the channel name
-    const std::string &Name() const { return name; }
+    const SString &Name() const { return name; }
 
 protected:
-    std::string name;
+    SString name;
 };
 
 #endif

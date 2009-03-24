@@ -55,19 +55,19 @@ public:
     void Reset();
 
     //! Prepends a string to the body
-    void PrependToBody(const std::string &data);
+    void PrependToBody(const SString &data);
 
     //! Prepends raw bytes to the body
     void PrependToBody(const char *buffer, unsigned size);
 
     //! Sets a string as the body
-    void SetBody(const std::string &data);
+    void SetBody(const SString &data);
 
     //! Sets raw bytes as the body
     void SetBody(const char *buffer, unsigned size);
 
     //! Appends a string to the body
-    void AppendToBody(const std::string &data);
+    void AppendToBody(const SString &data);
 
     //! Appends raw bytes to the body
     void AppendToBody(const char *buffer, unsigned size);
@@ -125,7 +125,7 @@ public:
     virtual bool WriteToStream(std::ostream &output);
 
     //! Gets the version
-    const std::string &Version() const;
+    const SString &Version() const;
 
     //! Gets the content length
     virtual int ContentLength();
@@ -137,7 +137,7 @@ public:
     SHeaderTable &Headers() { return headers; }
 
     //! Sets the version
-    void SetVersion(const std::string &version);
+    void SetVersion(const SString &version);
 
     //! Creates a new body part
     SBodyPart *NewBodyPart(int bptype = SBodyPart::BP_NORMAL, void *extra_data = NULL);
@@ -151,7 +151,7 @@ public:
 
 protected:
     //! Version - eg HTTP/1.1
-    std::string     version;
+    SString     version;
 
     //! The header table
     SHeaderTable    headers;

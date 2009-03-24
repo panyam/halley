@@ -42,7 +42,7 @@ void SWriterModule::ProcessOutput(SHttpHandlerData *    pHandlerData,
         SHttpResponse * pResponse   = pRequest->Response();
         SHeaderTable &  respHeaders = pResponse->Headers();
         // write headers
-        std::string transferEncoding(respHeaders.Header("Transfer-Encoding"));
+        SString transferEncoding(respHeaders.Header("Transfer-Encoding"));
         if (transferEncoding == "chunked")
         {
             respHeaders.RemoveHeader("Content-Length");
@@ -81,7 +81,7 @@ void SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
     SHttpRequest *  pRequest        = pHandlerData->Request();
     SHttpResponse * pResponse       = pRequest->Response();
     SHeaderTable &respHeaders       = pResponse->Headers();
-    std::string transferEncoding(respHeaders.Header("Transfer-Encoding"));
+    SString transferEncoding(respHeaders.Header("Transfer-Encoding"));
 
     if (pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION)
     {
@@ -92,7 +92,7 @@ void SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
     else if (pBodyPart->Type() == SBodyPart::BP_CONTENT_FINISHED)
     {
         // do nothing - close connection only if close header found
-        std::string closehdr;
+        SString closehdr;
         respHeaders.HeaderIfExists("Connection", closehdr);
         if (strcasecmp(closehdr.c_str(), "close") == 0)
         {

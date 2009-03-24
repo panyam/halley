@@ -27,15 +27,15 @@
 
 #include "utils.h"
 
-static const std::string base64_chars = 
+static const SString base64_chars = 
              "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
              "abcdefghijklmnopqrstuvwxyz"
              "0123456789+/";
 
 // Reads a line till the CRLF
-std::string ReadTillCrLf(std::istream &input)
+SString ReadTillCrLf(std::istream &input)
 {
-    std::stringstream out;
+    SStringStream out;
     int ch = input.get();
     while (!input.bad() && !input.eof() && ch != CR && ch != LF)
     {
@@ -51,8 +51,8 @@ static inline bool is_base64(unsigned char c) {
   return (isalnum(c) || (c == '+') || (c == '/'));
 }
 
-std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
-  std::string ret;
+SString base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
+  SString ret;
   int i = 0;
   int j = 0;
   unsigned char char_array_3[3];
@@ -94,13 +94,13 @@ std::string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_
 
 }
 
-std::string base64_decode(std::string const& encoded_string) {
+SString base64_decode(SString const& encoded_string) {
   int in_len = encoded_string.size();
   int i = 0;
   int j = 0;
   int in_ = 0;
   unsigned char char_array_4[4], char_array_3[3];
-  std::string ret;
+  SString ret;
 
   while (in_len-- && ( encoded_string[in_] != '=') && is_base64(encoded_string[in_])) {
     char_array_4[i++] = encoded_string[in_]; in_++;

@@ -36,13 +36,13 @@ int SHttpResponse::StatusCode() const
 }
 
 // The status message
-const std::string SHttpResponse::StatusMessage() const
+const SString SHttpResponse::StatusMessage() const
 {
     return statusMessage;
 }
 
 // Sets the request status
-void SHttpResponse::SetStatus(int status, const std::string &msg)
+void SHttpResponse::SetStatus(int status, const SString &msg)
 {
     statusCode = status;
     statusMessage = msg;

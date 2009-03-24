@@ -43,12 +43,12 @@ bool SBayeuxModule::RegisterChannel(SBayeuxChannel *pChannel, bool replace)
         // TODO: should unregister be called instead?
         channels.erase(iter);
     }
-    channels.insert(std::pair<std::string, SBayeuxChannel *>(pChannel->Name(), pChannel));
+    channels.insert(std::pair<SString, SBayeuxChannel *>(pChannel->Name(), pChannel));
     return true;
 }
 
 //! Removes a channel by name
-bool SBayeuxModule::UnregisterChannel(const std::string &name)
+bool SBayeuxModule::UnregisterChannel(const SString &name)
 {
     ChannelMap::iterator iter = channels.find(name);
     if (iter == channels.end())
@@ -62,6 +62,48 @@ bool SBayeuxModule::UnregisterChannel(const std::string &name)
 bool SBayeuxModule::UnregisterChannel(const SBayeuxChannel *pChannel)
 {
     return UnregisterChannel(pChannel->Name());
+}
+
+//! Adds a new connection to the subscription list
+// TODO: thread safety
+bool SBayeuxModule::AddSubscription(const SString &channel, SConnection *pConnection)
+{
+    ChannelSubscription::iterator iter  = subscriptions.find(channel);
+    SConnectionList *pConnList          = NULL;
+    if (iter == subscriptions.end())
+    {
+        pConnList = new SConnectionList();
+        subscriptions.insert(std::pair<SString, SConnectionList *>(channel, pConnList));
+    }
+    else
+    {
+        pConnList = iter->second;
+    }
+
+    if (find(pConnList->begin(), pConnList->end(), pConnection) != pConnList->end())
+        return false;
+
+    pConnList->push_back(pConnection);
+
+    return true;
+}
+
+bool SBayeuxModule::RemoveSubscription(const SString &channel, SConnection *pConnection)
+{
+    ChannelSubscription::iterator iter  = subscriptions.find(channel);
+    if (iter == subscriptions.end())
+        return false;
+
+    SConnectionList *pConnList = iter->second;
+
+    SConnectionList::iterator iter2 = find(pConnList->begin(), pConnList->end(), pConnection);
+
+    if (iter2 == pConnList->end())
+        return false;
+
+    pConnList->erase(iter2);
+
+    return true;
 }
 
 //! returns true if a character is a hyphen
@@ -82,6 +124,7 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
                                  SHttpHandlerStage *    pStage, 
                                  SBodyPart *            pBodyPart)
 {
+    SConnection *pConnection            = pHandlerData->pConnection;
     SHttpRequest *pRequest              = pHandlerData->Request();
     SHttpResponse *pResponse            = pRequest->Response();
     SBodyPart *pContent                 = pRequest->ContentBody();
@@ -101,13 +144,13 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
     {
         for (int i = 0, count = messages->Size();i < count;i++)
         {
-            if ( ! ProcessMessage(messages->Get(i), output))
+            if ( ! ProcessMessage(messages->Get(i), output, pConnection))
                 break ;
         }
     }
     else if (messages->Type() == JNT_OBJECT)
     {
-        ProcessMessage(messages, output);
+        ProcessMessage(messages, output, pConnection);
     }
     else
     {
@@ -121,7 +164,7 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
     {
         // invalid type
         SBodyPart * part        = pResponse->NewBodyPart();
-        std::string errormsg    = output->Value<std::string>();
+        SString errormsg    = output->Value<SString>();
         respHeaders.SetIntHeader("Content-Length", errormsg.size());
         respHeaders.SetHeader("Content-Type", "text/text");
         part->SetBody(errormsg);
@@ -134,9 +177,9 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
 }
 
 //! Processes a message and appends the result (json) to the output list.
-bool SBayeuxModule::ProcessMessage(const JsonNodePtr &message, JsonNodePtr &output)
+bool SBayeuxModule::ProcessMessage(const JsonNodePtr &message, JsonNodePtr &output, SConnection *pConnection)
 {
-    std::string channel = message->Get<std::string>("channel", "");
+    SString channel = message->Get<SString>("channel", "");
     if (channel == "")
     {
         output = JsonNodeFactory::StringNode("Channel name missing");
@@ -163,11 +206,11 @@ bool SBayeuxModule::ProcessMessage(const JsonNodePtr &message, JsonNodePtr &outp
         }
         else if (channel == "/meta/subscribe")
         {
-            return ProcessSubscribe(message, output);
+            return ProcessSubscribe(message, output, pConnection);
         }
         else if (channel == "/meta/unsubscribe")
         {
-            return ProcessUnsubscribe(message, output);
+            return ProcessUnsubscribe(message, output, pConnection);
         }
         else
         {
@@ -207,7 +250,7 @@ bool SBayeuxModule::ProcessHandshake(const JsonNodePtr &message, JsonNodePtr &ou
     uuid_unparse(uuid, uuid_str);
 
     // strip the "-"s from the uuid_str
-    std::string uuid_string(uuid_string);
+    SString uuid_string(uuid_string);
     uuid_string.erase(std::remove_if(uuid_string.begin(), uuid_string.end(), notAlpha),
                       uuid_string.end());
 
@@ -222,14 +265,14 @@ bool SBayeuxModule::ProcessHandshake(const JsonNodePtr &message, JsonNodePtr &ou
 
 bool SBayeuxModule::ProcessConnect(const JsonNodePtr &message, JsonNodePtr &output)
 {
-    std::string clientId(message->Get<std::string>(FIELD_CLIENTID, ""));
+    SString clientId(message->Get<SString>(FIELD_CLIENTID, ""));
     if (clientId == "")
     {
         output = JsonNodeFactory::StringNode("Client ID missing.");
         return false;
     }
 
-    std::string connectionType(message->Get<std::string>(FIELD_CONNTYPE, ""));
+    SString connectionType(message->Get<SString>(FIELD_CONNTYPE, ""));
     if (connectionType == "")
     {
         output = JsonNodeFactory::StringNode("connectionType missing.");
@@ -249,7 +292,7 @@ bool SBayeuxModule::ProcessConnect(const JsonNodePtr &message, JsonNodePtr &outp
 
 bool SBayeuxModule::ProcessDisconnect(const JsonNodePtr &message, JsonNodePtr &output)
 {
-    std::string clientId(message->Get<std::string>(FIELD_CLIENTID, ""));
+    SString clientId(message->Get<SString>(FIELD_CLIENTID, ""));
     if (clientId == "")
     {
         output = JsonNodeFactory::StringNode("Client ID missing.");
@@ -267,16 +310,46 @@ bool SBayeuxModule::ProcessDisconnect(const JsonNodePtr &message, JsonNodePtr &o
     return true;
 }
 
-bool SBayeuxModule::ProcessSubscribe(const JsonNodePtr &message, JsonNodePtr &output)
+bool SBayeuxModule::ProcessSubscribe(const JsonNodePtr &    message,
+                                     JsonNodePtr &          output,
+                                     SConnection *          pConnection)
 {
-    std::string clientId(message->Get<std::string>(FIELD_CLIENTID, ""));
+    SString clientId(message->Get<SString>(FIELD_CLIENTID, ""));
     if (clientId == "")
     {
         output = JsonNodeFactory::StringNode("Client ID missing.");
         return false;
     }
 
-    std::string subscription(message->Get<std::string>(FIELD_SUBSCRIPTION, ""));
+    SString subscription(message->Get<SString>(FIELD_SUBSCRIPTION, ""));
+    if (subscription == "")
+    {
+        output = JsonNodeFactory::StringNode("subscription missing.");
+        return false;
+    }
+
+    output->Set(FIELD_CHANNEL, JsonNodeFactory::StringNode("/meta/connect"));
+    output->Set(FIELD_SUCCESSFUL, JsonNodeFactory::BoolNode(true));
+    output->Set(FIELD_CLIENTID, JsonNodeFactory::StringNode(clientId));
+    output->Set(FIELD_SUBSCRIPTION, JsonNodeFactory::StringNode(subscription));
+
+    AddSubscription(subscription, pConnection);
+
+    return true;
+}
+
+bool SBayeuxModule::ProcessUnsubscribe(const JsonNodePtr &  message,
+                                       JsonNodePtr &        output,
+                                       SConnection *        pConnection)
+{
+    SString clientId(message->Get<SString>(FIELD_CLIENTID, ""));
+    if (clientId == "")
+    {
+        output = JsonNodeFactory::StringNode("Client ID missing.");
+        return false;
+    }
+
+    SString subscription(message->Get<SString>(FIELD_SUBSCRIPTION, ""));
     if (subscription == "")
     {
         output = JsonNodeFactory::StringNode("subscription missing.");
@@ -289,44 +362,19 @@ bool SBayeuxModule::ProcessSubscribe(const JsonNodePtr &message, JsonNodePtr &ou
     output->Set(FIELD_SUBSCRIPTION, JsonNodeFactory::StringNode(subscription));
 
     // TODO: again handle all the "real" stuff below
+    RemoveSubscription(subscription, pConnection);
 
     return true;
 }
 
-bool SBayeuxModule::ProcessUnsubscribe(const JsonNodePtr &message, JsonNodePtr &output)
-{
-    std::string clientId(message->Get<std::string>(FIELD_CLIENTID, ""));
-    if (clientId == "")
-    {
-        output = JsonNodeFactory::StringNode("Client ID missing.");
-        return false;
-    }
-
-    std::string subscription(message->Get<std::string>(FIELD_SUBSCRIPTION, ""));
-    if (subscription == "")
-    {
-        output = JsonNodeFactory::StringNode("subscription missing.");
-        return false;
-    }
-
-    output->Set(FIELD_CHANNEL, JsonNodeFactory::StringNode("/meta/connect"));
-    output->Set(FIELD_SUCCESSFUL, JsonNodeFactory::BoolNode(true));
-    output->Set(FIELD_CLIENTID, JsonNodeFactory::StringNode(clientId));
-    output->Set(FIELD_SUBSCRIPTION, JsonNodeFactory::StringNode(subscription));
-
-    // TODO: again handle all the "real" stuff below
-
-    return true;
-}
-
-bool SBayeuxModule::ProcessPublish(const std::string &channel, const JsonNodePtr &message, JsonNodePtr &output)
+bool SBayeuxModule::ProcessPublish(const SString &channel, const JsonNodePtr &message, JsonNodePtr &output)
 {
     // do all the stuff here
     output = JsonNodeFactory::StringNode("No handler for publish request found.");
     return false;
 }
 
-bool SBayeuxModule::ProcessMetaMessage(const std::string &channel, const JsonNodePtr &message, JsonNodePtr &output)
+bool SBayeuxModule::ProcessMetaMessage(const SString &channel, const JsonNodePtr &message, JsonNodePtr &output)
 {
     output = JsonNodeFactory::StringNode("Invalid meta channel");
     return false;
