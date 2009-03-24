@@ -97,11 +97,20 @@ public:
     }
 
 protected:
+    void HandleConnection(int clientSocket)
+    {
+        JsonNodePtr value = JsonNodeFactory::StringNode(" ===== Handling New Connection on Channel: " + Name());
+        pModule->DeliverEvent(this, value);
+
+        SServer::HandleConnection(clientSocket);
+
+        value = JsonNodeFactory::StringNode(" ===== Connection Finished on Channel: " + Name());
+        pModule->DeliverEvent(this, value);
+    }
+
+protected:
     //! The bayeux module through which events are dispatched
     SBayeuxModule * pModule;
-
-    //! Port on which commands are listened to
-    int             srvPort;
 };
 
 // This is what drives the server and loads modules depending on how we
@@ -171,6 +180,8 @@ void SMyModule::ProcessInput(SHttpHandlerData *     pHandlerData,
             "<br><a href='/form'>form</a> "
             "<br><a href='/auth'>authentication example</a> [use <b>adp</b> as username and <b>gmbh</b> as password"
             "<br><a href='/header'>show some HTTP header details</a> "
+            "<p><br> Bayeux Logs: "
+            "<br><textarea id = 'bayeuxLogs' style='width: 100%; bottom: 0px' rows = 20></textarea>"
             ;
 
     if(pRequest->Resource() == "/") {
@@ -178,7 +189,6 @@ void SMyModule::ProcessInput(SHttpHandlerData *     pHandlerData,
         body    = "I wonder what you're going to click"    + links;
     }
     else if (pRequest->Resource() == "/red") {
-
         bgcolor = "#ff4444";
         title     = "You chose red";
         body        = "<h1>Red</h1>" + links;
