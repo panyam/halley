@@ -84,14 +84,13 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
 {
     SHttpRequest *pRequest              = pHandlerData->Request();
     SHttpResponse *pResponse            = pRequest->Response();
-    SHeaderTable & respHeaders(pResponse->Headers());
     SBodyPart *pContent                 = pRequest->ContentBody();
-    const std::vector<char> &reqBody    = pContent->Body();
-
+    const SCharVector & reqBody         = pContent->Body();
+    SHeaderTable & respHeaders(pResponse->Headers());
 
     // parse the list of messages
-    DefaultJsonInputStream<std::vector<char>::const_iterator> instream(reqBody.begin(),
-                                                                       reqBody.end());
+    DefaultJsonInputStream<SCharVector::const_iterator> instream(reqBody.begin(),
+                                                                 reqBody.end());
     DefaultJsonBuilder jbuilder;
     JsonNodePtr messages = jbuilder.Build(&instream);
 
@@ -209,7 +208,8 @@ bool SBayeuxModule::ProcessHandshake(const JsonNodePtr &message, JsonNodePtr &ou
 
     // strip the "-"s from the uuid_str
     std::string uuid_string(uuid_string);
-    uuid_string.erase(std::remove_if(uuid_string.begin(), uuid_string.end(), notAlpha), uuid_string.end());
+    uuid_string.erase(std::remove_if(uuid_string.begin(), uuid_string.end(), notAlpha),
+                      uuid_string.end());
 
     output->Set(FIELD_CLIENTID, JsonNodeFactory::StringNode(uuid_string));
 

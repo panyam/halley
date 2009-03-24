@@ -14,12 +14,7 @@
 #ifndef HTTP_FWD_H
 #define HTTP_FWD_H
 
-#include <string>
-#include <vector>
-#include <queue>
-#include <list>
-#include <sys/stat.h>
-#include <sys/types.h>
+#include "../fwd.h"
 
 //! A type to denote body part indices.
 typedef unsigned BPIndexType;

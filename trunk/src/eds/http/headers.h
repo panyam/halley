@@ -28,8 +28,6 @@
 #ifndef _SHTTP_HEADERS_H_
 #define _SHTTP_HEADERS_H_
 
-#include <map>
-
 #include "utils.h"
 #include "httpfwd.h"
 

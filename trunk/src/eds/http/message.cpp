@@ -28,7 +28,7 @@ bool SBodyPart::WriteMessageBody(std::ostream &output)
 }
 
 // Gets the body data.
-const std::vector<char> &SBodyPart::Body() const
+const SCharVector &SBodyPart::Body() const
 {
     return data;
 }
