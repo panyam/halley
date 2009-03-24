@@ -34,10 +34,10 @@ public:
     virtual ~SDBHelperStage() { }
 
     //! Opens a DB connection
-    virtual void Connect(SJob *pJob, const std::string &dbURI, const std::map<std::string, void *> &params);
+    virtual void Connect(SJob *pJob, const SString &dbURI, const std::map<SString, void *> &params);
 
     //! Runs a query
-    virtual void RunQuery(SJob *pJob, const std::string &query);
+    virtual void RunQuery(SJob *pJob, const SString &query);
 
     //! Disconnect from a database
     virtual void Disconnect(SJob *pJob, void *pConnection);

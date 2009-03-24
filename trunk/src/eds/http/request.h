@@ -35,16 +35,16 @@ public:
 
 public:
     //! Gets the method
-    const std::string &Method() const;
+    const SString &Method() const;
 
     //! Sets the method
-    void SetMethod(const std::string &method);
+    void SetMethod(const SString &method);
 
     //! Gets the method Resource
-    const std::string &Resource() const;
+    const SString &Resource() const;
 
     //! Sets the request Resource
-    void SetResource(const std::string &resource);
+    void SetResource(const SString &resource);
 
     //! Sets the request status
     int StatusCode() const;
@@ -59,13 +59,13 @@ public:
     SBodyPart *ContentBody() const { return pContentBody; }
 
     //! The status message
-    const std::string StatusMessage() const;
+    const SString StatusMessage() const;
 
     //! Sets the request status
-    void SetStatus(int status, const std::string &msg);
+    void SetStatus(int status, const SString &msg);
 
     //! Parse the first line
-    bool ParseFirstLine(const std::string &line);
+    bool ParseFirstLine(const SString &line);
 
 protected:
     //! Reads the first request line
@@ -73,10 +73,10 @@ protected:
 
 protected:
     //! Current request method
-    std::string     method;
+    SString     method;
 
     //! Resource being accessed
-    std::string     resource;
+    SString     resource;
 
     //! The actually data that is sent as the content - Usually POSTs
     SBodyPart *     pContentBody;

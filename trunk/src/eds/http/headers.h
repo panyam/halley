@@ -31,28 +31,28 @@
 #include "utils.h"
 #include "httpfwd.h"
 
-typedef std::map<std::string, std::string>   HeaderMap;
-typedef std::pair<std::string, std::string>  HeaderPair;
-typedef std::map<std::string, std::string>   CookieMap;
-typedef std::pair<std::string, std::string>  CookiePair;
+typedef std::map<SString, SString>   HeaderMap;
+typedef std::pair<SString, SString>  HeaderPair;
+typedef std::map<SString, SString>   CookieMap;
+typedef std::pair<SString, SString>  CookiePair;
 
 //! A header in the message
 class SHeader
 {
 public:
     //! Creates a new header
-    SHeader(const std::string &v = "") : value(v) { }
+    SHeader(const SString &v = "") : value(v) { }
 
     //! Gets the value of the header
-    const std::string &Value() { return value; }
+    const SString &Value() { return value; }
 
     //! Sets the value
-    void SetValue(const std::string &v = "")
+    void SetValue(const SString &v = "")
     {
         value = v;
     }
 
-    void AppendValue(const std::string &v)
+    void AppendValue(const SString &v)
     {
         value += v;
     }
@@ -62,7 +62,7 @@ protected:
     char        type;
 
     //! Value of the header
-    std::string value;
+    SString value;
 };
 
 //! Table of headers
@@ -76,34 +76,34 @@ public:
     virtual ~SHeaderTable() { }
 
     //! Gets a header
-    std::string Header(const std::string &name) const;
+    SString Header(const SString &name) const;
 
     //! Returns a header if it exists
-    bool HeaderIfExists(const std::string &name, std::string &value);
+    bool HeaderIfExists(const SString &name, SString &value);
 
     //! Tells if a header is available
-    bool HasHeader(const std::string &name) const;
+    bool HasHeader(const SString &name) const;
 
     //! Sets the value of an string typed header
-    void SetHeader(const std::string &name, const std::string &value, bool append = false);
+    void SetHeader(const SString &name, const SString &value, bool append = false);
 
     //! Sets the value of an bool typed header
-    void SetBoolHeader(const std::string &name, bool value);
+    void SetBoolHeader(const SString &name, bool value);
 
     //! Sets the value of an int typed header
-    void SetIntHeader(const std::string &name, int value);
+    void SetIntHeader(const SString &name, int value);
 
     //! Sets the value of an int typed header
-    void SetUIntHeader(const std::string &name, unsigned value);
+    void SetUIntHeader(const SString &name, unsigned value);
 
     //! Sets the value of an double typed header
-    void SetDoubleHeader(const std::string &name, double value);
+    void SetDoubleHeader(const SString &name, double value);
 
     //! Removes a particular header
-    std::string RemoveHeader(const std::string &name);
+    SString RemoveHeader(const SString &name);
 
     //! Parses a header line.
-    virtual bool ParseHeaderLine(const std::string &line, std::string &name, std::string &value);
+    virtual bool ParseHeaderLine(const SString &line, SString &name, SString &value);
 
     HeaderMap::const_iterator FirstHeader() { return headers.begin(); }
     HeaderMap::const_iterator LastHeader() { return headers.end(); }
@@ -112,7 +112,7 @@ public:
     virtual bool ReadHeaders(std::istream &input);
 
     //! Reads the next header
-    virtual bool ReadNextHeader(std::istream &input, std::string &name, std::string &value);
+    virtual bool ReadNextHeader(std::istream &input, SString &name, SString &value);
 
     //! Writes the headers to the stream
     virtual bool WriteHeaders(std::ostream &output);
@@ -153,7 +153,7 @@ protected:
     bool        boolValue;
     int         intValue;
     double      dblValue;
-    std::string strValue;
+    SString     strValue;
 
     //! Header we are caching/proxying.
     SHeader *   pHeader;

@@ -27,23 +27,23 @@ SMimeTypes::SMimeTypes()
     // TODO: Need to this in a proper way that would query the system
     // (and loading the mime.conf file to memory) instead of
     // checking for filetypes manually!
-    mimeTypes.insert(std::pair<std::string, std::string>("xml", "text/xml"));
-    mimeTypes.insert(std::pair<std::string, std::string>("css", "text/css"));
-    mimeTypes.insert(std::pair<std::string, std::string>("js", "application/x-javascript"));
-    mimeTypes.insert(std::pair<std::string, std::string>("txt", "text/plain"));
-    mimeTypes.insert(std::pair<std::string, std::string>("cfg", "text/text"));
-    mimeTypes.insert(std::pair<std::string, std::string>("png", "image/png"));
-    mimeTypes.insert(std::pair<std::string, std::string>("gif", "image/gif"));
-    mimeTypes.insert(std::pair<std::string, std::string>("jpg", "image/jpeg"));
-    mimeTypes.insert(std::pair<std::string, std::string>("pdf", "application/pdf"));
-    mimeTypes.insert(std::pair<std::string, std::string>("doc", "application/msword"));
-    mimeTypes.insert(std::pair<std::string, std::string>("bin", "application/octet-stream"));
-    mimeTypes.insert(std::pair<std::string, std::string>("swf", "application/x-shockwave-flash"));
-    mimeTypes.insert(std::pair<std::string, std::string>("zip", "application/zip"));
-    mimeTypes.insert(std::pair<std::string, std::string>("bz2", "application/x-bzip2"));
-    mimeTypes.insert(std::pair<std::string, std::string>("html", "text/html"));
-    mimeTypes.insert(std::pair<std::string, std::string>("htm", "text/html"));
-    mimeTypes.insert(std::pair<std::string, std::string>("wav", "audio/x-wav"));
+    mimeTypes.insert(std::pair<SString, SString>("xml", "text/xml"));
+    mimeTypes.insert(std::pair<SString, SString>("css", "text/css"));
+    mimeTypes.insert(std::pair<SString, SString>("js", "application/x-javascript"));
+    mimeTypes.insert(std::pair<SString, SString>("txt", "text/plain"));
+    mimeTypes.insert(std::pair<SString, SString>("cfg", "text/text"));
+    mimeTypes.insert(std::pair<SString, SString>("png", "image/png"));
+    mimeTypes.insert(std::pair<SString, SString>("gif", "image/gif"));
+    mimeTypes.insert(std::pair<SString, SString>("jpg", "image/jpeg"));
+    mimeTypes.insert(std::pair<SString, SString>("pdf", "application/pdf"));
+    mimeTypes.insert(std::pair<SString, SString>("doc", "application/msword"));
+    mimeTypes.insert(std::pair<SString, SString>("bin", "application/octet-stream"));
+    mimeTypes.insert(std::pair<SString, SString>("swf", "application/x-shockwave-flash"));
+    mimeTypes.insert(std::pair<SString, SString>("zip", "application/zip"));
+    mimeTypes.insert(std::pair<SString, SString>("bz2", "application/x-bzip2"));
+    mimeTypes.insert(std::pair<SString, SString>("html", "text/html"));
+    mimeTypes.insert(std::pair<SString, SString>("htm", "text/html"));
+    mimeTypes.insert(std::pair<SString, SString>("wav", "audio/x-wav"));
 }
 
 // Removes mime types
@@ -61,7 +61,7 @@ SMimeTypes::~SMimeTypes()
  *        Created.
  *
  *****************************************************************************/
-std::string SMimeTypes::GetMimeType(const std::string &filename)
+SString SMimeTypes::GetMimeType(const SString &filename)
 {
     const char *pStart = filename.c_str();
     const char *pCurr = pStart + filename.size() - 1;
@@ -73,7 +73,7 @@ std::string SMimeTypes::GetMimeType(const std::string &filename)
     {
         pCurr++;
 
-        std::map<std::string, std::string>::iterator iter = mimeTypes.find(pCurr);
+        std::map<SString, SString>::iterator iter = mimeTypes.find(pCurr);
 
         if (iter != mimeTypes.end())
         {

@@ -22,6 +22,7 @@
 #include <errno.h>
 #include <queue>
 #include <string>
+#include <sstream>
 #include <algorithm>
 #include <map>
 #include <vector>
@@ -32,11 +33,13 @@
 class SJob;
 class SConnection;
 
-typedef std::vector<char>                   SCharVector;
-typedef std::list<SConnection *>            SConnectionList;
-typedef std::list<std::string>              SStringList;
-typedef std::vector<std::string>            SStringVector;
-typedef std::pair<std::string, std::string> SStringPair;
+typedef std::string                     SString;
+typedef std::stringstream               SStringStream;
+typedef std::vector<char>               SCharVector;
+typedef std::list<SConnection *>        SConnectionList;
+typedef std::list<SString>              SStringList;
+typedef std::vector<SString>            SStringVector;
+typedef std::pair<SString, SString>     SStringPair;
 
 class SEvent;
 class SEventDispatcher;

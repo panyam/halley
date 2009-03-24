@@ -34,7 +34,7 @@ class SDataSource
 {
 public:
     //! Creates a data source
-    SDataSource(const std::string &n, SHttpHandlerStage *pStage)
+    SDataSource(const SString &n, SHttpHandlerStage *pStage)
         : name(n), pHandlerStage(pStage) { }
 
     void AddDSModule(SBayeuxModule *pModule)
@@ -47,7 +47,7 @@ public:
 
 public:
     //! Name of the data source
-    std::string                     name;
+    SString                     name;
 
     //! The handler stage which will be notified when new data has arrived
     SHttpHandlerStage *             pHandlerStage;
@@ -103,10 +103,10 @@ void SMyModule::ProcessInput(SHttpHandlerData *     pHandlerData,
     SHttpRequest *pRequest      = pHandlerData->Request();
     SHttpResponse *pResponse    = pRequest->Response();
     SHeaderTable &reqHeaders    = pRequest->Headers();
-    std::string title;
-    std::string body;
-    std::string bgcolor="#ffffff";
-    std::string links =
+    SString title;
+    SString body;
+    SString bgcolor="#ffffff";
+    SString links =
             "<p><a href='/red'>red</a> "
             "<br><a href='/blue'>blue</a> "
             "<br><a href='/form'>form</a> "
@@ -145,7 +145,7 @@ void SMyModule::ProcessInput(SHttpHandlerData *     pHandlerData,
     else if (pRequest->Resource() == "/header") {
         title    = "HTTP Headers";
         body    = "<h1> Your HTTP Headers</h1>";
-        for (std::map<std::string, std::string>::const_iterator i = reqHeaders.FirstHeader();
+        for (std::map<SString, SString>::const_iterator i = reqHeaders.FirstHeader();
                  i != reqHeaders.LastHeader();
                  i++)
         {

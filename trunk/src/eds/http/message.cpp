@@ -40,7 +40,7 @@ void SBodyPart::Reset()
 }
 
 // Sets the content
-void SBodyPart::SetBody(const std::string &data)
+void SBodyPart::SetBody(const SString &data)
 {
     SetBody(data.c_str(), data.size());
 }
@@ -52,7 +52,7 @@ void SBodyPart::SetBody(const char *buffer, unsigned size)
 }
 
 // Prepends to the body
-void SBodyPart::PrependToBody(const std::string &data)
+void SBodyPart::PrependToBody(const SString &data)
 {
     PrependToBody(data.c_str(), data.size());
 }
@@ -64,7 +64,7 @@ void SBodyPart::PrependToBody(const char *buffer, unsigned size)
 }
 
 // Appends to the body
-void SBodyPart::AppendToBody(const std::string &data)
+void SBodyPart::AppendToBody(const SString &data)
 {
     AppendToBody(data.c_str(), data.size());
 }
@@ -108,7 +108,7 @@ bool SHttpMessage::ReadFromStream(std::istream &input)
 }
 
 // Gets the version
-const std::string &SHttpMessage::Version() const
+const SString &SHttpMessage::Version() const
 {
     return version;
 }
@@ -116,7 +116,7 @@ const std::string &SHttpMessage::Version() const
 //! Gets the content length
 int SHttpMessage::ContentLength()
 {
-    std::string length;
+    SString length;
     if (headers.HeaderIfExists("Content-Length", length))
         return atoi(length.c_str());
     return 0;
@@ -125,13 +125,13 @@ int SHttpMessage::ContentLength()
 //! Tells if a response is multipart or not
 bool SHttpMessage::IsMultipart()
 {
-    std::string hdrContType;
+    SString hdrContType;
     headers.HeaderIfExists("Content-Type", hdrContType);
     return (strncmp("multipart", hdrContType.c_str(), 9) == 0);
 }
 
 // Sets the version
-void SHttpMessage::SetVersion(const std::string &v)
+void SHttpMessage::SetVersion(const SString &v)
 {
     version = v;
 }

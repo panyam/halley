@@ -32,7 +32,7 @@ public:
     virtual bool UnregisterChannel(const SBayeuxChannel *pChannel);
 
     //! Removes a channel by name
-    virtual bool UnregisterChannel(const std::string &name);
+    virtual bool UnregisterChannel(const SString &name);
 
     //! Called to handle connections
     virtual void ProcessInput(SHttpHandlerData *    pHandlerData,
@@ -40,22 +40,34 @@ public:
                               SBodyPart *           pBodyPart);
 
 protected:
-    bool ProcessMessage(const JsonNodePtr &node, JsonNodePtr &output);
+    bool ProcessMessage(const JsonNodePtr & node,
+                        JsonNodePtr &       output,
+                        SConnection *       pConnection);
     bool ProcessHandshake(const JsonNodePtr &message, JsonNodePtr &output);
     bool ProcessConnect(const JsonNodePtr &message, JsonNodePtr &output);
     bool ProcessDisconnect(const JsonNodePtr &message, JsonNodePtr &output);
-    bool ProcessSubscribe(const JsonNodePtr &message, JsonNodePtr &output);
-    bool ProcessUnsubscribe(const JsonNodePtr &message, JsonNodePtr &output);
-    bool ProcessMetaMessage(const std::string &channel, const JsonNodePtr &message, JsonNodePtr &output);
-    bool ProcessPublish(const std::string &channel, const JsonNodePtr &message, JsonNodePtr &output);
+    bool ProcessSubscribe(const JsonNodePtr &   message,
+                          JsonNodePtr &         output,
+                          SConnection *         pConnection);
+    bool ProcessUnsubscribe(const JsonNodePtr & message,
+                            JsonNodePtr &       output,
+                            SConnection *       pConnection);
+    bool ProcessMetaMessage(const SString & channel,
+                            const JsonNodePtr & message,
+                            JsonNodePtr &       output);
+    bool ProcessPublish(const SString &     channel,
+                        const JsonNodePtr &     message,
+                        JsonNodePtr &           output);
 
+    bool AddSubscription(const SString &channel, SConnection *pConnection);
+    bool RemoveSubscription(const SString &channel, SConnection *pConnection);
 
 protected:
     //! Collection of channels
-    typedef std::map<std::string, SBayeuxChannel *>     ChannelMap;
+    typedef std::map<SString, SBayeuxChannel *>     ChannelMap;
 
     //! Collection of subscriptions for each channel
-    typedef std::map<std::string, SConnectionList *>    ChannelSubscription;
+    typedef std::map<SString, SConnectionList *>    ChannelSubscription;
 
     //! Channels that are currently registered
     ChannelMap              channels;

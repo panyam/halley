@@ -19,12 +19,12 @@
 class DirEnt
 {
 public:
-    std::string entName;
+    SString entName;
     struct stat entStat;
 
 public:
     //! Constructor
-    DirEnt(const std::string &name) : entName(name)
+    DirEnt(const SString &name) : entName(name)
     {
         memset(&entStat, 0, sizeof(entStat));
     }
@@ -75,25 +75,25 @@ public:
                               SBodyPart *           pBodyPart);
 
     //! Tries to open a file.
-    static FILE *OpenFile(const char *filename, const char *mode, std::string &errormsg);
+    static FILE *OpenFile(const char *filename, const char *mode, SString &errormsg);
 
     //! Print contents of directory
-    static std::string PrintDirContents(const std::string &docroot, const std::string &filename, const std::string &prefix);
+    static SString PrintDirContents(const SString &docroot, const SString &filename, const SString &prefix);
 
     //! Print directory parents.
-    static std::string PrintDirParents(const std::string &docroot, const std::string &filename);
+    static SString PrintDirParents(const SString &docroot, const SString &filename);
 
     //! Reads directory contents.
     static bool ReadDirectory(const char *dirname, std::vector<DirEnt> &entries);
 
     //! Adds a new docroot
-    virtual void AddDocRoot(const std::string &prefix, const std::string &docRoot)
+    virtual void AddDocRoot(const SString &prefix, const SString &docRoot)
     {
         docRoots.push_back(SStringPair(prefix, docRoot));
     }
 
     //! Parses a resource path to its docroot and child path components
-    virtual bool ParsePath(const std::string &path, std::string &docroot, std::string &child, std::string &prefix);
+    virtual bool ParsePath(const SString &path, SString &docroot, SString &child, SString &prefix);
 
 protected:
     //! The document roots for each prefix

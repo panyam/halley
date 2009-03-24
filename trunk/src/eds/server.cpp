@@ -317,17 +317,17 @@ int SEvServer::setnonblocking(int fd)
 *       - Sri Panyam  19/02/2009
 *         Created
 **************************************************************************************/
-void SEvServer::SetStage(const std::string &name, SStage *pStage)
+void SEvServer::SetStage(const SString &name, SStage *pStage)
 {
-    std::map<std::string, SStage *>::iterator iter = eventStages.find(name);
+    std::map<SString, SStage *>::iterator iter = eventStages.find(name);
     if (iter == eventStages.end())
     {
-        eventStages.insert(std::pair<std::string, SStage *>(name, pStage));
+        eventStages.insert(std::pair<SString, SStage *>(name, pStage));
     }
     else
     {
         eventStages[name] = pStage;
-        eventStages.insert(std::pair<std::string, SStage *>(name, pStage));
+        eventStages.insert(std::pair<SString, SStage *>(name, pStage));
     }
 }
 
@@ -338,9 +338,9 @@ void SEvServer::SetStage(const std::string &name, SStage *pStage)
 *       - Sri Panyam  19/02/2009
 *         Created
 **************************************************************************************/
-SStage *SEvServer::GetStage(const std::string &name)
+SStage *SEvServer::GetStage(const SString &name)
 {
-    std::map<std::string, SStage *>::iterator iter = eventStages.find(name);
+    std::map<SString, SStage *>::iterator iter = eventStages.find(name);
     if (iter == eventStages.end())
     {
         return NULL;

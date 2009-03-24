@@ -38,10 +38,10 @@ public:
     int StatusCode() const;
 
     //! The status message
-    const std::string StatusMessage() const;
+    const SString StatusMessage() const;
 
     //! Sets the response status
-    void SetStatus(int status, const std::string &msg);
+    void SetStatus(int status, const SString &msg);
 
     //! Write the response to a stream.
     virtual bool WriteToStream(std::ostream &output);
@@ -55,7 +55,7 @@ protected:
     int                                 statusCode;
 
     //! Status message eg OK, Not Found etc
-    std::string                         statusMessage;
+    SString                         statusMessage;
 };
 
 #endif

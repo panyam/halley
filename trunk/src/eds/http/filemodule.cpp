@@ -24,13 +24,13 @@ void SFileModule::ProcessInput(SHttpHandlerData *   pHandlerData,
                                SBodyPart *          pBodyPart)
 {
     SHttpRequest *pRequest  = pHandlerData->Request();
-    std::string resource    = pRequest->Resource();
+    SString resource    = pRequest->Resource();
 
-    std::string docroot;
-    std::string filename;
-    std::string prefix;
+    SString docroot;
+    SString filename;
+    SString prefix;
 
-    std::string     errormsg;
+    SString     errormsg;
     SBodyPart *     part        = NULL;
     SHttpResponse * pResponse   = pRequest->Response();
     SHeaderTable &  respHeaders(pResponse->Headers());
@@ -44,7 +44,7 @@ void SFileModule::ProcessInput(SHttpHandlerData *   pHandlerData,
     }
     else
     {
-        std::string fullpath = docroot + filename;
+        SString fullpath = docroot + filename;
         part = pResponse->NewBodyPart();
         struct stat fileStat;
         memset(&fileStat, 0, sizeof(struct stat));
@@ -92,7 +92,7 @@ void SFileModule::ProcessInput(SHttpHandlerData *   pHandlerData,
             if ((fileStat.st_mode & S_IFDIR) != 0)
             {
                 // we are dealing with a folder!
-                std::string contents = PrintDirContents(docroot, filename, prefix);
+                SString contents = PrintDirContents(docroot, filename, prefix);
                 respHeaders.SetIntHeader("Content-Length", contents.size());
                 respHeaders.SetHeader("Content-Type", "text/html");
                 respHeaders.SetHeader("Cache-Control", "no-cache");
@@ -142,7 +142,7 @@ void SFileModule::ProcessInput(SHttpHandlerData *   pHandlerData,
  *        Created.
  *
  *****************************************************************************/
-bool SFileModule::ParsePath(const std::string &path, std::string &docroot, std::string &child, std::string &prefix)
+bool SFileModule::ParsePath(const SString &path, SString &docroot, SString &child, SString &prefix)
 {
     for (std::list<SStringPair>::iterator iter = docRoots.begin();
                 iter != docRoots.end(); ++iter)
@@ -153,7 +153,7 @@ bool SFileModule::ParsePath(const std::string &path, std::string &docroot, std::
         {
             prefix = iter->first;
             docroot = iter->second;
-            child = std::string(path.c_str() + preflen);
+            child = SString(path.c_str() + preflen);
             return true;
         }
     }
@@ -169,7 +169,7 @@ bool SFileModule::ParsePath(const std::string &path, std::string &docroot, std::
  *        Created.
  *
  *****************************************************************************/
-FILE * SFileModule::OpenFile(const char *filename, const char *mode, std::string &errormsg)
+FILE * SFileModule::OpenFile(const char *filename, const char *mode, SString &errormsg)
 {
     errormsg    = "Unknown Error";
 
@@ -271,7 +271,7 @@ bool SFileModule::ReadDirectory(const char *dirname, std::vector<DirEnt> &entrie
                     pDirEnt->d_name[2] == 0))
         {
             DirEnt entry(pDirEnt->d_name);
-            std::stringstream entnamestream;
+            SStringStream entnamestream;
             entnamestream << dirname << "/" << entry.entName;
             stat(entnamestream.str().c_str(), &entry.entStat);
             entries.push_back(entry);
@@ -296,11 +296,11 @@ bool SFileModule::ReadDirectory(const char *dirname, std::vector<DirEnt> &entrie
  *        Created.
  *
  *****************************************************************************/
-std::string SFileModule::PrintDirContents(const std::string &docroot, const std::string &filename, const std::string &prefix)
+SString SFileModule::PrintDirContents(const SString &docroot, const SString &filename, const SString &prefix)
 {
-    std::string dirname(docroot + filename);
+    SString dirname(docroot + filename);
     int dirnamelen = dirname.size();
-    std::stringstream output;
+    SStringStream output;
     std::vector<DirEnt> entries;
 
     output << "<html>";
@@ -384,15 +384,15 @@ std::string SFileModule::PrintDirContents(const std::string &docroot, const std:
  *        Created.
  *
  *****************************************************************************/
-std::string SFileModule::PrintDirParents(const std::string &docroot, const std::string &filename)
+SString SFileModule::PrintDirParents(const SString &docroot, const SString &filename)
 {
     /*
     char *buff = strdup(dirname.c_str());
 
-    std::string bn = basename(buff);
-    std::string dn = dirname(buff);
+    SString bn = basename(buff);
+    SString dn = dirname(buff);
 
-    std::string temp;
+    SString temp;
 
     while (! (dn[0] == 0 || ((dn[0] == '.' || dn[0] == '/') && dn[1] == 0)))
     {

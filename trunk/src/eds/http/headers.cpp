@@ -13,8 +13,8 @@
 
 #include "headers.h"
 
-const std::string TRUE_STRING = "true";
-const std::string FALSE_STRING = "false";
+const SString TRUE_STRING = "true";
+const SString FALSE_STRING = "false";
 
 //! Write the headers to the stream
 bool SHeaderTable::WriteHeaders(std::ostream &output)
@@ -34,17 +34,17 @@ bool SHeaderTable::WriteHeaders(std::ostream &output)
 
 // Reads a http header.
 // Headers are read till a line with only a CRLF is found.
-bool SHeaderTable::ReadNextHeader(std::istream &input, std::string &name, std::string &value)
+bool SHeaderTable::ReadNextHeader(std::istream &input, SString &name, SString &value)
 {
-    std::string line = ReadTillCrLf(input);
+    SString line = ReadTillCrLf(input);
 
     return ParseHeaderLine(line, name, value);
 }
 
 bool SHeaderTable::ReadHeaders(std::istream &input)
 {
-    std::string headerName;
-    std::string headerValue;
+    SString headerName;
+    SString headerValue;
 
     // read all header lines
     while (ReadNextHeader(input, headerName, headerValue)) 
@@ -56,7 +56,7 @@ bool SHeaderTable::ReadHeaders(std::istream &input)
 }
 
 //! Parses header line
-bool SHeaderTable::ParseHeaderLine(const std::string &line, std::string &name, std::string &value)
+bool SHeaderTable::ParseHeaderLine(const SString &line, SString &name, SString &value)
 {
     const char *pStart  = line.c_str();
 
@@ -78,22 +78,22 @@ bool SHeaderTable::ParseHeaderLine(const std::string &line, std::string &name, s
     pCurr++;
     while (isspace(*pCurr)) pCurr++;
 
-    name  = std::string(pStart, pHeaderEnd - pStart);
-    value = std::string(pCurr);
+    name  = SString(pStart, pHeaderEnd - pStart);
+    value = SString(pCurr);
     SetHeader(name, value);
     
     return true;
 }
 
 // Tells if a header exists
-bool SHeaderTable::HasHeader(const std::string &name) const
+bool SHeaderTable::HasHeader(const SString &name) const
 {
     HeaderMap::const_iterator iter = headers.find(name);
     return iter != headers.end();
 }
 
 // Gets a header
-std::string SHeaderTable::Header(const std::string &name) const
+SString SHeaderTable::Header(const SString &name) const
 {
     HeaderMap::const_iterator iter = headers.find(name);
     if (iter == headers.end())
@@ -103,7 +103,7 @@ std::string SHeaderTable::Header(const std::string &name) const
 }
 
 //! Returns a header if it exists
-bool SHeaderTable::HeaderIfExists(const std::string &name, std::string &value)
+bool SHeaderTable::HeaderIfExists(const SString &name, SString &value)
 {
     HeaderMap::const_iterator iter = headers.find(name);
     if (iter == headers.end())
@@ -114,7 +114,7 @@ bool SHeaderTable::HeaderIfExists(const std::string &name, std::string &value)
 }
 
 // Sets a header value - if it already exists, this value is appended to it.
-void SHeaderTable::SetHeader(const std::string &name, const std::string &value, bool append)
+void SHeaderTable::SetHeader(const SString &name, const SString &value, bool append)
 {
     if (locked) return ;
 
@@ -123,7 +123,7 @@ void SHeaderTable::SetHeader(const std::string &name, const std::string &value, 
     {
         if (append)
         {
-            std::stringstream newvalue;
+            SStringStream newvalue;
             newvalue << iter->second << "," << value;
             headers.insert(HeaderPair(name, newvalue.str()));
         }
@@ -144,13 +144,13 @@ void SHeaderTable::SetHeader(const std::string &name, const std::string &value, 
 }
 
 //! Sets the value of an bool typed header
-void SHeaderTable::SetBoolHeader(const std::string &name, bool value)
+void SHeaderTable::SetBoolHeader(const SString &name, bool value)
 {
     SetHeader(name, value ? TRUE_STRING : FALSE_STRING);
 }
 
 //! Sets the value of an int typed header
-void SHeaderTable::SetUIntHeader(const std::string &name, unsigned value)
+void SHeaderTable::SetUIntHeader(const SString &name, unsigned value)
 {
     char valueStr[64];
     sprintf(&valueStr[0], "%u", value);
@@ -158,7 +158,7 @@ void SHeaderTable::SetUIntHeader(const std::string &name, unsigned value)
 }
 
 //! Sets the value of an int typed header
-void SHeaderTable::SetIntHeader(const std::string &name, int value)
+void SHeaderTable::SetIntHeader(const SString &name, int value)
 {
     char valueStr[64];
     sprintf(valueStr, "%d", value);
@@ -166,7 +166,7 @@ void SHeaderTable::SetIntHeader(const std::string &name, int value)
 }
 
 //! Sets the value of an double typed header
-void SHeaderTable::SetDoubleHeader(const std::string &name, double value)
+void SHeaderTable::SetDoubleHeader(const SString &name, double value)
 {
     char valueStr[64];
     sprintf(valueStr, "%f", value);
@@ -174,7 +174,7 @@ void SHeaderTable::SetDoubleHeader(const std::string &name, double value)
 }
 
 // Removes a header
-std::string SHeaderTable::RemoveHeader(const std::string &name)
+SString SHeaderTable::RemoveHeader(const SString &name)
 {
     if ( ! locked)
     {

@@ -66,7 +66,7 @@ public:
     int                 currState;
 
     //! Current header being read
-    std::stringstream   currHeaderLine;
+    SStringStream   currHeaderLine;
 
     //! Current request being read
     SHttpRequest *      pCurrRequest;
@@ -81,7 +81,7 @@ public:
     unsigned            currBodyRead;
 
     //! Current line being accumulated
-    std::stringstream   currentLine;
+    SStringStream   currentLine;
 };
 
 // Creates a new file io helper stage
@@ -170,7 +170,7 @@ bool SHttpReaderState::ProcessBytes(const char *buffer, size_t len, std::list<SH
             // go to the first CRLF or LF
             while ((pCurr < pLast) && (*pCurr != CR) && (*pCurr != LF)) pCurr++;
 
-            currentLine << std::string(pStart, pCurr - pStart);
+            currentLine << SString(pStart, pCurr - pStart);
             if (*pCurr == CR)
             {
                 pCurr += 2;
@@ -258,7 +258,7 @@ bool SHttpReaderState::ProcessCurrentLine(std::list<SHttpRequest *> & requests)
     // create a request if none found
     if (pCurrRequest == NULL) pCurrRequest = new SHttpRequest();
 
-    std::string currLine(currentLine.str());
+    SString currLine(currentLine.str());
 
     if (currState == READING_FIRST_LINE)
     {
@@ -289,10 +289,10 @@ bool SHttpReaderState::ProcessCurrentLine(std::list<SHttpRequest *> & requests)
         {
             // we have a valid header, so add the last header to our
             // list (if it wasnt empty)
-            std::string lastHeader(currHeaderLine.str());
+            SString lastHeader(currHeaderLine.str());
             if ( ! lastHeader.empty())
             {
-                std::string hdrName, hdrValue;
+                SString hdrName, hdrValue;
                 SHeaderTable &pHeaders = pCurrRequest->Headers();
                 if (!pHeaders.ParseHeaderLine(lastHeader, hdrName, hdrValue))
                     return false;
@@ -309,7 +309,7 @@ bool SHttpReaderState::ProcessCurrentLine(std::list<SHttpRequest *> & requests)
                 currBodySize  = currBodyRead  = 0;
 
                 // see if we are doing chunked encoding or not
-                std::string transferEncoding;
+                SString transferEncoding;
                 if (pCurrRequest->Headers().HeaderIfExists("Transfer-Encoding", transferEncoding))
                 {
                     if (transferEncoding == "chunked")

@@ -19,12 +19,12 @@ SDBHelperStage::SDBHelperStage(int numThreads) : SStage(numThreads)
 
 
 //! Opens a DB connection
-void SDBHelperStage::Connect(SJob *pJob, const std::string &dbURI, const std::map<std::string, void *> &params)
+void SDBHelperStage::Connect(SJob *pJob, const SString &dbURI, const std::map<SString, void *> &params)
 {
 }
 
 //! Runs a query
-void SDBHelperStage::RunQuery(SJob *pJob, const std::string &query)
+void SDBHelperStage::RunQuery(SJob *pJob, const SString &query)
 {
 }
 
