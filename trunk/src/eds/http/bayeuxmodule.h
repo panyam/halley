@@ -13,6 +13,7 @@
 #ifndef _SBAYEUX_MODULE_H_
 #define _SBAYEUX_MODULE_H_
 
+#include "httpmodule.h"
 
 //! A module that sends data as it comes from several data sources
 class SBayeuxModule : public SHttpModule
