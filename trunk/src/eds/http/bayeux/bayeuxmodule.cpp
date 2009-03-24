@@ -138,19 +138,20 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
     JsonNodePtr messages = jbuilder.Build(&instream);
 
     JsonNodePtr output;
+    int         result  = -1;
 
     // see if it is a single message or a list of messages:
     if (messages->Type() == JNT_LIST)
     {
         for (int i = 0, count = messages->Size();i < count;i++)
         {
-            if ( ! ProcessMessage(messages->Get(i), output, pConnection))
-                break ;
+            result = ProcessMessage(messages->Get(i), output, pConnection);
+            if (result < 0) break;
         }
     }
     else if (messages->Type() == JNT_OBJECT)
     {
-        ProcessMessage(messages, output, pConnection);
+        result = ProcessMessage(messages, output, pConnection);
     }
     else
     {
@@ -158,6 +159,7 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
         pResponse->SetStatus(500, "Invalid bayeux message.");
         pStage->OutputToModule(pHandlerData->pConnection, pNextModule,
                                pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED, pNextModule));
+        return ;
     }
 
     if (output->Type() == JNT_STRING)
@@ -172,18 +174,29 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
         pResponse->SetStatus(500, "Invalid bayeux message.");
         pStage->OutputToModule(pHandlerData->pConnection, pNextModule, part);
         pStage->OutputToModule(pHandlerData->pConnection, pNextModule,
-                               pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED, pNextModule));
+                               pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED,
+                                                      pNextModule));
+    }
+    else
+    {
+        // result >= 0?
     }
 }
 
 //! Processes a message and appends the result (json) to the output list.
-bool SBayeuxModule::ProcessMessage(const JsonNodePtr &message, JsonNodePtr &output, SConnection *pConnection)
+// Returns:
+//  -1 on error,
+//  0 on success and to return a response immediately
+//  1 on success but to make 
+int SBayeuxModule::ProcessMessage(const JsonNodePtr &   message,
+                                  JsonNodePtr &         output,
+                                  SConnection *         pConnection)
 {
     SString channel = message->Get<SString>("channel", "");
     if (channel == "")
     {
         output = JsonNodeFactory::StringNode("Channel name missing");
-        return false;
+        return -1;
     }
 
     if (!output || output->Type() != JNT_LIST)
@@ -215,20 +228,20 @@ bool SBayeuxModule::ProcessMessage(const JsonNodePtr &message, JsonNodePtr &outp
         else
         {
             // other meta messages
-            return ProcessMetaMessage(channel, message, output);
+            return ProcessMetaMessage(channel, message, output, pConnection);
         }
     }
     else 
     {
         // message is for a channel
-        return ProcessPublish(channel, message, output);
+        return ProcessPublish(channel, message, output, pConnection);
     }
 }
 
 //! Processes a handshake.  Default is to simply return a true to accept
 // everything.  Override this to do multi-level handshakes and
 // authentication etc.
-bool SBayeuxModule::ProcessHandshake(const JsonNodePtr &message, JsonNodePtr &output)
+int SBayeuxModule::ProcessHandshake(const JsonNodePtr &message, JsonNodePtr &output)
 {
     output = JsonNodeFactory::ObjectNode();
     output->Set(FIELD_CHANNEL, JsonNodeFactory::StringNode("/meta/handshake"));
@@ -260,23 +273,23 @@ bool SBayeuxModule::ProcessHandshake(const JsonNodePtr &message, JsonNodePtr &ou
     //
     // Override this, and extend to do things like handling auth and so on.
 
-    return true;
+    return 0;
 }
 
-bool SBayeuxModule::ProcessConnect(const JsonNodePtr &message, JsonNodePtr &output)
+int SBayeuxModule::ProcessConnect(const JsonNodePtr &message, JsonNodePtr &output)
 {
     SString clientId(message->Get<SString>(FIELD_CLIENTID, ""));
     if (clientId == "")
     {
         output = JsonNodeFactory::StringNode("Client ID missing.");
-        return false;
+        return -1;
     }
 
     SString connectionType(message->Get<SString>(FIELD_CONNTYPE, ""));
     if (connectionType == "")
     {
         output = JsonNodeFactory::StringNode("connectionType missing.");
-        return false;
+        return -1;
     }
 
     output = JsonNodeFactory::ObjectNode();
@@ -287,16 +300,16 @@ bool SBayeuxModule::ProcessConnect(const JsonNodePtr &message, JsonNodePtr &outp
     // TODO: register this client and do things like handle "timeouts" with
     // handshakes and so on...
 
-    return true;
+    return 0;
 }
 
-bool SBayeuxModule::ProcessDisconnect(const JsonNodePtr &message, JsonNodePtr &output)
+int SBayeuxModule::ProcessDisconnect(const JsonNodePtr &message, JsonNodePtr &output)
 {
     SString clientId(message->Get<SString>(FIELD_CLIENTID, ""));
     if (clientId == "")
     {
         output = JsonNodeFactory::StringNode("Client ID missing.");
-        return false;
+        return -1;
     }
 
     output = JsonNodeFactory::ObjectNode();
@@ -307,10 +320,10 @@ bool SBayeuxModule::ProcessDisconnect(const JsonNodePtr &message, JsonNodePtr &o
     // TODO: register this client and do things like handle "timeouts" with
     // handshakes and so on...
 
-    return true;
+    return 0;
 }
 
-bool SBayeuxModule::ProcessSubscribe(const JsonNodePtr &    message,
+int SBayeuxModule::ProcessSubscribe(const JsonNodePtr &    message,
                                      JsonNodePtr &          output,
                                      SConnection *          pConnection)
 {
@@ -318,14 +331,14 @@ bool SBayeuxModule::ProcessSubscribe(const JsonNodePtr &    message,
     if (clientId == "")
     {
         output = JsonNodeFactory::StringNode("Client ID missing.");
-        return false;
+        return -1;
     }
 
     SString subscription(message->Get<SString>(FIELD_SUBSCRIPTION, ""));
     if (subscription == "")
     {
         output = JsonNodeFactory::StringNode("subscription missing.");
-        return false;
+        return -1;
     }
 
     output->Set(FIELD_CHANNEL, JsonNodeFactory::StringNode("/meta/connect"));
@@ -335,10 +348,10 @@ bool SBayeuxModule::ProcessSubscribe(const JsonNodePtr &    message,
 
     AddSubscription(subscription, pConnection);
 
-    return true;
+    return 0;
 }
 
-bool SBayeuxModule::ProcessUnsubscribe(const JsonNodePtr &  message,
+int SBayeuxModule::ProcessUnsubscribe(const JsonNodePtr &  message,
                                        JsonNodePtr &        output,
                                        SConnection *        pConnection)
 {
@@ -346,14 +359,14 @@ bool SBayeuxModule::ProcessUnsubscribe(const JsonNodePtr &  message,
     if (clientId == "")
     {
         output = JsonNodeFactory::StringNode("Client ID missing.");
-        return false;
+        return -1;
     }
 
     SString subscription(message->Get<SString>(FIELD_SUBSCRIPTION, ""));
     if (subscription == "")
     {
         output = JsonNodeFactory::StringNode("subscription missing.");
-        return false;
+        return -1;
     }
 
     output->Set(FIELD_CHANNEL, JsonNodeFactory::StringNode("/meta/connect"));
@@ -364,19 +377,25 @@ bool SBayeuxModule::ProcessUnsubscribe(const JsonNodePtr &  message,
     // TODO: again handle all the "real" stuff below
     RemoveSubscription(subscription, pConnection);
 
-    return true;
+    return 0;
 }
 
-bool SBayeuxModule::ProcessPublish(const SString &channel, const JsonNodePtr &message, JsonNodePtr &output)
+int SBayeuxModule::ProcessPublish(const SString &       channel,
+                                  const JsonNodePtr &   message,
+                                  JsonNodePtr &         output,
+                                  SConnection *         pConnection)
 {
     // do all the stuff here
     output = JsonNodeFactory::StringNode("No handler for publish request found.");
-    return false;
+    return -1;
 }
 
-bool SBayeuxModule::ProcessMetaMessage(const SString &channel, const JsonNodePtr &message, JsonNodePtr &output)
+int SBayeuxModule::ProcessMetaMessage(const SString &       channel,
+                                      const JsonNodePtr &   message,
+                                      JsonNodePtr &         output,
+                                      SConnection *         pConnection)
 {
     output = JsonNodeFactory::StringNode("Invalid meta channel");
-    return false;
+    return -1;
 }
 
