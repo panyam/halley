@@ -15,6 +15,7 @@
 #include "../handlerstage.h"
 #include "../request.h"
 #include "../response.h"
+#include "../../connection.h"
 #include "json/json.h"
 #include "json/tokenizer.h"
 #include <uuid/uuid.h>
@@ -106,6 +107,36 @@ bool SBayeuxModule::RemoveSubscription(const SString &channel, SConnection *pCon
     return true;
 }
 
+//! Delivers an event to all subscribers of a channel
+void SBayeuxModule::DeliverEvent(SBayeuxChannel *pChannel, JsonNodePtr &value)
+{
+    // do nothing if no handler stage available
+    if (pHandlerStage == NULL) return ;
+
+    ChannelSubscription::iterator iter  = subscriptions.find(pChannel->Name());
+
+    if (iter == subscriptions.end())
+        return ;
+
+    SStringStream msgstream;
+    DefaultJsonFormatter formatter;
+    formatter.Format(msgstream, value);
+
+    SString             msgbody(msgstream.str());
+    SConnectionList *   pConnList(iter->second);
+    for (SConnectionList::iterator iter = pConnList->begin();
+                    iter != pConnList->end(); ++iter)
+    {
+        SConnection *       pConnection = *iter;
+        SHttpHandlerData *  pData       = (SHttpHandlerData *)pConnection->GetStageData(pHandlerStage);
+        SHttpRequest *      pRequest    = pData->Request();
+        SHttpResponse *     pResponse   = pRequest->Response();
+        SBodyPart *         pNewPart    = pResponse->NewBodyPart();
+        pNewPart->SetBody(msgbody);
+        pHandlerStage->OutputToModule(pData->pConnection, pNextModule, pNewPart);
+    }
+}
+
 //! returns true if a character is a hyphen
 bool equalsHyphen(const char &ch) { return ch == '-'; }
 bool notAlpha(const char &ch) { return !isalnum(ch); }
@@ -124,6 +155,7 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
                                  SHttpHandlerStage *    pStage, 
                                  SBodyPart *            pBodyPart)
 {
+    this->pHandlerStage                 = pStage;
     SConnection *pConnection            = pHandlerData->pConnection;
     SHttpRequest *pRequest              = pHandlerData->Request();
     SHttpResponse *pResponse            = pRequest->Response();

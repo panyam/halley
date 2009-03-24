@@ -23,7 +23,8 @@ class SBayeuxModule : public SHttpModule
 {
 public:
     // Constructor
-    SBayeuxModule(SHttpModule *pNext, const SString &b) : SHttpModule(pNext), boundary(b) { }
+    SBayeuxModule(SHttpModule *pNext, const SString &b)
+        : SHttpModule(pNext), pHandlerStage(NULL), boundary(b) { }
 
     //! Registers a channel
     virtual bool RegisterChannel(SBayeuxChannel *pChannel, bool replace = false);
@@ -38,6 +39,9 @@ public:
     virtual void ProcessInput(SHttpHandlerData *    pHandlerData,
                               SHttpHandlerStage *   pStage, 
                               SBodyPart *           pBodyPart);
+
+    //! Deliver an event to all connections
+    virtual void DeliverEvent(SBayeuxChannel *pChannel, JsonNodePtr &value);
 
 protected:
     int  ProcessMessage(const JsonNodePtr & node,
@@ -77,6 +81,9 @@ protected:
 
     //! Collection of subscriptions for each channel
     typedef std::map<SString, SConnectionList *>    ChannelSubscription;
+
+    //! The handler stage that is driving us all.
+    SHttpHandlerStage *     pHandlerStage;
 
     //! Channels that are currently registered
     ChannelMap              channels;
