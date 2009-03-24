@@ -51,13 +51,17 @@ protected:
 
 
 protected:
-    typedef std::map<std::string, SBayeuxChannel *> ChannelMap;
+    //! Collection of channels
+    typedef std::map<std::string, SBayeuxChannel *>     ChannelMap;
+
+    //! Collection of subscriptions for each channel
+    typedef std::map<std::string, SConnectionList *>    ChannelSubscription;
 
     //! Channels that are currently registered
-    ChannelMap      channels;
+    ChannelMap              channels;
 
-    //! A list of data source subscriptions
-    std::map<std::string, std::list<SConnection *> >    subscriptions;
+    //! A list of channel subscriptions
+    ChannelSubscription     subscriptions;
 };
 
 #endif

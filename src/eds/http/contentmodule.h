@@ -29,11 +29,11 @@ public:
 public:
     //! A stack that maintains the boundaries we have opened so far (for
     // multipart messages).
-    std::list<std::string>  boundaries;
+    SStringList     boundaries;
 
     //! Here is where we accumulate body parts that are less than
     // content lengths in single part messages
-    std::vector<char>   bodyAccumulator;
+    SCharVector     bodyAccumulator;
 };
 
 // Takes care of content encoding - may or maynot include Content-Length

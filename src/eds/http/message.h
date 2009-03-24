@@ -28,10 +28,6 @@
 #ifndef _SHTTP_MESSAGE_H_
 #define _SHTTP_MESSAGE_H_
 
-#include <list>
-#include <vector>
-#include <algorithm>
-
 #include "headers.h"
 
 class SBodyPart
@@ -77,7 +73,7 @@ public:
     void AppendToBody(const char *buffer, unsigned size);
 
     //! Gets the body
-    const std::vector<char> &Body() const;
+    const SCharVector &Body() const;
 
     //! Writes the body to stream - override for multipart messages
     virtual bool WriteMessageBody(std::ostream &output);
@@ -102,10 +98,10 @@ public:
     int         bpType;
 
     //! The data required for this body part
-    std::vector<char>   data;
+    SCharVector data;
 
     //! The handler data
-    void * extra_data;
+    void *      extra_data;
 };
 
 //*****************************************************************************
