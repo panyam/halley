@@ -15,26 +15,6 @@ build_mode=release
 
 ##########  DO NOT EDIT BELOW THIS LINE  ##############
 
-function confirm_lib_download()
-{
-    libname=$1
-
-    echo Would you like to install $libname? y/n [y]: 
-    read yesno
-
-    if [ "$yesno" = "n" -o "$yesno" = "no" -o "$yesno" = "N" -o "$yesno" = "NO" ]; then
-        echo You have chosen not to download $libname.  
-        echo Please install it manually and re-run configuration script.
-        echo You can download $libname from $url.
-        exit 1;
-    fi
-
-    if [ "$yesno" != "y" -a "$yesno" != "yes" -a "$yesno" != "Y" -a "$yesno" != "YES" ]; then
-        echo "Invalid selection.  Please select \"y\" or \"n\"."
-        exit 1;
-    fi
-}
-
 dnl Check for required programs
 AC_PROG_CXX
 AC_PROG_CC
@@ -82,3 +62,5 @@ dnl Create the necessary files.
 
 AC_OUTPUT([ Makefile.common Makefile src/Makefile test/Makefile ])
 
+echo Generating make dependancies...
+make dep
