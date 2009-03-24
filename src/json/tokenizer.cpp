@@ -28,11 +28,11 @@ using std::cerr;
  *        Created.
  *
  *****************************************************************************/
-void JsonTokenizer::Begin(std::istream &instream)
+void JsonTokenizer::Begin(JsonInputStream *pStream)
 {
     Reset();
 
-    input       = &instream;
+    pInputStream = pStream;
 }
 
 //*****************************************************************************
@@ -47,44 +47,6 @@ void JsonTokenizer::Begin(std::istream &instream)
 const std::string & JsonTokenizer::TokenText() const
 {
     return tokText;
-}
-
-//*****************************************************************************
-/*!
- *  \brief  Gets the next character, -ve if eof.
- *
- *  \version
- *      - S Panyam     02/02/2009
- *        Created.
- *
- *****************************************************************************/
-int JsonTokenizer::GetChar()
-{
-    if (lastChar >= 0)
-    {
-        int out = lastChar;
-        lastChar = -1;
-        return out;
-    }
-
-    int ch = input->get();
-    if (input->bad() || input->eof())
-        return -1;
-    return ch;
-}
-
-//*****************************************************************************
-/*!
- *  \brief  Unget a character.
- *
- *  \version
- *      - S Panyam     02/02/2009
- *        Created.
- *
- *****************************************************************************/
-void JsonTokenizer::UngetChar(int ch)
-{
-    lastChar = ch;
 }
 
 //*****************************************************************************
@@ -195,11 +157,11 @@ JsonTokenizer::JsonToken JsonTokenizer::NextToken()
  *****************************************************************************/
 JsonTokenizer::JsonToken JsonTokenizer::RealToken()
 {
-    int     ch  = GetChar();
+    int     ch  = pInputStream->GetChar();
 
     while (ch >= 0 && isspace(ch))
     {
-        ch = GetChar();
+        ch = pInputStream->GetChar();
     }
 
     if (ch < 0)
@@ -231,7 +193,7 @@ JsonTokenizer::JsonToken JsonTokenizer::RealToken()
     {
         std::stringstream str;
         char delim = ch;
-        ch = GetChar();
+        ch = pInputStream->GetChar();
         while (ch != delim)
         {
             if (ch < 0)
@@ -241,7 +203,7 @@ JsonTokenizer::JsonToken JsonTokenizer::RealToken()
             }
             if (ch == '\\')
             {
-                int nextch = GetChar();
+                int nextch = pInputStream->GetChar();
 
                 if (nextch < 0)
                 {
@@ -265,7 +227,7 @@ JsonTokenizer::JsonToken JsonTokenizer::RealToken()
             {
                 str << (char)ch;
             }
-            ch = GetChar();
+            ch = pInputStream->GetChar();
         }
         tokText = str.str();
         return JT_STRING;
@@ -276,9 +238,9 @@ JsonTokenizer::JsonToken JsonTokenizer::RealToken()
         while (ch >= 0 && isdigit(ch))
         {
             str << char(ch);
-            ch = GetChar();
+            ch = pInputStream->GetChar();
         }
-        UngetChar(ch);
+        pInputStream->UngetChar(ch);
 
         tokText = str.str();
         return JT_DIGITS;
@@ -288,15 +250,15 @@ JsonTokenizer::JsonToken JsonTokenizer::RealToken()
         // an identifier
         std::stringstream str;
         str << char(ch);
-        ch = GetChar();
+        ch = pInputStream->GetChar();
 
         while (ch >= 0 && (isalnum(ch) || ch == '_'))
         {
             str << char(ch);
-            ch = GetChar();
+            ch = pInputStream->GetChar();
         }
 
-        UngetChar(ch);
+        pInputStream->UngetChar(ch);
         tokText = str.str();
 
         if (tokText == "true")
@@ -323,9 +285,8 @@ JsonTokenizer::JsonToken JsonTokenizer::RealToken()
  *****************************************************************************/
 void JsonTokenizer::Reset()
 {
-    input       = NULL;
-    tokText     = "";
-    lastChar    = -1;
-    laToken     = JT_NONE;
+    pInputStream    = NULL;
+    tokText         = "";
+    laToken         = JT_NONE;
 }
 

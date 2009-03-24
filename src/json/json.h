@@ -17,8 +17,11 @@
 #include <vector>
 #include <iostream>
 #include <map>
+#include <iterator>
 #include "utils/refcount.h"
 #include "utils/membuff.h"
+
+class JsonInputStream ;
 
 //*****************************************************************************
 /*!
@@ -351,7 +354,7 @@ class JsonBuilder
 {
 public:
     virtual ~JsonBuilder() { }
-    virtual JsonNodePtr     Build(std::istream &input) = 0;
+    virtual JsonNodePtr     Build(JsonInputStream *pStream) = 0;
 };
 
 //*****************************************************************************
@@ -365,7 +368,7 @@ class DefaultJsonBuilder : public JsonBuilder
 {
 public:
     virtual ~DefaultJsonBuilder() { }
-    virtual JsonNodePtr     Build(std::istream &input); 
+    virtual JsonNodePtr     Build(JsonInputStream *pStream);
 };
 
 
