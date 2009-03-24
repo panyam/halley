@@ -11,9 +11,9 @@
  *****************************************************************************/
 
 #include "bayeuxmodule.h"
-#include "handlerstage.h"
-#include "request.h"
-#include "response.h"
+#include "../handlerstage.h"
+#include "../request.h"
+#include "../response.h"
 #include "json/json.h"
 #include "json/tokenizer.h"
 
@@ -43,10 +43,10 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
     JsonNodePtr messages = jbuilder.Build(&instream);
 
     // see if it is a single message or a list of messages:
-    if (messages.Type() == JNT_LIST)
+    if (messages->Type() == JNT_LIST)
     {
     }
-    else if (messages.Type() == JNT_OBJECT)
+    else if (messages->Type() == JNT_OBJECT)
     {
     }
     else
