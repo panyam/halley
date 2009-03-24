@@ -29,7 +29,16 @@ public:
                               SBodyPart *           pBodyPart);
 
 protected:
-    bool ProcessMessage(const JsonNodePtr &node, JsonNodePtr &outputList);
+    bool ProcessMessage(const JsonNodePtr &node, JsonNodePtr &output);
+    bool ProcessHandshake(JsonNodePtr message, JsonNodePtr &output);
+    bool ProcessConnect(JsonNodePtr message, JsonNodePtr &output);
+    bool ProcessDisconnect(JsonNodePtr message, JsonNodePtr &output);
+    bool ProcessSubscribe(JsonNodePtr message, JsonNodePtr &output);
+    bool ProcessUnsubscribe(JsonNodePtr message, JsonNodePtr &output);
+    bool ProcessMetaMessage(JsonNodePtr message, JsonNodePtr &output);
+    bool ProcessPublish(JsonNodePtr message, JsonNodePtr &output);
+
+
 protected:
     //! A list of data source subscriptions
     std::map<std::string, std::list<SConnection *> >    subscriptions;
