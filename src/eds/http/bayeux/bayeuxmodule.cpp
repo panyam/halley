@@ -160,29 +160,33 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
     SHttpRequest *pRequest              = pHandlerData->Request();
     SHttpResponse *pResponse            = pRequest->Response();
     SBodyPart *pContent                 = pRequest->ContentBody();
-    const SCharVector & reqBody         = pContent->Body();
     SHeaderTable & respHeaders(pResponse->Headers());
 
-    // parse the list of messages
-    DefaultJsonInputStream<SCharVector::const_iterator> instream(reqBody.begin(),
-                                                                 reqBody.end());
-    DefaultJsonBuilder jbuilder;
-    JsonNodePtr messages    = jbuilder.Build(&instream);
-    JsonNodePtr output      = JsonNodeFactory::StringNode("Invalid message");
+    JsonNodePtr output      = JsonNodeFactory::StringNode("<html><title>Error</title><body>Invalid bayeux message</body></html>");
     int         result      = -1;
 
-    // see if it is a single message or a list of messages:
-    if (messages->Type() == JNT_LIST)
+    if (pContent != NULL)
     {
-        for (int i = 0, count = messages->Size();i < count;i++)
+        const SCharVector & reqBody         = pContent->Body();
+        // parse the list of messages
+        DefaultJsonInputStream<SCharVector::const_iterator> instream(reqBody.begin(),
+                                                                     reqBody.end());
+        DefaultJsonBuilder jbuilder;
+        JsonNodePtr messages    = jbuilder.Build(&instream);
+
+        // see if it is a single message or a list of messages:
+        if (messages->Type() == JNT_LIST)
         {
-            result = ProcessMessage(messages->Get(i), output, pConnection);
-            if (result < 0) break;
+            for (int i = 0, count = messages->Size();i < count;i++)
+            {
+                result = ProcessMessage(messages->Get(i), output, pConnection);
+                if (result < 0) break;
+            }
         }
-    }
-    else if (messages->Type() == JNT_OBJECT)
-    {
-        result = ProcessMessage(messages, output, pConnection);
+        else if (messages->Type() == JNT_OBJECT)
+        {
+            result = ProcessMessage(messages, output, pConnection);
+        }
     }
 
     if (result <= 0)
@@ -195,7 +199,7 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
             //            (output->Type() == JNT_STRING));
 
             statCode    = 500;
-            statMessage = "Invalid bayeux message";
+            statMessage = "Invalid Message";
         }
 
         // invalid type
@@ -206,7 +210,7 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
         SBodyPart * part        = pResponse->NewBodyPart();
         SString     msgbody     = msgstream.str();
         respHeaders.SetIntHeader("Content-Length", msgbody.size());
-        respHeaders.SetHeader("Content-Type", "text/text");
+        respHeaders.SetHeader("Content-Type", "text/html");
         part->SetBody(msgbody);
 
         pResponse->SetStatus(statCode, statMessage);
