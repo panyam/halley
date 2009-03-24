@@ -16,6 +16,7 @@
 #include "../response.h"
 #include "json/json.h"
 #include "json/tokenizer.h"
+#include <uuid/uuid.h>
 
 //! Called to handle subscriptions, unsubscriptions and callbacks
 //
@@ -33,6 +34,7 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
 {
     SHttpRequest *pRequest              = pHandlerData->Request();
     SHttpResponse *pResponse            = pRequest->Response();
+    SHeaderTable & respHeaders(pResponse->Headers());
     SBodyPart *pContent                 = pRequest->ContentBody();
     const std::vector<char> &reqBody    = pContent->Body();
 
@@ -65,13 +67,40 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
         pStage->OutputToModule(pHandlerData->pConnection, pNextModule,
                                pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED, pNextModule));
     }
+
+    if (output->Type() == JNT_STRING)
+    {
+        // invalid type
+        SBodyPart * part        = pResponse->NewBodyPart();
+        std::string errormsg    = output->Value<std::string>();
+        respHeaders.SetIntHeader("Content-Length", errormsg.size());
+        respHeaders.SetHeader("Content-Type", "text/text");
+        part->SetBody(errormsg);
+
+        pResponse->SetStatus(500, "Invalid bayeux message.");
+        pStage->OutputToModule(pHandlerData->pConnection, pNextModule, part);
+        pStage->OutputToModule(pHandlerData->pConnection, pNextModule,
+                               pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED, pNextModule));
+    }
 }
 
 //! Processes a message and appends the result (json) to the output list.
 bool SBayeuxModule::ProcessMessage(const JsonNodePtr &message, JsonNodePtr &output)
 {
+    std::string channel = message->Get<std::string>("channel", "");
+    if (channel == "")
+    {
+        output = JsonNodeFactory::StringNode("Channel name missing");
+        return false;
+    }
+
     if (!output || output->Type() != JNT_LIST)
         output = JsonNodeFactory::ListNode();
+
+    // see what kind of message it is
+    if (channel == "/meta/handshake")
+    {
+    }
 
     return true;
 }
