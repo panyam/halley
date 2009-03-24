@@ -15,13 +15,13 @@
 #include "request.h"
 
 //! TODO: Matches a resource to a regex.
-bool SRegexUrlMatcher::Matches(const std::string &resource, SStringList &params) const
+bool SRegexUrlMatcher::Matches(const std::string &resource) const
 {
     return false;
 }
 
 //! Tells if a pattern is at the start, middle or end of a resource
-bool SContainsUrlMatcher::Matches(const std::string &resource, SStringList &params) const
+bool SContainsUrlMatcher::Matches(const std::string &resource) const
 {
     const char *res_ptr = resource.c_str();
     const char *pat_ptr = resPattern.c_str();
@@ -46,12 +46,10 @@ void SUrlRouter::ProcessInput(SHttpHandlerData *    pHandlerData,
                               SBodyPart *           pBodyPart)
 {
     SHttpRequest *pRequest = pHandlerData->Request();
-    SStringList params;
     for (UrlMatcherList::const_iterator iter = urlMatchers.begin();
                 iter != urlMatchers.end();++iter)
     {
-        params.clear();
-        if ((*iter)->Matches(pRequest->Resource(), params))
+        if ((*iter)->Matches(pRequest->Resource()))
         {
             pStage->InputToModule(pHandlerData->pConnection, (*iter)->Module());
             return ;

@@ -27,7 +27,7 @@ public:
 
     //! Tells if a resources matches a given pattern, and fills the params
     // array with parameters and their values.
-    virtual bool Matches(const std::string &resource, SStringList &params) const { return false; }
+    virtual bool Matches(const std::string &resource) const { return false; }
 
     //! Gets the module on pattern match
     SHttpModule *Module() const { return pMatchModule; }
@@ -47,7 +47,7 @@ public:
 
     //! Tells if a resources matches a given pattern, and fills the params
     // array with parameters and their values.
-    virtual bool Matches(const std::string &resource, SStringList &params) const
+    virtual bool Matches(const std::string &resource) const
     {
         return resource == absPath;
     }
@@ -73,7 +73,7 @@ public:
 
     //! Tells if a resources matches a given pattern, and fills the params
     // array with parameters and their values.
-    virtual bool Matches(const std::string &resource, SStringList &params) const;
+    virtual bool Matches(const std::string &resource) const;
 
 protected:
     //! The pattern to look for
@@ -93,7 +93,7 @@ public:
         SUrlMatcher(pMatch), resPattern(pattern) { }
 
     //! Matches the resource to a regex - TBD
-    virtual bool Matches(const std::string &resource, SStringList &params) const;
+    virtual bool Matches(const std::string &resource) const;
 
 protected:
     std::string resPattern;
