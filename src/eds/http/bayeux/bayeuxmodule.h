@@ -14,6 +14,7 @@
 #define _SBAYEUX_MODULE_H_
 
 #include "../httpmodule.h"
+#include "json/json.h"
 
 //! A module that sends data as it comes from several data sources
 class SBayeuxModule : public SHttpModule
@@ -27,6 +28,8 @@ public:
                               SHttpHandlerStage *   pStage, 
                               SBodyPart *           pBodyPart);
 
+protected:
+    bool ProcessMessage(const JsonNodePtr &node, JsonNodePtr &outputList);
 protected:
     //! A list of data source subscriptions
     std::map<std::string, std::list<SConnection *> >    subscriptions;

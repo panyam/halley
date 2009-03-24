@@ -144,11 +144,11 @@ void SFileModule::ProcessInput(SHttpHandlerData *   pHandlerData,
  *****************************************************************************/
 bool SFileModule::ParsePath(const std::string &path, std::string &docroot, std::string &child, std::string &prefix)
 {
-    for (std::list<std::pair<std::string, std::string> >::iterator iter = docRoots.begin();
+    for (std::list<SStringPair>::iterator iter = docRoots.begin();
                 iter != docRoots.end(); ++iter)
     {
-        std::pair<std::string, std::string> item = *iter;
-        size_t preflen = iter->first.size();
+        SStringPair item    = *iter;
+        size_t      preflen = iter->first.size();
         if (strncmp(path.c_str(), iter->first.c_str(), preflen) == 0)
         {
             prefix = iter->first;

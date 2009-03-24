@@ -32,6 +32,7 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
                                  SBodyPart *            pBodyPart)
 {
     SHttpRequest *pRequest              = pHandlerData->Request();
+    SHttpResponse *pResponse            = pRequest->Response();
     SBodyPart *pContent                 = pRequest->ContentBody();
     const std::vector<char> &reqBody    = pContent->Body();
 
@@ -42,19 +43,36 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
     DefaultJsonBuilder jbuilder;
     JsonNodePtr messages = jbuilder.Build(&instream);
 
-    JsonNodePtr output = JsonNodeFactory::ObjectNode();
-
+    JsonNodePtr output;
 
     // see if it is a single message or a list of messages:
     if (messages->Type() == JNT_LIST)
     {
+        for (int i = 0, count = messages->Size();i < count;i++)
+        {
+            if ( ! ProcessMessage(messages->Get(i), output))
+                break ;
+        }
     }
     else if (messages->Type() == JNT_OBJECT)
     {
+        ProcessMessage(messages, output);
     }
     else
     {
         // invalid type
+        pResponse->SetStatus(500, "Invalid bayeux message.");
+        pStage->OutputToModule(pHandlerData->pConnection, pNextModule,
+                               pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED, pNextModule));
     }
+}
+
+//! Processes a message and appends the result (json) to the output list.
+bool SBayeuxModule::ProcessMessage(const JsonNodePtr &message, JsonNodePtr &output)
+{
+    if (!output || output->Type() != JNT_LIST)
+        output = JsonNodeFactory::ListNode();
+
+    return true;
 }
 

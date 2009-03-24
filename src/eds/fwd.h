@@ -27,6 +27,7 @@
 
 typedef std::list<std::string>  SStringList;
 typedef std::vector<std::string>  SStringVector;
+typedef std::pair<std::string, std::string> SStringPair;
 
 class SJob;
 class SConnection;

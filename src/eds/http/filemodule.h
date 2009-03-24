@@ -89,7 +89,7 @@ public:
     //! Adds a new docroot
     virtual void AddDocRoot(const std::string &prefix, const std::string &docRoot)
     {
-        docRoots.push_back(std::pair<std::string, std::string>(prefix, docRoot));
+        docRoots.push_back(SStringPair(prefix, docRoot));
     }
 
     //! Parses a resource path to its docroot and child path components
@@ -97,7 +97,7 @@ public:
 
 protected:
     //! The document roots for each prefix
-    std::list<std::pair<std::string, std::string> > docRoots;
+    std::list<SStringPair> docRoots;
 
     //! Whether (sub) directory's can be listed
     bool            showIndexes;
