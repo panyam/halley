@@ -135,10 +135,9 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
     DefaultJsonInputStream<SCharVector::const_iterator> instream(reqBody.begin(),
                                                                  reqBody.end());
     DefaultJsonBuilder jbuilder;
-    JsonNodePtr messages = jbuilder.Build(&instream);
-
-    JsonNodePtr output;
-    int         result  = -1;
+    JsonNodePtr messages    = jbuilder.Build(&instream);
+    JsonNodePtr output      = JsonNodeFactory::StringNode("Invalid message");
+    int         result      = -1;
 
     // see if it is a single message or a list of messages:
     if (messages->Type() == JNT_LIST)
@@ -153,25 +152,32 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
     {
         result = ProcessMessage(messages, output, pConnection);
     }
-    else
-    {
-        // invalid type
-        pResponse->SetStatus(500, "Invalid bayeux message.");
-        pStage->OutputToModule(pHandlerData->pConnection, pNextModule,
-                               pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED, pNextModule));
-        return ;
-    }
 
-    if (output->Type() == JNT_STRING)
+    if (result <= 0)
     {
+        int         statCode = 200;
+        std::string statMessage("OK");
+        if (result < 0)
+        {
+            // assert("Type MUST be a string if result is -ve" &&
+            //            (output->Type() == JNT_STRING));
+
+            statCode    = 500;
+            statMessage = "Invalid bayeux message";
+        }
+
         // invalid type
+        SStringStream msgstream;
+        DefaultJsonFormatter formatter;
+        formatter.Format(msgstream, output);
+
         SBodyPart * part        = pResponse->NewBodyPart();
-        SString errormsg    = output->Value<SString>();
-        respHeaders.SetIntHeader("Content-Length", errormsg.size());
+        SString     msgbody     = msgstream.str();
+        respHeaders.SetIntHeader("Content-Length", msgbody.size());
         respHeaders.SetHeader("Content-Type", "text/text");
-        part->SetBody(errormsg);
+        part->SetBody(msgbody);
 
-        pResponse->SetStatus(500, "Invalid bayeux message.");
+        pResponse->SetStatus(statCode, statMessage);
         pStage->OutputToModule(pHandlerData->pConnection, pNextModule, part);
         pStage->OutputToModule(pHandlerData->pConnection, pNextModule,
                                pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED,
@@ -179,7 +185,9 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
     }
     else
     {
-        // result >= 0?
+        respHeaders.SetHeader("Content-Type",
+                              "multipart/x-mixed-replace;boundary=\"" +
+                                    boundary + SString("\""));
     }
 }
 
@@ -323,9 +331,9 @@ int SBayeuxModule::ProcessDisconnect(const JsonNodePtr &message, JsonNodePtr &ou
     return 0;
 }
 
-int SBayeuxModule::ProcessSubscribe(const JsonNodePtr &    message,
-                                     JsonNodePtr &          output,
-                                     SConnection *          pConnection)
+int SBayeuxModule::ProcessSubscribe(const JsonNodePtr & message,
+                                     JsonNodePtr &      output,
+                                     SConnection *      pConnection)
 {
     SString clientId(message->Get<SString>(FIELD_CLIENTID, ""));
     if (clientId == "")
@@ -347,6 +355,8 @@ int SBayeuxModule::ProcessSubscribe(const JsonNodePtr &    message,
     output->Set(FIELD_SUBSCRIPTION, JsonNodeFactory::StringNode(subscription));
 
     AddSubscription(subscription, pConnection);
+
+    // TODO: merge subscriptions from the same browser into 1.
 
     return 0;
 }

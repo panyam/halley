@@ -23,7 +23,7 @@ class SBayeuxModule : public SHttpModule
 {
 public:
     // Constructor
-    SBayeuxModule(SHttpModule *pNext) : SHttpModule(pNext) { }
+    SBayeuxModule(SHttpModule *pNext, const SString &b) : SHttpModule(pNext), boundary(b) { }
 
     //! Registers a channel
     virtual bool RegisterChannel(SBayeuxChannel *pChannel, bool replace = false);
@@ -83,6 +83,9 @@ protected:
 
     //! A list of channel subscriptions
     ChannelSubscription     subscriptions;
+
+    //! The boundary to be used bw multi part messages
+    SString                 boundary;
 };
 
 #endif
