@@ -21,6 +21,7 @@
 #include <uuid/uuid.h>
 
 const char *FIELD_CHANNEL               = "channel";
+const char *FIELD_DATA                  = "data";
 const char *FIELD_VERSION               = "version";
 const char *FIELD_MINVERSION            = "minimumVersion";
 const char *FIELD_CONNTYPE              = "connectionType";
@@ -118,9 +119,13 @@ void SBayeuxModule::DeliverEvent(SBayeuxChannel *pChannel, JsonNodePtr &value)
     if (iter == subscriptions.end())
         return ;
 
+    JsonNodePtr realValue = JsonNodeFactory::ObjectNode();
+    realValue->Set(FIELD_CHANNEL, JsonNodeFactory::StringNode(pChannel->Name()));
+    realValue->Set(FIELD_DATA, value);
+
     SStringStream msgstream;
     DefaultJsonFormatter formatter;
-    formatter.Format(msgstream, value);
+    formatter.Format(msgstream, realValue);
 
     SString             msgbody(msgstream.str());
     SConnectionList *   pConnList(iter->second);
