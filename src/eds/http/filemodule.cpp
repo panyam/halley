@@ -15,6 +15,7 @@
 #include "handlerstage.h"
 #include "request.h"
 #include "response.h"
+#include "mimetypes.h"
 
 //! Called to handle input data from another module
 // This module simply writes out a given file and calls "ProcessOutput of
@@ -113,7 +114,7 @@ void SFileModule::ProcessInput(SHttpHandlerData *   pHandlerData,
                 else
                 {
                     respHeaders.SetIntHeader("Content-Length", fileStat.st_size);
-                    respHeaders.SetHeader("Content-Type", "text/text");
+                    respHeaders.SetHeader("Content-Type", SMimeTypes::GetInstance()->GetMimeType(fullpath));
 
                     const static int MAX_READ_SIZE = (1 << 15);
                     char fileBuffer[MAX_READ_SIZE];
@@ -300,6 +301,7 @@ SString SFileModule::PrintDirContents(const SString &docroot, const SString &fil
 {
     SString dirname(docroot + filename);
     int dirnamelen = dirname.size();
+    int filenamelen = filename.size();
     SStringStream output;
     std::vector<DirEnt> entries;
 
@@ -337,13 +339,10 @@ SString SFileModule::PrintDirContents(const SString &docroot, const SString &fil
 
             output << "<td><a href=\"";
             output << prefix;
-            output << (dirname[0] == '/' ? dirname.c_str() + 1 : dirname.c_str());
-            // output << dirname;
-            if (dirnamelen > 0 && dirname[dirnamelen - 1] != '/') output << "/";
+            output << (filename[0] == '/' ? filename.c_str() + 1 : filename.c_str());
+            if (filenamelen > 0 && filename[filenamelen - 1] != '/') output << "/";
             output << (iter->entName[0] == '/' ? iter->entName.c_str() + 1 : iter->entName.c_str());
             output << "\">";
-
-            // if (dirname[0] != '/') output << "/";
 
             if (isdir)
             {

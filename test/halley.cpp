@@ -126,13 +126,17 @@ int main(int argc, char *argv[])
     SBayeuxModule       bayeuxModule(&contentModule, "MyTestBoundary");
     SFileModule         rootFileModule(&contentModule, true);
     SMyModule           myModule(&contentModule);
+    SFileModule         testModule(&contentModule, true);
     SUrlRouter          urlRouter(&myModule);
     SContainsUrlMatcher staticUrlMatch("/static/", SContainsUrlMatcher::PREFIX_MATCH, &rootFileModule);
+    SContainsUrlMatcher testUrlMatch("/bayeux/test/", SContainsUrlMatcher::PREFIX_MATCH, &testModule);
     SContainsUrlMatcher dsUrlMatch("/bayeux/", SContainsUrlMatcher::PREFIX_MATCH, &bayeuxModule);
 
+    testModule.AddDocRoot("/bayeux/test/", "/home/spanyam/personal/halley/test/");
     rootFileModule.AddDocRoot("/static/", "/");
 
     urlRouter.AddUrlMatch(&staticUrlMatch);
+    urlRouter.AddUrlMatch(&testUrlMatch);
     urlRouter.AddUrlMatch(&dsUrlMatch);
 
     requestReader.SetHandlerStage(&requestHandler);
@@ -180,8 +184,7 @@ void SMyModule::ProcessInput(SHttpHandlerData *     pHandlerData,
             "<br><a href='/form'>form</a> "
             "<br><a href='/auth'>authentication example</a> [use <b>adp</b> as username and <b>gmbh</b> as password"
             "<br><a href='/header'>show some HTTP header details</a> "
-            "<p><br> Bayeux Logs: "
-            "<br><textarea id = 'bayeuxLogs' style='width: 100%; bottom: 0px' rows = 20></textarea>"
+            "<br><a href='/bayeux/test/'>Bayeux Test</a> "
             ;
 
     if(pRequest->Resource() == "/") {

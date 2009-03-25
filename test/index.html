@@ -1,0 +1,61 @@
+
+
+<html>
+    <head>
+    <title>Bayeux Test!!!</title>
+    <script>
+        // info about each of the channels
+        var channels = [
+            {'started': false},
+            {'started': false},
+            {'started': false},
+            {'started': false},
+            {'started': false},
+        ];
+
+        function onChannelClicked(channel)
+        {
+            channels['started'] = !channels['started'];
+            document.getElementById("channel" + channel).value = channels['started'] ? "Stop" : "Start";
+        }
+    </script>
+    </head>
+    <body>
+        <table style="width: 100%; height: 100%" border = 1>
+        <tr>
+        <td> <center> Channel 1: <br>
+            <input id = "channel1" name = "channel1"
+                   type="button" value = "Start"
+                   onclick = "return onChannelClicked(1);"/>
+        </center> </td>
+        <td> <center> Channel 2: <br>
+            <input id = "channel2" name = "channel2"
+                   type="button" value = "Start"
+                   onclick = "return onChannelClicked(2);"/>
+        </center> </td>
+        <td> <center> Channel 3: <br>
+            <input id = "channel3" name = "channel3"
+                   type="button" value = "Start"
+                   onclick = "return onChannelClicked(3);"/>
+        </center> </td>
+        <td> <center> Channel 4: <br>
+            <input id = "channel4" name = "channel4"
+                   type="button" value = "Start"
+                   onclick = "return onChannelClicked(4);"/>
+        </center> </td>
+        <td> <center> Channel 5: <br>
+            <input id = "channel5" name = "channel5"
+                   type="button" value = "Start"
+                   onclick = "return onChannelClicked(5);"/>
+        </center> </td>
+        </tr>
+        <tr style="height: 100%">
+        <td colspan = 5 style="width: 100%; height: 100%">
+            <p><br> Bayeux Logs:
+            <br><textarea id = 'bayeuxLogs' style='width: 100%; height: 100%; bottom: 0px' rows = 20></textarea>
+        </td>
+        </tr>
+        </table>
+    </body>
+</html>
+
