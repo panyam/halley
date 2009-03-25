@@ -1007,8 +1007,8 @@ AMFFormatter::Format(std::ostream &out, const JsonNodePtr &node)
 
     int len = membuff.Length();
 
-    std::cerr << "Written Node - Length: " << len << std::endl;
-    std::cerr << "============================================" << std::endl;
+    // std::cerr << "Written Node - Length: " << len << std::endl;
+    // std::cerr << "============================================" << std::endl;
 
     char bytes[4] = {
         (len >> 24) & 0xff,

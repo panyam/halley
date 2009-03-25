@@ -265,8 +265,6 @@ bool SHttpReaderState::ProcessCurrentLine(std::list<SHttpRequest *> & requests)
         if (!pCurrRequest->ParseFirstLine(currLine))
             return false;
 
-        std::cout << std::endl << "================================" << std::endl;
-        std::cout << "Request First Line: " << currLine << std::endl;
         currHeaderLine.str("");
         currHeaderLine.clear();
         currState = READING_HEADERS;
