@@ -1,11 +1,12 @@
 
-
 <html>
     <head>
     <title>Bayeux Test!!!</title>
+    <script type="text/javascript" src = "/bayeux/test/json.js"> </script>
     <script type="text/javascript" src = "/bayeux/test/test.js"> </script>
-    <script>
+    <script type="text/javascript" defer >
         // info about each of the channels
+        var clientId = null;
         var channels = [
             {'started': false},
             {'started': false},
@@ -16,9 +17,36 @@
 
         function onChannelClicked(channel)
         {
+            var command = document.getElementById("channel" + channel).value;
+
             channels['started'] = !channels['started'];
-            document.getElementById("channel" + channel).value = channels['started'] ? "Stop" : "Start";
+            document.getElementById("channel" + channel).value =
+                                    channels['started'] ? "Stop" : "Start";
         }
+
+        function handshake()
+        {
+            // subscribe to all channels
+            function callback(request, response)
+            {
+                var a = 0;
+            }
+
+            var data = {'channel': "/meta/handshake",
+                        'version': "1.0",
+                        "supportedConnectionTypes": ["long-polling",
+                                                     "callback-polling",
+                                                     "iframe"]};
+            var datastr = JSON.encode(data);
+            MakeAjaxRequest("POST", "/bayeux/" + 1, callback, datastr, datastr.length);
+        }
+
+        function onDocumentLoaded()
+        {
+            handshake();
+        }
+
+        window.onload = onDocumentLoaded;
     </script>
     </head>
     <body>
