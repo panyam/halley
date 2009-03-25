@@ -219,6 +219,7 @@ JsonTokenizer::JsonToken JsonTokenizer::RealToken()
                     case 'b': str << '\b'; break;
                     case 't': str << '\t'; break;
                     case 'v': str << '\v'; break;
+                    case '/': str << '/'; break;
                     case '\\': str << '\\'; break;
                     default: str << '\\' << (char)nextch;
                 }

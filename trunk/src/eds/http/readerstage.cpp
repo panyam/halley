@@ -215,6 +215,7 @@ size_t SHttpReaderState::ProcessBodyData(const char *buffer, size_t len, std::li
     if (currState == READING_BODY)
     {
         contLength = pCurrRequest->ContentLength();
+        currBodySize = contLength;
     }
     else
     {
@@ -265,12 +266,20 @@ bool SHttpReaderState::ProcessCurrentLine(std::list<SHttpRequest *> & requests)
         if (!pCurrRequest->ParseFirstLine(currLine))
             return false;
 
+        std::cout << pCurrRequest->Method() << " "
+                  << pCurrRequest->Resource() << " "
+                  << pCurrRequest->Version() << endl;
+
         currHeaderLine.str("");
         currHeaderLine.clear();
         currState = READING_HEADERS;
     }
     else if (currState == READING_CHUNK_SIZE)
     {
+        assert("Chunk reading not yet done." &&  false);
+
+        // TODO: Set currBodySize to parsed chunk size 
+        // and currBodyRead to 0
         currBodySize  = currBodyRead  = 0;
 
         // read the chunk body
