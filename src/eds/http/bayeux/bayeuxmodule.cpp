@@ -176,6 +176,10 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
         // parse the list of messages
         DefaultJsonInputStream<SCharVector::const_iterator> instream(reqBody.begin(),
                                                                      reqBody.end());
+        cout << "Bayeux Body: ";
+        copy(reqBody.begin(), reqBody.end(), std::ostreambuf_iterator<char>(cout));
+        cout << endl;
+
         DefaultJsonBuilder jbuilder;
         JsonNodePtr messages    = jbuilder.Build(&instream);
 
@@ -312,7 +316,7 @@ int SBayeuxModule::ProcessHandshake(const JsonNodePtr &message, JsonNodePtr &out
     uuid_unparse(uuid, uuid_str);
 
     // strip the "-"s from the uuid_str
-    SString uuid_string(uuid_string);
+    SString uuid_string(uuid_str);
     uuid_string.erase(std::remove_if(uuid_string.begin(), uuid_string.end(), notAlpha),
                       uuid_string.end());
 

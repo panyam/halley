@@ -129,10 +129,10 @@ int main(int argc, char *argv[])
     SFileModule         testModule(&contentModule, true);
     SUrlRouter          urlRouter(&myModule);
     SContainsUrlMatcher staticUrlMatch("/static/", SContainsUrlMatcher::PREFIX_MATCH, &rootFileModule);
-    SContainsUrlMatcher testUrlMatch("/bayeux/test/", SContainsUrlMatcher::PREFIX_MATCH, &testModule);
+    SContainsUrlMatcher testUrlMatch("/btest/", SContainsUrlMatcher::PREFIX_MATCH, &testModule);
     SContainsUrlMatcher dsUrlMatch("/bayeux/", SContainsUrlMatcher::PREFIX_MATCH, &bayeuxModule);
 
-    testModule.AddDocRoot("/bayeux/test/", "/home/spanyam/personal/halley/test/");
+    testModule.AddDocRoot("/btest/", "/home/spanyam/personal/halley/test/");
     rootFileModule.AddDocRoot("/static/", "/");
 
     urlRouter.AddUrlMatch(&staticUrlMatch);
@@ -184,7 +184,7 @@ void SMyModule::ProcessInput(SHttpHandlerData *     pHandlerData,
             "<br><a href='/form'>form</a> "
             "<br><a href='/auth'>authentication example</a> [use <b>adp</b> as username and <b>gmbh</b> as password"
             "<br><a href='/header'>show some HTTP header details</a> "
-            "<br><a href='/bayeux/test/'>Bayeux Test</a> "
+            "<br><a href='/btest/'>Bayeux Test</a> "
             ;
 
     if(pRequest->Resource() == "/") {

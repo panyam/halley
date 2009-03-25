@@ -2,8 +2,8 @@
 <html>
     <head>
     <title>Bayeux Test!!!</title>
-    <script type="text/javascript" src = "/bayeux/test/json.js"> </script>
-    <script type="text/javascript" src = "/bayeux/test/test.js"> </script>
+    <script type="text/javascript" src = "/btest/json.js"> </script>
+    <script type="text/javascript" src = "/btest/test.js"> </script>
     <script type="text/javascript" defer >
         // info about each of the channels
         var clientId = null;
@@ -24,21 +24,51 @@
                                     channels['started'] ? "Stop" : "Start";
         }
 
+        function SubscribeToChannel(channel)
+        {
+            function callback(request, response)
+            {
+                if (request.readyState == 4)
+                {
+                    alert("Subscription Result for channel (" + channel + "): " + request.responseText);
+                }
+            }
+
+            var data = {'channel': '/meta/subscribe',
+                        'clientId': clientId,
+                        'subscription': '/bayeux/channel' + channel};
+
+            var datastr = JSON.encode(data);
+            MakeAjaxRequest("POST", "/bayeux/", callback, datastr, datastr.length);
+        }
+
         function handshake()
         {
             // subscribe to all channels
             function callback(request, response)
             {
-                var a = 0;
+                if (request.readyState == 4)
+                {
+                    // woo whoo success
+                    var result = JSON.decode(request.responseText);
+                    clientId = result['clientId'];
+                    alert("Client ID: " + clientId);
+
+                    // now do the subscriptions!!
+                    for (var i = 1;i <= 5;i++)
+                    {
+                        SubscribeToChannel(i);
+                    }
+                }
             }
 
-            var data = {'channel': "/meta/handshake",
-                        'version': "1.0",
-                        "supportedConnectionTypes": ["long-polling",
-                                                     "callback-polling",
-                                                     "iframe"]};
+            var data = {'channel': '/meta/handshake',
+                        'version': '1.0',
+                        'supportedConnectionTypes': ['long-polling',
+                                                     'callback-polling',
+                                                     'iframe']};
             var datastr = JSON.encode(data);
-            MakeAjaxRequest("POST", "/bayeux/" + 1, callback, datastr, datastr.length);
+            MakeAjaxRequest("POST", "/bayeux/", callback, datastr, datastr.length);
         }
 
         function onDocumentLoaded()
