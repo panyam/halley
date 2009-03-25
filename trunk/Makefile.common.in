@@ -41,6 +41,13 @@ ifeq ($(BUILD_MODE),)
     BUILD_MODE          = @build_mode@
 endif
 
+# 
+# Disable memory checking by default
+#
+ifeq ($(ENABLE_MEMCHECK),)
+    ENABLE_MEMCHECK     = @enable_memcheck@
+endif
+
 ###############  DO NOT MODIFY BELOW THIS   ##############
 
 VERSION                 = $(MAJOR_VERSION).$(MINOR_VERSION).$(BUILD_VERSION)
@@ -64,6 +71,10 @@ else
                             -DHALLEY_VERSION_REVISION=$(BUILD_VERSION)
 endif
 
+ifeq ($(ENABLE_MEMCHECK), yes)
+    CXXFLAGS += -DUSING_VALGRIND
+endif
+
 ####    Installation Directories    ####
 LIB_INSTALL_DIR         = @prefix@/lib
 INCLUDE_INSTALL_DIR     = @prefix@/include
@@ -78,5 +89,5 @@ GPP                     = g++
 # Implicit rule to build .o into the build directory from .cpp
 $(OUTPUT_DIR)/%.o : %.cpp
 	@echo Building $@
-	@$(GPP) -c $(CXXFLAGS) $< -o $@
+	$(GPP) -c $(CXXFLAGS) $< -o $@
 

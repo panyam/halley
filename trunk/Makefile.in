@@ -45,7 +45,7 @@ cleanall: clean
 distclean: cleanall
 	@cd src ; make distclean
 	@cd test ; make distclean
-	@rm -Rf Makefile Makefile.common autom4te.cache config.*
+	@rm -Rf Makefile Makefile.common autom4te.cache config.* configure
 	@rm -Rf $(OUTPUT_DIR)
 
 dep:
