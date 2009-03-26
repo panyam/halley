@@ -30,8 +30,6 @@
 int
 SServer::RealStop()
 {
-    std::cerr << "INFO: Stopping Server..." << endl;
-
     serverStopped = true;
 
     if (serverSocket >= 0)
@@ -230,6 +228,8 @@ int SServer::Run()
         int errnum  = errno;
         result      = errnum;
 
+        cerr << "Accepted new connection on socket: " << serverSocket << endl;
+
         if (!serverStopped)
         {
             if (clientSocket < 0)
@@ -260,6 +260,26 @@ int SServer::Run()
 
     return result;
 }
+
+//*****************************************************************************
+/*!
+ *  \brief  Called by the handler when it has finished in asynch mode.
+ *
+ *  \param  SConnHandler *  The handler that has just finished.
+ *
+ *  \version
+ *      - Sri Panyam      10/02/2009
+ *        Created.
+ *
+ *****************************************************************************/
+void SServer::HandlerFinished(SConnHandler *pHandler)
+{
+    cerr << "Done Handling Connection: " << pHandler->Socket() << endl;
+    pHandler->Reset();
+    if (connFactory != NULL)
+        connFactory->ReleaseHandler(pHandler);
+}
+
 
 //*****************************************************************************
 /*!

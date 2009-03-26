@@ -31,8 +31,6 @@
 int
 SEvServer::RealStop()
 {
-    std::cerr << "INFO: Stopping Server..." << std::endl;
-
     if (serverSocket >= 0)
     {
         shutdown(serverSocket, SHUT_RDWR);

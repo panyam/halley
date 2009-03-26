@@ -100,8 +100,6 @@ void SConnHandler::Reset()
 **************************************************************************************/
 int SConnHandler::RealStop()
 {
-    std::cerr << "INFO: Stopping Client: " << std::endl;
-
     clientStopped = true;
     if (clientSocket >= 0)
     {
