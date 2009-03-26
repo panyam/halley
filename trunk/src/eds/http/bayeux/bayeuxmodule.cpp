@@ -23,6 +23,7 @@
 const char *FIELD_CHANNEL               = "channel";
 const char *FIELD_DATA                  = "data";
 const char *FIELD_VERSION               = "version";
+const char *FIELD_FIRSTCONN             = "firstconn";
 const char *FIELD_MINVERSION            = "minimumVersion";
 const char *FIELD_CONNTYPE              = "connectionType";
 const char *FIELD_SUPPORTED_CONNTYPES   = "supportedConnectionTypes";
@@ -431,8 +432,10 @@ int SBayeuxModule::ProcessSubscribe(const JsonNodePtr & message,
     output->Set(FIELD_CLIENTID, JsonNodeFactory::StringNode(clientId));
     output->Set(FIELD_SUBSCRIPTION, JsonNodeFactory::StringNode(subscription));
 
-    AddClientConnection(clientId, pConnection);
+    bool firstConn = AddClientConnection(clientId, pConnection);
     AddSubscription(subscription, clientId);
+
+    output->Set(FIELD_FIRSTCONN, JsonNodeFactory::BoolNode(firstConn));
 
     // TODO: merge subscriptions from the same browser into 1.
 
