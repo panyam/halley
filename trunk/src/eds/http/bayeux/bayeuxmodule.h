@@ -51,7 +51,7 @@ protected:
     void SendResponse(int                   result,
                       const JsonNodePtr &   output,
                       SHttpHandlerStage *   pStage, 
-                      SConnection *         pConnection,
+                      SHttpHandlerData *    pHandlerData,
                       SHttpResponse *       pResponse);
 
     int  ProcessMessage(const JsonNodePtr & node,

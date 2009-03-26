@@ -180,9 +180,9 @@ void SBayeuxModule::DeliverEvent(const SBayeuxChannel *pChannel, const JsonNodeP
         {
             SHttpRequest *      pRequest    = pHandlerData->Request();
             SHttpResponse *     pResponse   = pRequest->Response();
-            SBodyPart *         pNewPart    = pResponse->NewBodyPart();
-            pNewPart->SetBody(msgbody);
-            pHandlerStage->OutputToModule(pHandlerData->pConnection, pNextModule, pNewPart);
+            SBodyPart *         pBodyPart   = pResponse->NewBodyPart();
+            pBodyPart->SetBody(msgbody);
+            pHandlerStage->OutputToModule(pHandlerData->pConnection, pNextModule, pBodyPart);
         }
     }
 }
@@ -206,7 +206,6 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
                                  SBodyPart *            pBodyPart)
 {
     this->pHandlerStage                 = pStage;
-    SConnection *pConnection            = pHandlerData->pConnection;
     SHttpRequest *pRequest              = pHandlerData->Request();
     SHttpResponse *pResponse            = pRequest->Response();
     SBodyPart *pContent                 = pRequest->ContentBody();
@@ -242,43 +241,38 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
         }
     }
 
-    SendResponse(result, output, pStage, pConnection, pResponse);
+    SendResponse(result, output, pStage, pHandlerData, pResponse);
 }
 
 void SBayeuxModule::SendResponse(int                result,
                                  const JsonNodePtr &output,
                                  SHttpHandlerStage *pStage,
-                                 SConnection *      pConnection,
+                                 SHttpHandlerData * pHandlerData,
                                  SHttpResponse *    pResponse)
 {
     SHeaderTable & respHeaders(pResponse->Headers());
+
+    // set response code and message
+    if (result < 0)
+    {
+        pResponse->SetStatus(500, "Invalid Message");
+    }
+
     if (result <= 0)
     {
-        int         statCode = 200;
-        std::string statMessage("OK");
-        if (result < 0)
-        {
-            // assert("Type MUST be a string if result is -ve" &&
-            //            (output->Type() == JNT_STRING));
-
-            statCode    = 500;
-            statMessage = "Invalid Message";
-        }
-
-        // invalid type
         SStringStream msgstream;
         DefaultJsonFormatter formatter;
         formatter.Format(msgstream, output);
 
-        SBodyPart * part        = pResponse->NewBodyPart();
         SString     msgbody     = msgstream.str();
         respHeaders.SetIntHeader("Content-Length", msgbody.size());
         respHeaders.SetHeader("Content-Type", "text/html");
+
+        SBodyPart * part        = pResponse->NewBodyPart();
         part->SetBody(msgbody);
 
-        pResponse->SetStatus(statCode, statMessage);
-        pStage->OutputToModule(pConnection, pNextModule, part);
-        pStage->OutputToModule(pConnection, pNextModule,
+        pStage->OutputToModule(pHandlerData->pConnection, pNextModule, part);
+        pStage->OutputToModule(pHandlerData->pConnection, pNextModule,
                                pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED,
                                                       pNextModule));
     }
@@ -290,8 +284,24 @@ void SBayeuxModule::SendResponse(int                result,
 
         SString channel = output->Get(FIELD_SUBSCRIPTION, EMPTY);
 
-        // and deliver an event
-        DeliverEvent(GetChannel(channel), output);
+        // and deliver the message 
+        JsonNodePtr realValue = JsonNodeFactory::ObjectNode();
+        realValue->Set(FIELD_CHANNEL, JsonNodeFactory::StringNode(channel));
+        realValue->Set(FIELD_DATA, output);
+
+        SStringStream           msgstream;
+        DefaultJsonFormatter    formatter;
+        formatter.Format(msgstream, realValue);
+
+        // open a boundary body part 
+        SBodyPart *pBodyPart = pResponse->NewBodyPart(SBodyPart::BP_OPEN_SUB_MESSAGE);
+        pBodyPart->SetBody(boundary);
+        pStage->OutputToModule(pHandlerData->pConnection, pNextModule, pBodyPart);
+
+        // send the first message!
+        pBodyPart = pResponse->NewBodyPart();
+        pBodyPart->SetBody(msgstream.str());
+        pStage->OutputToModule(pHandlerData->pConnection, pNextModule, pBodyPart);
     }
 }
 

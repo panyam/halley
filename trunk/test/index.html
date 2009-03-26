@@ -6,7 +6,10 @@
     <script type="text/javascript" src = "/btest/test.js"> </script>
     <script type="text/javascript" defer >
         // info about each of the channels
-        var clientId = null;
+        var clientId        = null;
+        var NUM_CHANNELS    = 5;
+        var ALL_AT_ONCE     = true;
+        var curr_channel    = 1;
         var channels = [
             null,
             {'started': false, 'numevents': 0},
@@ -47,6 +50,11 @@
                     }
                     channels[channel]['started'] = true;
                     document.getElementById("channel" + channel).value = "Stop";
+
+                    // subscribe to the next channel if more left
+                    curr_channel += 1;
+                    if ( ! ALL_AT_ONCE && curr_channel <= num_channels)
+                        SubscribeToChannel(curr_channel);
                 }
                 else
                 {
@@ -79,12 +87,14 @@
                     var result = JSON.decode(request.responseText);
                     clientId = result['clientId'];
 
-                    // alert('ClientID After: ' + clientId);
-
-                    // now do the subscriptions!!
-                    for (var i = 1;i <= 5;i++)
+                    if (ALL_AT_ONCE)
                     {
-                        SubscribeToChannel(i);
+                        for (var i = 1;i <= NUM_CHANNELS;i++)
+                            SubscribeToChannel(i);
+                    }
+                    else
+                    {
+                        SubscribeToChannel(curr_channel);
                     }
                 }
             }

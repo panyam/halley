@@ -300,7 +300,6 @@ bool SFileModule::ReadDirectory(const char *dirname, std::vector<DirEnt> &entrie
 SString SFileModule::PrintDirContents(const SString &docroot, const SString &filename, const SString &prefix)
 {
     SString dirname(docroot + filename);
-    int dirnamelen = dirname.size();
     int filenamelen = filename.size();
     SStringStream output;
     std::vector<DirEnt> entries;

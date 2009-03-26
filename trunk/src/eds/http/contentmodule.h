@@ -30,10 +30,6 @@ public:
     //! A stack that maintains the boundaries we have opened so far (for
     // multipart messages).
     SStringList     boundaries;
-
-    //! Here is where we accumulate body parts that are less than
-    // content lengths in single part messages
-    SCharVector     bodyAccumulator;
 };
 
 // Takes care of content encoding - may or maynot include Content-Length
@@ -47,6 +43,12 @@ public:
     virtual void ProcessOutput(SHttpHandlerData *   pHandlerData,
                               SHttpHandlerStage *   pStage, 
                               SBodyPart *           pBodyPart);
+
+    //! Creates new module data if necessary
+    virtual SHttpModuleData *CreateModuleData(SHttpHandlerData *pHandlerData)
+    {
+        return new SContentModuleData();
+    }
 
 protected:
     void HandleBodyPart(SHttpHandlerData *  pHandlerData, 
