@@ -68,44 +68,76 @@ bool SBayeuxModule::UnregisterChannel(const SBayeuxChannel *pChannel)
 
 //! Adds a new connection to the subscription list
 // TODO: thread safety
-bool SBayeuxModule::AddSubscription(const SString &channel, SConnection *pConnection)
+bool SBayeuxModule::AddSubscription(const SString &channel, const SString &clientId)
 {
-    ChannelSubscription::iterator iter  = subscriptions.find(channel);
-    SConnectionList *pConnList          = NULL;
+    ChannelClients::iterator    iter        = subscriptions.find(channel);
+    SStringList *               pClientList = NULL;
     if (iter == subscriptions.end())
     {
-        pConnList = new SConnectionList();
-        subscriptions.insert(std::pair<SString, SConnectionList *>(channel, pConnList));
+        pClientList = new SStringList();
+        subscriptions.insert(std::pair<SString, SStringList *>(channel, pClientList));
     }
     else
     {
-        pConnList = iter->second;
+        pClientList = iter->second;
     }
 
-    if (find(pConnList->begin(), pConnList->end(), pConnection) != pConnList->end())
+    if (find(pClientList->begin(), pClientList->end(), clientId) == pClientList->end())
+    {
+        pClientList->push_back(clientId);
+        return true;
+    }
+    return false;
+}
+
+bool SBayeuxModule::RemoveSubscription(const SString &channel, const SString &clientId)
+{
+    ChannelClients::iterator iter = subscriptions.find(channel);
+    if (iter == subscriptions.end())
+    {
+        SStringList *pClientList = iter->second;
+        if (pClientList != NULL)
+        {
+            SStringList::iterator iter2 = find(pClientList->begin(), pClientList->end(), clientId);
+
+            if (iter2 != pClientList->end())
+            {
+                pClientList->erase(iter2);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool SBayeuxModule::AddClientConnection(const SString &clientId, SConnection *pConnection)
+{
+    ChannelConnections::iterator iter = connections.find(clientId);
+    if (iter != connections.end())
         return false;
 
-    pConnList->push_back(pConnection);
+    connections.insert(std::pair<SString, SConnection *>(clientId, pConnection));
 
     return true;
 }
 
-bool SBayeuxModule::RemoveSubscription(const SString &channel, SConnection *pConnection)
+SConnection *SBayeuxModule::GetClientConnection(const SString &clientId)
 {
-    ChannelSubscription::iterator iter  = subscriptions.find(channel);
-    if (iter == subscriptions.end())
-        return false;
+    ChannelConnections::iterator iter = connections.find(clientId);
+    if (iter == connections.end())
+        return NULL;
+    else
+        return iter->second;
+}
 
-    SConnectionList *pConnList = iter->second;
+SConnection *SBayeuxModule::RemoveClientConnection(const SString &clientId, SConnection *pConnection)
+{
+    ChannelConnections::iterator iter = connections.find(clientId);
+    if (iter == connections.end())
+        return NULL;
 
-    SConnectionList::iterator iter2 = find(pConnList->begin(), pConnList->end(), pConnection);
-
-    if (iter2 == pConnList->end())
-        return false;
-
-    pConnList->erase(iter2);
-
-    return true;
+    connections.erase(iter);
+    return iter->second;
 }
 
 //! Delivers an event to all subscribers of a channel
@@ -114,7 +146,7 @@ void SBayeuxModule::DeliverEvent(SBayeuxChannel *pChannel, JsonNodePtr &value)
     // do nothing if no handler stage available
     if (pHandlerStage == NULL) return ;
 
-    ChannelSubscription::iterator iter  = subscriptions.find(pChannel->Name());
+    ChannelClients::iterator iter  = subscriptions.find(pChannel->Name());
 
     if (iter == subscriptions.end())
         return ;
@@ -126,19 +158,21 @@ void SBayeuxModule::DeliverEvent(SBayeuxChannel *pChannel, JsonNodePtr &value)
     SStringStream msgstream;
     DefaultJsonFormatter formatter;
     formatter.Format(msgstream, realValue);
+    SString msgbody(msgstream.str());
 
-    SString             msgbody(msgstream.str());
-    SConnectionList *   pConnList(iter->second);
-    for (SConnectionList::iterator iter = pConnList->begin();
-                    iter != pConnList->end(); ++iter)
+    SStringList *pClientList = iter->second;
+    for (SStringList::iterator iter = pClientList->begin();iter != pClientList->end();++iter)
     {
-        SConnection *       pConnection = *iter;
-        SHttpHandlerData *  pData       = (SHttpHandlerData *)pConnection->GetStageData(pHandlerStage);
-        SHttpRequest *      pRequest    = pData->Request();
-        SHttpResponse *     pResponse   = pRequest->Response();
-        SBodyPart *         pNewPart    = pResponse->NewBodyPart();
-        pNewPart->SetBody(msgbody);
-        pHandlerStage->OutputToModule(pData->pConnection, pNextModule, pNewPart);
+        SConnection *pConnection = GetClientConnection(*iter);
+        if (pConnection != NULL)
+        {
+            SHttpHandlerData *  pData       = (SHttpHandlerData *)pConnection->GetStageData(pHandlerStage);
+            SHttpRequest *      pRequest    = pData->Request();
+            SHttpResponse *     pResponse   = pRequest->Response();
+            SBodyPart *         pNewPart    = pResponse->NewBodyPart();
+            pNewPart->SetBody(msgbody);
+            pHandlerStage->OutputToModule(pData->pConnection, pNextModule, pNewPart);
+        }
     }
 }
 
@@ -251,9 +285,6 @@ int SBayeuxModule::ProcessMessage(const JsonNodePtr &   message,
         output = JsonNodeFactory::StringNode("Channel name missing");
         return -1;
     }
-
-    if (!output || output->Type() != JNT_LIST)
-        output = JsonNodeFactory::ListNode();
 
     // see what kind of message it is
     if (strncmp(channel.c_str(), "/meta/", 6) == 0)
@@ -394,12 +425,14 @@ int SBayeuxModule::ProcessSubscribe(const JsonNodePtr & message,
         return -1;
     }
 
+    output = JsonNodeFactory::ObjectNode();
     output->Set(FIELD_CHANNEL, JsonNodeFactory::StringNode("/meta/connect"));
     output->Set(FIELD_SUCCESSFUL, JsonNodeFactory::BoolNode(true));
     output->Set(FIELD_CLIENTID, JsonNodeFactory::StringNode(clientId));
     output->Set(FIELD_SUBSCRIPTION, JsonNodeFactory::StringNode(subscription));
 
-    AddSubscription(subscription, pConnection);
+    AddClientConnection(clientId, pConnection);
+    AddSubscription(subscription, clientId);
 
     // TODO: merge subscriptions from the same browser into 1.
 
@@ -430,7 +463,7 @@ int SBayeuxModule::ProcessUnsubscribe(const JsonNodePtr &  message,
     output->Set(FIELD_SUBSCRIPTION, JsonNodeFactory::StringNode(subscription));
 
     // TODO: again handle all the "real" stuff below
-    RemoveSubscription(subscription, pConnection);
+    RemoveSubscription(subscription, clientId);
 
     return 0;
 }
