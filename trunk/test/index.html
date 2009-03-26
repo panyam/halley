@@ -32,9 +32,8 @@
 
         function HandleChannelEvent(channel)
         {
-            function handler(evt)
+            function handler(request)
             {
-                var request     = evt.currentTarget;
                 var result      = JSON.decode(request.responseText);
                 var numevents   = channels[channel]['numevents'];
                 if (numevents == 0)
@@ -61,20 +60,12 @@
 
         function SubscribeToChannel(channel)
         {
-            function callback(request)
-            {
-                if (request.readyState == 4)
-                {
-                    // then add an onload handler to the request too
-                }
-            }
-
             var data = {'channel': '/meta/subscribe',
                         'clientId': clientId,
                         'subscription': '/bayeux/channel' + channel};
 
             var datastr = JSON.encode(data);
-            MakeAjaxRequest("POST", "/bayeux/", callback, datastr, datastr.length, HandleChannelEvent(channel));
+            MakeAjaxRequest("POST", "/bayeux/", HandleChannelEvent(channel), datastr, true);
         }
 
         function handshake()
@@ -87,6 +78,8 @@
                     // woo whoo success
                     var result = JSON.decode(request.responseText);
                     clientId = result['clientId'];
+
+                    // alert('ClientID After: ' + clientId);
 
                     // now do the subscriptions!!
                     for (var i = 1;i <= 5;i++)
@@ -102,7 +95,7 @@
                                                      'callback-polling',
                                                      'iframe']};
             var datastr = JSON.encode(data);
-            MakeAjaxRequest("POST", "/bayeux/", callback, datastr, datastr.length);
+            MakeAjaxRequest("POST", "/bayeux/", callback, datastr);
         }
 
         function onDocumentLoaded()

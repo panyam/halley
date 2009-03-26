@@ -20,20 +20,21 @@
 #include "json/tokenizer.h"
 #include <uuid/uuid.h>
 
-const char *FIELD_CHANNEL               = "channel";
-const char *FIELD_DATA                  = "data";
-const char *FIELD_VERSION               = "version";
-const char *FIELD_FIRSTCONN             = "firstconn";
-const char *FIELD_MINVERSION            = "minimumVersion";
-const char *FIELD_CONNTYPE              = "connectionType";
-const char *FIELD_SUPPORTED_CONNTYPES   = "supportedConnectionTypes";
-const char *FIELD_CLIENTID              = "clientId";
-const char *FIELD_ADVICE                = "advice";
-const char *FIELD_ID                    = "id";
-const char *FIELD_EXT                   = "ext";
-const char *FIELD_SUCCESSFUL            = "successful";
-const char *FIELD_AUTHSUCCESSFUL        = "authSuccessful";
-const char *FIELD_SUBSCRIPTION          = "subscription";
+const SString EMPTY("");
+const SString FIELD_CHANNEL             = "channel";
+const SString FIELD_DATA                = "data";
+const SString FIELD_VERSION             = "version";
+const SString FIELD_FIRSTCONN           = "firstconn";
+const SString FIELD_MINVERSION          = "minimumVersion";
+const SString FIELD_CONNTYPE            = "connectionType";
+const SString FIELD_SUPPORTED_CONNTYPES = "supportedConnectionTypes";
+const SString FIELD_CLIENTID            = "clientId";
+const SString FIELD_ADVICE              = "advice";
+const SString FIELD_ID                  = "id";
+const SString FIELD_EXT                 = "ext";
+const SString FIELD_SUCCESSFUL          = "successful";
+const SString FIELD_AUTHSUCCESSFUL      = "authSuccessful";
+const SString FIELD_SUBSCRIPTION        = "subscription";
 
 //! Registers a channel
 bool SBayeuxModule::RegisterChannel(SBayeuxChannel *pChannel, bool replace)
@@ -48,6 +49,16 @@ bool SBayeuxModule::RegisterChannel(SBayeuxChannel *pChannel, bool replace)
     }
     channels.insert(std::pair<SString, SBayeuxChannel *>(pChannel->Name(), pChannel));
     return true;
+}
+
+//! Get a channel by name
+SBayeuxChannel *SBayeuxModule::GetChannel(const SString &name)
+{
+    ChannelMap::iterator iter = channels.find(name);
+    if (iter == channels.end())
+        return NULL;
+    else 
+        return iter->second;
 }
 
 //! Removes a channel by name
@@ -111,18 +122,18 @@ bool SBayeuxModule::RemoveSubscription(const SString &channel, const SString &cl
     return false;
 }
 
-bool SBayeuxModule::AddClientConnection(const SString &clientId, SConnection *pConnection)
+bool SBayeuxModule::AddClient(const SString &clientId, SHttpHandlerData *pHandlerData)
 {
     ChannelConnections::iterator iter = connections.find(clientId);
     if (iter != connections.end())
         return false;
 
-    connections.insert(std::pair<SString, SConnection *>(clientId, pConnection));
+    connections.insert(std::pair<SString, SHttpHandlerData *>(clientId, pHandlerData));
 
     return true;
 }
 
-SConnection *SBayeuxModule::GetClientConnection(const SString &clientId)
+SHttpHandlerData *SBayeuxModule::GetClient(const SString &clientId)
 {
     ChannelConnections::iterator iter = connections.find(clientId);
     if (iter == connections.end())
@@ -131,7 +142,7 @@ SConnection *SBayeuxModule::GetClientConnection(const SString &clientId)
         return iter->second;
 }
 
-SConnection *SBayeuxModule::RemoveClientConnection(const SString &clientId, SConnection *pConnection)
+SHttpHandlerData *SBayeuxModule::RemoveClient(const SString &clientId)
 {
     ChannelConnections::iterator iter = connections.find(clientId);
     if (iter == connections.end())
@@ -142,10 +153,10 @@ SConnection *SBayeuxModule::RemoveClientConnection(const SString &clientId, SCon
 }
 
 //! Delivers an event to all subscribers of a channel
-void SBayeuxModule::DeliverEvent(SBayeuxChannel *pChannel, JsonNodePtr &value)
+void SBayeuxModule::DeliverEvent(const SBayeuxChannel *pChannel, const JsonNodePtr &value)
 {
     // do nothing if no handler stage available
-    if (pHandlerStage == NULL) return ;
+    if (pHandlerStage == NULL || pChannel == NULL) return ;
 
     ChannelClients::iterator iter  = subscriptions.find(pChannel->Name());
 
@@ -164,15 +175,14 @@ void SBayeuxModule::DeliverEvent(SBayeuxChannel *pChannel, JsonNodePtr &value)
     SStringList *pClientList = iter->second;
     for (SStringList::iterator iter = pClientList->begin();iter != pClientList->end();++iter)
     {
-        SConnection *pConnection = GetClientConnection(*iter);
-        if (pConnection != NULL)
+        SHttpHandlerData *pHandlerData = GetClient(*iter);
+        if (pHandlerData != NULL)
         {
-            SHttpHandlerData *  pData       = (SHttpHandlerData *)pConnection->GetStageData(pHandlerStage);
-            SHttpRequest *      pRequest    = pData->Request();
+            SHttpRequest *      pRequest    = pHandlerData->Request();
             SHttpResponse *     pResponse   = pRequest->Response();
             SBodyPart *         pNewPart    = pResponse->NewBodyPart();
             pNewPart->SetBody(msgbody);
-            pHandlerStage->OutputToModule(pData->pConnection, pNextModule, pNewPart);
+            pHandlerStage->OutputToModule(pHandlerData->pConnection, pNextModule, pNewPart);
         }
     }
 }
@@ -200,7 +210,6 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
     SHttpRequest *pRequest              = pHandlerData->Request();
     SHttpResponse *pResponse            = pRequest->Response();
     SBodyPart *pContent                 = pRequest->ContentBody();
-    SHeaderTable & respHeaders(pResponse->Headers());
 
     JsonNodePtr output      = JsonNodeFactory::StringNode("<html><title>Error</title><body>Invalid bayeux message</body></html>");
     int         result      = -1;
@@ -223,16 +232,26 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
         {
             for (int i = 0, count = messages->Size();i < count;i++)
             {
-                result = ProcessMessage(messages->Get(i), output, pConnection);
+                result = ProcessMessage(messages->Get(i), output, pHandlerData);
                 if (result < 0) break;
             }
         }
         else if (messages->Type() == JNT_OBJECT)
         {
-            result = ProcessMessage(messages, output, pConnection);
+            result  = ProcessMessage(messages, output, pHandlerData);
         }
     }
 
+    SendResponse(result, output, pStage, pConnection, pResponse);
+}
+
+void SBayeuxModule::SendResponse(int                result,
+                                 const JsonNodePtr &output,
+                                 SHttpHandlerStage *pStage,
+                                 SConnection *      pConnection,
+                                 SHttpResponse *    pResponse)
+{
+    SHeaderTable & respHeaders(pResponse->Headers());
     if (result <= 0)
     {
         int         statCode = 200;
@@ -258,8 +277,8 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
         part->SetBody(msgbody);
 
         pResponse->SetStatus(statCode, statMessage);
-        pStage->OutputToModule(pHandlerData->pConnection, pNextModule, part);
-        pStage->OutputToModule(pHandlerData->pConnection, pNextModule,
+        pStage->OutputToModule(pConnection, pNextModule, part);
+        pStage->OutputToModule(pConnection, pNextModule,
                                pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED,
                                                       pNextModule));
     }
@@ -268,6 +287,11 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
         respHeaders.SetHeader("Content-Type",
                               "multipart/x-mixed-replace;boundary=\"" +
                                     boundary + SString("\""));
+
+        SString channel = output->Get(FIELD_SUBSCRIPTION, EMPTY);
+
+        // and deliver an event
+        DeliverEvent(GetChannel(channel), output);
     }
 }
 
@@ -278,7 +302,7 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
 //  1 on success but to make 
 int SBayeuxModule::ProcessMessage(const JsonNodePtr &   message,
                                   JsonNodePtr &         output,
-                                  SConnection *         pConnection)
+                                  SHttpHandlerData *    pHandlerData)
 {
     SString channel = message->Get<SString>("channel", "");
     if (channel == "")
@@ -304,22 +328,22 @@ int SBayeuxModule::ProcessMessage(const JsonNodePtr &   message,
         }
         else if (channel == "/meta/subscribe")
         {
-            return ProcessSubscribe(message, output, pConnection);
+            return ProcessSubscribe(message, output, pHandlerData);
         }
         else if (channel == "/meta/unsubscribe")
         {
-            return ProcessUnsubscribe(message, output, pConnection);
+            return ProcessUnsubscribe(message, output, pHandlerData);
         }
         else
         {
             // other meta messages
-            return ProcessMetaMessage(channel, message, output, pConnection);
+            return ProcessMetaMessage(channel, message, output, pHandlerData);
         }
     }
     else 
     {
         // message is for a channel
-        return ProcessPublish(channel, message, output, pConnection);
+        return ProcessPublish(channel, message, output, pHandlerData);
     }
 }
 
@@ -410,7 +434,7 @@ int SBayeuxModule::ProcessDisconnect(const JsonNodePtr &message, JsonNodePtr &ou
 
 int SBayeuxModule::ProcessSubscribe(const JsonNodePtr & message,
                                      JsonNodePtr &      output,
-                                     SConnection *      pConnection)
+                                     SHttpHandlerData * pHandlerData)
 {
     SString clientId(message->Get<SString>(FIELD_CLIENTID, ""));
     if (clientId == "")
@@ -432,19 +456,20 @@ int SBayeuxModule::ProcessSubscribe(const JsonNodePtr & message,
     output->Set(FIELD_CLIENTID, JsonNodeFactory::StringNode(clientId));
     output->Set(FIELD_SUBSCRIPTION, JsonNodeFactory::StringNode(subscription));
 
-    bool firstConn = AddClientConnection(clientId, pConnection);
-    AddSubscription(subscription, clientId);
+    bool firstConn = AddClient(clientId, pHandlerData);
+    bool subscribed = AddSubscription(subscription, clientId);
 
     output->Set(FIELD_FIRSTCONN, JsonNodeFactory::BoolNode(firstConn));
+    output->Set("subscribed", JsonNodeFactory::BoolNode(subscribed));
 
-    // TODO: merge subscriptions from the same browser into 1.
-
-    return 0;
+    // if first connection then dont close this connection - this is THE
+    // long living one!!!
+    return firstConn ? 1 : 0;
 }
 
-int SBayeuxModule::ProcessUnsubscribe(const JsonNodePtr &  message,
+int SBayeuxModule::ProcessUnsubscribe(const JsonNodePtr &   message,
                                        JsonNodePtr &        output,
-                                       SConnection *        pConnection)
+                                       SHttpHandlerData *   pHandlerData)
 {
     SString clientId(message->Get<SString>(FIELD_CLIENTID, ""));
     if (clientId == "")
@@ -474,7 +499,7 @@ int SBayeuxModule::ProcessUnsubscribe(const JsonNodePtr &  message,
 int SBayeuxModule::ProcessPublish(const SString &       channel,
                                   const JsonNodePtr &   message,
                                   JsonNodePtr &         output,
-                                  SConnection *         pConnection)
+                                  SHttpHandlerData *    pHandlerData)
 {
     // do all the stuff here
     output = JsonNodeFactory::StringNode("No handler for publish request found.");
@@ -484,7 +509,7 @@ int SBayeuxModule::ProcessPublish(const SString &       channel,
 int SBayeuxModule::ProcessMetaMessage(const SString &       channel,
                                       const JsonNodePtr &   message,
                                       JsonNodePtr &         output,
-                                      SConnection *         pConnection)
+                                      SHttpHandlerData *    pHandlerData)
 {
     output = JsonNodeFactory::StringNode("Invalid meta channel");
     return -1;

@@ -78,16 +78,16 @@ public:
     virtual ~SFileIOStage() { }
 
     // Open a file handle
-    void    OpenFile(SJob *pJob, const char *path, const char *mode);
+    void    OpenFile(void *pSource, const char *path, const char *mode);
 
     // Read bytes
-    void    ReadBytes(SJob *pJob, FILE *file, size_t nbytes);
+    void    ReadBytes(void *pSource, FILE *file, size_t nbytes);
 
     // Write bytes
-    void    WriteBytes(SJob *pJob, FILE *file, size_t nbytes);
+    void    WriteBytes(void *pSource, FILE *file, size_t nbytes);
 
     //! Change the current offset of a file
-    void    SeekOffset(SJob *pJob, FILE *file, long offset);
+    void    SeekOffset(void *pSource, FILE *file, long offset);
 };
 
 #endif

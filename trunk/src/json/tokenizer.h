@@ -48,6 +48,7 @@ public:
     {
         pInputStart = start;
         pInputEnd   = end;
+        lastChar    = -1;
     }
 
     //! Gets the next character

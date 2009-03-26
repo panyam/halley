@@ -99,9 +99,9 @@ void SHttpReaderStage::SetHandlerStage(SHttpHandlerStage *pHandler)
 }
 
 // Read bytes
-void SHttpReaderStage::ReadSocket(SJob *pJob)
+void SHttpReaderStage::ReadSocket(SConnection *pConnection)
 {
-    QueueEvent(SEvent(EVT_BYTES_RECIEVED, pJob));
+    QueueEvent(SEvent(EVT_BYTES_RECIEVED, pConnection));
 }
 
 //! Handles "read request" events.
@@ -111,7 +111,7 @@ void SHttpReaderStage::ReadSocket(SJob *pJob)
 void SHttpReaderStage::HandleEvent(const SEvent &event)
 {
     // The connection currently being processed
-    SConnection *pConnection    = dynamic_cast<SConnection *>(event.pJob);
+    SConnection *pConnection    = (SConnection *)(event.pSource);
     void *pStageData            = pConnection->GetStageData(this);
     if (pStageData == NULL)
     {
