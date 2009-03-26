@@ -42,6 +42,9 @@ public:
         : pTheChannel(pChannel), pModule(pMod) { }
 
 protected:
+    //! Handle connection in async mode
+    virtual bool HandleConnection() { Start(); return false; }
+
     //! handles a custom connection
     virtual int Run()
     {
@@ -51,11 +54,14 @@ protected:
             char buffer[1025];
 
             clientInput->getline(buffer, 1025);
+            if (clientInput->bad() || clientInput->fail() || clientInput->eof())
+                break ;
 
             JsonNodePtr value = JsonNodeFactory::StringNode(buffer);
             pModule->DeliverEvent(pTheChannel, value);
         }
 
+        pServer->HandlerFinished(this);
         return 0;
     }
 

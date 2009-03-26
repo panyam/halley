@@ -75,6 +75,9 @@ public:
     // TODO: should this be allowed when the server is running?
     void SetConnectionFactory(SConnFactory *factory) { connFactory = factory; }
 
+    //! Called by the handler when it has finished
+    virtual void HandlerFinished(SConnHandler *pHandler);
+
 protected:
     // Creates the socket
     // virtual int CreateSocket();
@@ -94,7 +97,6 @@ protected:
     // Listens on the socket
     virtual int ListenOnSocket();
 
-protected:
     // handle a new connection
     virtual void HandleConnection(int clientSocket);
 

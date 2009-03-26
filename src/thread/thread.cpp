@@ -69,7 +69,6 @@ void SThread::Start()
     SMutexLock stateMutexLock(threadStateMutex);
     if (threadState == THREAD_RUNNING)
     {
-        cerr << "INFO: Thread is already running." << endl << endl;
         return ;
     }
     else if (threadState == THREAD_STARTED)
@@ -133,8 +132,6 @@ void SThread::Stop()
     }
 
     threadState = THREAD_STOPPED;
-
-    std::cerr << "INFO: Stopping child: ..." << std::endl << std::endl;
 
     if (pTask != NULL)
     {
@@ -279,7 +276,6 @@ bool SThread::IsCurrent()
  *****************************************************************************/
 int SThread::WaitForThreadBegin()
 {
-    cerr << "INFO: Thread already started, waiting to get into RUNNING state..." << endl << endl;
     return threadRunningCond.Wait();
 }
 
@@ -295,7 +291,6 @@ int SThread::WaitForThreadBegin()
  *****************************************************************************/
 int SThread::WaitForThreadFinish()
 {
-    cerr << "INFO: Waiting for Thread to fully stop..." << endl << endl;
     return threadDeadCond.Wait();
 }
 
@@ -310,7 +305,6 @@ int SThread::WaitForThreadFinish()
  *****************************************************************************/
 int SThread::SignalThreadBegin()
 {
-    cerr << "INFO: Thread gone to start state!" << endl << endl;
     SMutexLock locker(threadStateMutex);
     if (threadState == THREAD_STARTED)
     {
@@ -336,8 +330,6 @@ int SThread::SignalThreadBegin()
  *****************************************************************************/
 int SThread::SignalThreadFinish()
 {
-    cerr << "INFO: Thread gone to finish state!" << endl << endl;
-
     SMutexLock stateMutexLock(threadStateMutex);
 
     threadState = THREAD_FINISHED;
