@@ -27,6 +27,9 @@ class SJob
 {
 public:
     //! Destroys the connection object
+    SJob();
+
+    //! Destroys the connection object
     virtual ~SJob() { }
 
     //! Get the stage specific data for this connection

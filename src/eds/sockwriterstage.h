@@ -48,10 +48,10 @@ public:
     virtual ~SSockWriterStage() { }
 
     //! Opens a DB connection
-    virtual void WriteData(SJob *pJob, int sockHandle, char *data, size_t length);
+    virtual void WriteData(void *pSource, int sockHandle, char *data, size_t length);
 
     //! Runs a query
-    virtual void RunQuery(SJob *pJob, const SString &query);
+    virtual void RunQuery(void *pSource, const SString &query);
 };
 
 #endif

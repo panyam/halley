@@ -4,43 +4,42 @@ var EmailFilter = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})
 // 
 // Make an ajax request to a server and send the response to a call back
 //
-function MakeAjaxRequest(method, uri, callback, data, len, onload, headers)
+function MakeAjaxRequest(method, uri, callback, data, multipart, headers)
 {
-    var httpRequest = GetHttpRequest()
-    
+    var httpRequest = GetHttpRequest(method, uri, multipart, headers)
     if (httpRequest == null)
     {
         alert("You are not ajax enabled!  This is being fixed!")
         return false;
     }
 
+    var handler = function(evt)
+    {
+        callback(evt.currentTarget);
+    }
+
     // 
     // Called as we get a list of files to fill up on
     //
-    httpRequest.onreadystatechange = function(evt)
+    if (multipart == true)
     {
-        callback(httpRequest);
+        httpRequest.onload = handler;
+    }
+    else
+    {
+        httpRequest.onreadystatechange = handler;
     }
 
-    if (onload != null)
-    {
-        httpRequest.multipart = true;
-        httpRequest.onload = onload;
-    }
+    SendHttpRequest(httpRequest, data);
 
-    httpRequest.open(method, uri, true)
+    return true;
+}
 
-    if (headers != null)
+function SendHttpRequest(httpRequest, data)
+{
+    if (data != null)
     {
-        for (var hdr in headers)
-        {
-            httpRequest.setRequestHeader(hdr, headers[hdr]);
-        }
-    }
-
-    if (data && len)
-    {
-        httpRequest.setRequestHeader("Content-Length", len);
+        httpRequest.setRequestHeader("Content-Length", data.len);
     }
     else
     {
@@ -48,15 +47,13 @@ function MakeAjaxRequest(method, uri, callback, data, len, onload, headers)
     }
 
     httpRequest.send(data);
-
-    return true;
 }
 
 // 
 // This gets the XMLHttpRequest object for us 
 // in a platform independant way
 //
-function GetHttpRequest()
+function GetHttpRequest(method, uri, multipart, headers)
 {
     var xmlHttp;
     try
@@ -81,6 +78,20 @@ function GetHttpRequest()
             {
                 alert("Your browser does not support AJAX!");
                 return null;
+            }
+        }
+    }
+
+    if (xmlHttp != null)
+    {
+        if (multipart == true)
+            xmlHttp.multipart = true;
+        xmlHttp.open(method, uri, true)
+        if (headers != null)
+        {
+            for (var hdr in headers)
+            {
+                xmlHttp.setRequestHeader(hdr, headers[hdr]);
             }
         }
     }

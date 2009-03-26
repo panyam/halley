@@ -23,12 +23,12 @@ SSockWriterStage::SSockWriterStage(int numThreads) : SStage(numThreads)
 
 
 //! Queues data to be written to a socket
-void SSockWriterStage::WriteData(SJob *pJob, int sockHandle, char *data, size_t length)
+void SSockWriterStage::WriteData(void *pSource, int sockHandle, char *data, size_t length)
 {
 }
 
 //! Runs a query
-void SSockWriterStage::RunQuery(SJob *pJob, const SString &query)
+void SSockWriterStage::RunQuery(void *pSource, const SString &query)
 {
 }
 

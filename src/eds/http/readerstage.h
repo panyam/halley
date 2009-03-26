@@ -47,7 +47,7 @@ public:
     virtual SHttpHandlerStage *GetHandlerStage() { return pHandlerStage; }
 
     //! Called when bytes are available
-    void    ReadSocket(SJob *pJob);
+    void    ReadSocket(SConnection *pConnection);
 
 protected:
     //! Does the actual event handling.

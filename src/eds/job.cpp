@@ -16,6 +16,22 @@
 #include "stage.h"
 
 /**************************************************************************************
+*   \brief  Create a new job object
+*
+*   \version
+*       - Sri Panyam  26/03/2009
+*         Created
+**************************************************************************************/
+SJob::SJob()
+{
+    // create space for the first 5 stages
+    for (int i = 0;i < 5;i++)
+    {
+        stageData.push_back(NULL);
+    }
+}
+
+/**************************************************************************************
 *   \brief  Get stage specific data.
 *
 *   \version
@@ -25,7 +41,8 @@
 void *SJob::GetStageData(SStage *pStage)
 {
     int id = pStage->ID();
-    for (int i = stageData.size();i <= id;i++)
+    int size = stageData.size();
+    for (int i = size;i <= id;i++)
         stageData.push_back(NULL);
     return stageData[id];
 }
@@ -40,7 +57,8 @@ void *SJob::GetStageData(SStage *pStage)
 void SJob::SetStageData(SStage *pStage, void * data)
 {
     int id = pStage->ID();
-    for (int i = stageData.size();i <= id;i++)
+    int size = stageData.size();
+    for (int i = size;i <= id;i++)
         stageData.push_back(NULL);
     stageData[id] = data;
 }

@@ -219,7 +219,7 @@ int SEvServer::Run()
     while (!Stopped())
     {
         int nfds = epoll_wait(kdpfd, events, curfds, -1);
-        if (nfds < 0)
+        if (nfds < 0 && errno != EINTR)
         {
             std::cerr << "ERROR: epoll_wait error: [" << errno << "]: " << strerror(errno) << std::endl;
             break ;

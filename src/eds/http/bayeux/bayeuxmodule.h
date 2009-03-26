@@ -29,6 +29,9 @@ public:
     //! Registers a channel
     virtual bool RegisterChannel(SBayeuxChannel *pChannel, bool replace = false);
 
+    //! Get a channel by name
+    virtual SBayeuxChannel *GetChannel(const SString &name);
+
     //! Removes a channel
     virtual bool UnregisterChannel(const SBayeuxChannel *pChannel);
 
@@ -41,12 +44,19 @@ public:
                               SBodyPart *           pBodyPart);
 
     //! Deliver an event to all connections
-    virtual void DeliverEvent(SBayeuxChannel *pChannel, JsonNodePtr &value);
+    virtual void DeliverEvent(const SBayeuxChannel *pChannel, const JsonNodePtr &value);
 
 protected:
+    //! Sends the response for a message
+    void SendResponse(int                   result,
+                      const JsonNodePtr &   output,
+                      SHttpHandlerStage *   pStage, 
+                      SConnection *         pConnection,
+                      SHttpResponse *       pResponse);
+
     int  ProcessMessage(const JsonNodePtr & node,
                         JsonNodePtr &       output,
-                        SConnection *       pConnection);
+                        SHttpHandlerData *  pHandlerData);
 
     int  ProcessHandshake(const JsonNodePtr &message, JsonNodePtr &output);
 
@@ -56,35 +66,35 @@ protected:
 
     int  ProcessSubscribe(const JsonNodePtr &   message,
                           JsonNodePtr &         output,
-                          SConnection *         pConnection);
+                          SHttpHandlerData *    pHandlerData);
 
     int  ProcessUnsubscribe(const JsonNodePtr & message,
                             JsonNodePtr &       output,
-                            SConnection *       pConnection);
+                            SHttpHandlerData *  pHandlerData);
 
     int  ProcessMetaMessage(const SString & channel,
                             const JsonNodePtr & message,
                             JsonNodePtr &       output,
-                            SConnection *       pConnection);
+                            SHttpHandlerData *  pHandlerData);
 
     int  ProcessPublish(const SString &         channel,
                         const JsonNodePtr &     message,
                         JsonNodePtr &           output,
-                        SConnection *           pConnection);
+                        SHttpHandlerData *      pHandlerData);
 
     bool AddSubscription(const SString &channel, const SString &clientId);
     bool RemoveSubscription(const SString &channel, const SString &clientId);
 
-    bool AddClientConnection(const SString &clientId, SConnection *pConnection);
-    SConnection *GetClientConnection(const SString &clientId);
-    SConnection *RemoveClientConnection(const SString &clientId, SConnection *pConnection);
+    bool AddClient(const SString &clientId, SHttpHandlerData *pHandlerData);
+    SHttpHandlerData *GetClient(const SString &clientId);
+    SHttpHandlerData *RemoveClient(const SString &clientId);
 
 protected:
     //! Collection of channels
     typedef std::map<SString, SBayeuxChannel *>     ChannelMap;
 
     //! The connection to send data from for each client
-    typedef std::map<SString, SConnection *>        ChannelConnections;
+    typedef std::map<SString, SHttpHandlerData *>   ChannelConnections;
 
     //! Clients connected to a channel
     typedef std::map<SString, SStringList *>        ChannelClients;

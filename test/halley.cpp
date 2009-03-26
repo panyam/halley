@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
     for (int i = 0;i < 5;i++)
     {
         SStringStream sstr;
-        sstr << "channel" << (i + 1);
+        sstr << "/bayeux/channel" << (i + 1);
         int port = 1010 + (i * 10);
         MyBayeuxChannel *pChannel = new MyBayeuxChannel(&bayeuxModule, sstr.str(), port);
         cerr << "Starting bayeux channel: " << sstr.str() << " on port: " << port << endl;

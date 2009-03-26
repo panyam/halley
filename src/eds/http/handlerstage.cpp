@@ -97,7 +97,7 @@ void SHttpHandlerStage::CloseConnection(SConnection *pConnection)
 void SHttpHandlerStage::HandleEvent(const SEvent &event)
 {
     // The connection currently being processed
-    SConnection *pConnection            = dynamic_cast<SConnection *>(event.pJob);
+    SConnection *pConnection            = (SConnection *)(event.pSource);
     SHttpHandlerData *pHandlerData      = (SHttpHandlerData *)pConnection->GetStageData(this);
 
     // create the response if none yet - it MUST be an "arrived" event

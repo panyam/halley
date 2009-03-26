@@ -19,16 +19,16 @@ SDBHelperStage::SDBHelperStage(int numThreads) : SStage(numThreads)
 
 
 //! Opens a DB connection
-void SDBHelperStage::Connect(SJob *pJob, const SString &dbURI, const std::map<SString, void *> &params)
+void SDBHelperStage::Connect(void *pSource, const SString &dbURI, const std::map<SString, void *> &params)
 {
 }
 
 //! Runs a query
-void SDBHelperStage::RunQuery(SJob *pJob, const SString &query)
+void SDBHelperStage::RunQuery(void *pSource, const SString &query)
 {
 }
 
 //! Disconnect from a database
-void SDBHelperStage::Disconnect(SJob *pJob, void *pConnection)
+void SDBHelperStage::Disconnect(void *pSource, void *pConnection)
 {
 }
