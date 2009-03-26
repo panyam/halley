@@ -72,15 +72,22 @@ protected:
                         JsonNodePtr &           output,
                         SConnection *           pConnection);
 
-    bool AddSubscription(const SString &channel, SConnection *pConnection);
-    bool RemoveSubscription(const SString &channel, SConnection *pConnection);
+    bool AddSubscription(const SString &channel, const SString &clientId);
+    bool RemoveSubscription(const SString &channel, const SString &clientId);
+
+    bool AddClientConnection(const SString &clientId, SConnection *pConnection);
+    SConnection *GetClientConnection(const SString &clientId);
+    SConnection *RemoveClientConnection(const SString &clientId, SConnection *pConnection);
 
 protected:
     //! Collection of channels
     typedef std::map<SString, SBayeuxChannel *>     ChannelMap;
 
-    //! Collection of subscriptions for each channel
-    typedef std::map<SString, SConnectionList *>    ChannelSubscription;
+    //! The connection to send data from for each client
+    typedef std::map<SString, SConnection *>        ChannelConnections;
+
+    //! Clients connected to a channel
+    typedef std::map<SString, SStringList *>        ChannelClients;
 
     //! The handler stage that is driving us all.
     SHttpHandlerStage *     pHandlerStage;
@@ -89,7 +96,10 @@ protected:
     ChannelMap              channels;
 
     //! A list of channel subscriptions
-    ChannelSubscription     subscriptions;
+    ChannelConnections      connections;
+
+    //! List of clients for each channel
+    ChannelClients          subscriptions;
 
     //! The boundary to be used bw multi part messages
     SString                 boundary;
