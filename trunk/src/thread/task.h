@@ -47,10 +47,10 @@ public:
 
 protected:
     //! Main task run function
-    virtual int Run()           =   0;
+    virtual int Run() { return 0; }
 
     //! Main task stop function
-    virtual int  RealStop()     =   0;
+    virtual int  RealStop() { return 0; }
 
 private:
     //! Tells whether the task has been stopped or not
