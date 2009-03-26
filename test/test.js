@@ -4,7 +4,7 @@ var EmailFilter = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})
 // 
 // Make an ajax request to a server and send the response to a call back
 //
-function MakeAjaxRequest(method, uri, callback, data, len, headers)
+function MakeAjaxRequest(method, uri, callback, data, len, onload, headers)
 {
     var httpRequest = GetHttpRequest()
     
@@ -17,9 +17,15 @@ function MakeAjaxRequest(method, uri, callback, data, len, headers)
     // 
     // Called as we get a list of files to fill up on
     //
-    httpRequest.onreadystatechange = function(response)
+    httpRequest.onreadystatechange = function(evt)
     {
-        callback(httpRequest, response);
+        callback(httpRequest);
+    }
+
+    if (onload != null)
+    {
+        httpRequest.multipart = true;
+        httpRequest.onload = onload;
     }
 
     httpRequest.open(method, uri, true)
