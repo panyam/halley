@@ -45,7 +45,6 @@ void SContentModule::ProcessOutput(SHttpHandlerData *   pHandlerData,
     }
     else
     {
-        std::cerr << "  === ContentModule:ProcessOutput - " << "Sending Body Part to Next Module: " << pBodyPart << std::endl;
         SendBodyPartToModule(pHandlerData->pConnection, pStage, pBodyPart, pModData, pNextModule);
     }
 
@@ -152,7 +151,6 @@ void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData,
                 }
             }
 
-            std::cerr << "  === ContentModule:HandleBodyPart - " << "Sending Body Part to Next Module" << std::endl;
             SendBodyPartToModule(pConnection, pStage, pBodyPart, pModData, pNextModule);
         }
         else
@@ -162,16 +160,11 @@ void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData,
 
             SStringStream boundary;
             boundary << CRLF << "--" << pModData->boundaries.front() << CRLF;
-            boundary << "Content-Type: " << "text/text" << CRLF;
+            // boundary << "Content-Type: " << "text/text" << CRLF;
             boundary << "Content-Length: " << pBodyPart->Size() << CRLF << CRLF;
 
             pBodyPart->InsertInBody(boundary.str());
 
-            // pBodyPart->AppendToBody(CRLF, 2);
-            // pBodyPart->AppendToBody("--", 2);
-            // pBodyPart->AppendToBody(pModData->boundaries.front());
-
-            std::cerr << "  === ContentModule:HandleBodyPart - " << "Sending Body Part to Next Module" << std::endl;
             SendBodyPartToModule(pConnection, pStage, pBodyPart, pModData, pNextModule);
         }
     }
