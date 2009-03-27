@@ -512,8 +512,10 @@ int SBayeuxModule::ProcessPublish(const SString &       channel,
                                   SHttpHandlerData *    pHandlerData)
 {
     // do all the stuff here
-    output = JsonNodeFactory::StringNode("No handler for publish request found.");
-    return -1;
+    output = JsonNodeFactory::StringNode("OK");
+    SBayeuxChannel *pChannel = GetChannel(channel);
+    pChannel->HandleEvent(message, output);
+    return 0;
 }
 
 int SBayeuxModule::ProcessMetaMessage(const SString &       channel,
