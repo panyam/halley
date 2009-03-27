@@ -23,7 +23,7 @@ class SHttpModuleData
 {
 public:
     //! Creates a module data object.
-    SHttpModuleData() { Reset(); }
+    SHttpModuleData() : nextBP(0), nextBPToSend(0), processing(false) { }
 
     //! Virtual destructor
     virtual ~SHttpModuleData();
@@ -31,7 +31,7 @@ public:
     //! Resets the module data
     virtual void Reset()
     {
-        lastBP = lastBPSent = 0;
+        nextBP = nextBPToSend = 0;
         processing = false;
     }
 
@@ -47,7 +47,7 @@ public:
 
 public:
     //! last BP processed
-    BPIndexType lastBP;
+    BPIndexType nextBP;
 
     //! Last BP sent to the next module, this is so that we may consume
     // modules or merge modules in which case we dont want "holes"
@@ -104,7 +104,7 @@ public:
     // is available - or that even if it is called, a new counter be assigned only
     // when it is needed instead of at creation time.
 
-    BPIndexType lastBPSent;
+    BPIndexType nextBPToSend;
 
     //! true if this module is currently processing this body part.
     bool        processing;

@@ -36,7 +36,7 @@ void SWriterModule::ProcessOutput(SHttpHandlerData *    pHandlerData,
 
     // first send the headers regardless of whether there are any 
     // body parts so it is done with
-    if (pModData->lastBPSent == 0)
+    if (pModData->nextBPToSend == 0)
     {
         SHttpRequest *  pRequest    = pHandlerData->Request();
         SHttpResponse * pResponse   = pRequest->Response();
@@ -83,18 +83,17 @@ void SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
     SHeaderTable &respHeaders       = pResponse->Headers();
     SString transferEncoding(respHeaders.Header("Transfer-Encoding"));
 
-    if (pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION)
+    if (pBodyPart->Type() == SBodyPart::BP_CONTENT_FINISHED ||
+        pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION)
     {
-        // TODO: how to ignore all future body parts since connection is
-        // closed and/or finished?
-        pStage->CloseConnection(pConnection);
-    }
-    else if (pBodyPart->Type() == SBodyPart::BP_CONTENT_FINISHED)
-    {
+        // reset last BP sent as no more packets will 
+        // be sent for this request
+        pModData->nextBP        = 0;
+        pModData->nextBPToSend  = 0;
+
         // do nothing - close connection only if close header found
-        SString closehdr;
-        respHeaders.HeaderIfExists("Connection", closehdr);
-        if (strcasecmp(closehdr.c_str(), "close") == 0)
+        if (pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION ||
+            (respHeaders.Header("Connection") == "close"))
         {
             std::cerr << "  === WriterModule - " << "Closing Connection" << std::endl;
             pStage->CloseConnection(pConnection);
@@ -115,11 +114,10 @@ void SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
     {
         std::cerr << "  === WriterModule - " << "Writing Message Body" << std::endl;
         pBodyPart->WriteMessageBody(outStream);
+        pModData->nextBPToSend++;
     }
 
     // now delete the body part - its no longer needed!
     delete pBodyPart;
-
-    pModData->lastBPSent++;
 }
 
