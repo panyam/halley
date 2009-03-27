@@ -807,8 +807,25 @@ JsonNodeFactory::ObjectNode()
 std::ostream &
 JsonFormatter::FormatString(std::ostream &out, const std::string &str)
 {
-    // TODO: handle appropriate escape strings and unicode chars
-    out << '"' << str << '"';
+    out << '"';
+    for (std::string::const_iterator iter = str.begin(); iter != str.end(); ++iter)
+    {
+        char ch = *iter;
+        switch (ch)
+        {
+            case '"':   out << "\\\""; break;
+            case '/':   out << "\\/"; break;
+            case '\\':  out << "\\\\"; break;
+            case '\b':  out << "\\b"; break;
+            case '\f':  out << "\\f"; break;
+            case '\n':  out << "\\n"; break;
+            case '\r':  out << "\\r"; break;
+            case '\v':  out << "\\v"; break;
+            case '\t':  out << "\\t"; break;
+            default:    out << ch; break;
+        }
+    }
+    out << '"';
     return out;
 }
 
@@ -1006,9 +1023,6 @@ AMFFormatter::Format(std::ostream &out, const JsonNodePtr &node)
     Format(&membuff, node);
 
     int len = membuff.Length();
-
-    // std::cerr << "Written Node - Length: " << len << std::endl;
-    // std::cerr << "============================================" << std::endl;
 
     char bytes[4] = {
         (len >> 24) & 0xff,

@@ -66,6 +66,12 @@ public:
     //! Sets raw bytes as the body
     void SetBody(const char *buffer, unsigned size);
 
+    //! Inserts content at a given position
+    void InsertInBody(const SString &data, size_t offset = 0);
+
+    //! Insert raw bytes into the body
+    void InsertInBody(const char *buffer, unsigned size, size_t offset = 0);
+
     //! Appends a string to the body
     void AppendToBody(const SString &data);
 
