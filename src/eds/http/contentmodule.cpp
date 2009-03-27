@@ -20,7 +20,7 @@ void SContentModule::ProcessOutput(SHttpHandlerData *   pHandlerData,
                                    SHttpHandlerStage *  pStage,
                                    SBodyPart *          pBodyPart)
 {
-    SContentModuleData *pModData    = (SContentModuleData *)(pHandlerData->GetModuleData(this, true));
+    SContentModuleData *pModData    = dynamic_cast<SContentModuleData *>(pHandlerData->GetModuleData(this, true));
 
     // already being processed quit
     // TODO: not yet thread safe
@@ -104,21 +104,22 @@ void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData,
     {
         // Send a whole bunch of Close boundary calls!!
 
-        if (false)
+        if (!pModData->boundaries.empty())
         {
-            pBodyPart->bpType = SBodyPart::BP_NORMAL;  // convert to normal message
-            pBodyPart->SetBody("");
+            SBodyPart *pCloser = pResponse->NewBodyPart();
 
             while ( ! pModData->boundaries.empty())
             {
                 SString boundary(pModData->boundaries.front());
                 pModData->boundaries.pop_front();
 
-                pBodyPart->AppendToBody("--", 2);
-                pBodyPart->AppendToBody(boundary);
-                pBodyPart->AppendToBody("--", 2);
-                pBodyPart->AppendToBody(CRLF, 2);
+                pCloser->AppendToBody("--", 2);
+                pCloser->AppendToBody(boundary);
+                pCloser->AppendToBody("--", 2);
+                pCloser->AppendToBody(CRLF, 2);
             }
+
+            SendBodyPartToModule(pConnection, pStage, pCloser, pModData, pNextModule);
         }
 
         // send to next module so it can close it - nothing to do here

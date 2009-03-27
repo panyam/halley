@@ -24,7 +24,11 @@ public:
     virtual ~SContentModuleData() { boundaries.clear(); }
 
     //! Clears boundaries
-    virtual void Reset() { boundaries.clear(); }
+    virtual void Reset()
+    {
+        SHttpModuleData::Reset();
+        boundaries.clear();
+    }
 
 public:
     //! A stack that maintains the boundaries we have opened so far (for

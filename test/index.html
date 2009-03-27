@@ -8,7 +8,7 @@
         // info about each of the channels
         var clientId        = null;
         var NUM_CHANNELS    = 5;
-        var ALL_AT_ONCE     = true;
+        var ALL_AT_ONCE     = false;
         var curr_channel    = 1;
         var channels = [
             null,
@@ -53,8 +53,10 @@
 
                     // subscribe to the next channel if more left
                     curr_channel += 1;
-                    if ( ! ALL_AT_ONCE && curr_channel <= num_channels)
+                    if ( ! ALL_AT_ONCE && curr_channel <= NUM_CHANNELS)
+                    {
                         SubscribeToChannel(curr_channel);
+                    }
                 }
                 else
                 {
@@ -72,6 +74,7 @@
                         'clientId': clientId,
                         'subscription': '/bayeux/channel' + channel};
 
+            logMessage("Subscribing to channel: " + channel);
             var datastr = JSON.encode(data);
             MakeAjaxRequest("POST", "/bayeux/", HandleChannelEvent(channel), datastr, true);
         }

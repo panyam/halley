@@ -43,7 +43,7 @@ SHttpModuleData::~SHttpModuleData()
     }
 }
 
-//! Returns the next body part if it matches the lastBP count
+//! Returns the next body part if it matches the nextBP count
 SBodyPart *SHttpModuleData::NextBodyPart()
 {
     SBodyPart *pOut = NULL;
@@ -51,9 +51,9 @@ SBodyPart *SHttpModuleData::NextBodyPart()
     if (!bodyParts.empty())
     {
         SBodyPart *pTop = bodyParts.top();
-        if (pTop->Index() == lastBP)
+        if (pTop->Index() == nextBP)
         {
-            lastBP++;
+            nextBP++;
             pOut = pTop;
             bodyParts.pop();
         }
@@ -167,6 +167,7 @@ SHttpModuleData *SHttpHandlerData::GetModuleData(SHttpModule *pModule, bool crea
     if (create)
     {
         pModData = pModule->CreateModuleData(this);
+        pModData->Reset();
         moduleData.push_back(new ModuleData(pModule, pModData));
     }
     return pModData;
@@ -187,7 +188,7 @@ void SHttpModule::SendBodyPartToModule(SConnection *        pConnection,
                                        SHttpModule *        pModule)
 {
     if (pBodyPart != NULL)
-        pBodyPart->bpIndex = pModData->lastBPSent++;
+        pBodyPart->bpIndex = pModData->nextBPToSend++;
     pStage->OutputToModule(pConnection, pNextModule, pBodyPart);
 }
 
