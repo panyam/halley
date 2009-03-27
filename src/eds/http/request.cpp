@@ -80,9 +80,8 @@ bool SHttpRequest::ParseFirstLine(const SString &line)
 
     resource = SString(pStart, pCurr - pStart);
 
-    // TODO: 
-    //      Unescape the resource
-    //      Strip ./ and ../ from resource
+    // TODO: Unescape the resource
+    // TODO: Strip ./ and ../ from resource
 
     pStart = pCurr;
     while (*pStart && isspace(*pStart)) pStart++;
