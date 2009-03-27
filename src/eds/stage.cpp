@@ -79,7 +79,7 @@ SStage::~SStage()
     {
         if (handlerThreads[i] != NULL)
         {
-            assert("Stage::Stop MUST be called before destruction." && !handlerThreads[i]->Running());
+            assert("Stage::Stop MUST be called before destruction." && !handlerThreads[i]->IsRunning());
         }
     }
 }
