@@ -729,7 +729,6 @@ JsonNodeFactory::BoolNode(bool value)
 JsonNodePtr
 JsonNodeFactory::IntNode(int value)
 {
-    // TODO: use pools so bools arent created too many times
     return new JsonBasicNode<JNT_INT, int>(value);
 }
 
@@ -745,7 +744,6 @@ JsonNodeFactory::IntNode(int value)
 JsonNodePtr
 JsonNodeFactory::DoubleNode(double value)
 {
-    // TODO: use pools so bools arent created too many times
     return new JsonBasicNode<JNT_DOUBLE, double>(value);
 }
 
@@ -761,7 +759,6 @@ JsonNodeFactory::DoubleNode(double value)
 JsonNodePtr
 JsonNodeFactory::StringNode(const std::string &value)
 {
-    // TODO: use pools so bools arent created too many times
     return new JsonBasicNode<JNT_STRING, std::string>(value);
 }
 

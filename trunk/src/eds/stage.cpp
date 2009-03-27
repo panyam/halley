@@ -72,6 +72,18 @@ SStage::SStage(int numThreads)
     }
 }
 
+//! Destroys the stage - Stop MUST be called before destruction
+SStage::~SStage()
+{
+    for (int i = 0, numThreads = handlerThreads.size();i < numThreads;i++)
+    {
+        if (handlerThreads[i] != NULL)
+        {
+            assert("Stage::Stop MUST be called before destruction." && !handlerThreads[i]->Running());
+        }
+    }
+}
+
 //! Starts the stage
 void SStage::Start()
 {
@@ -104,7 +116,6 @@ void SStage::Stop()
 }
 
 //! Queue an event to be handled later
-// TODO: if we are not using any threads then handle the event already!
 void SStage::QueueEvent(const SEvent &event)
 {
     if (handlerThreads.empty())

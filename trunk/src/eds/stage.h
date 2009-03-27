@@ -34,9 +34,8 @@ public:
     // Creates a new handler
     SStage(int numThreads = 0);
     
-    // Destroys the stage
-    // TODO: Destoy all threads
-    virtual ~SStage() { }
+    // Destroys the stage - MUST call Stop before this
+    virtual ~SStage();
 
     // Start the stage
     virtual void Start();

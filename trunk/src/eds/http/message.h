@@ -163,7 +163,6 @@ protected:
     SHeaderTable    headers;
 
     // Number of body parts in this message so far
-    // TODO - how to handle more than 4 billion messages?
     BPIndexType     bpCount;
 };
 
