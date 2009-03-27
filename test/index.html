@@ -22,7 +22,9 @@
 
         function logMessage(text)
         {
-            document.getElementById("bayeuxLogs").value += (text + "\n");
+            var logs = document.getElementById("bayeuxLogs");
+            logs.value += (text + "\n");
+            logs.focus();
         }
 
         function onChannelClicked(channel)
@@ -32,6 +34,22 @@
             channels['started'] = !channels['started'];
             document.getElementById("channel" + channel).value =
                                     channels['started'] ? "Stop" : "Start";
+        }
+
+        function SetPromptForChannel(channel)
+        {
+            var prompt = document.getElementById("channel" + channel + "Prompt").value;
+            function handler(request)
+            {
+                logMessage("SetPrompt Result for channel (" + channel + "): " + request.responseText);
+            }
+
+            var data = {'channel': '/bayeux/channel' + channel,
+                        'clientId': clientId,
+                        'prompt': prompt}
+
+            var datastr = JSON.encode(data);
+            MakeAjaxRequest("POST", "/bayeux/", handler, datastr, true);
         }
 
         function HandleChannelEvent(channel)
@@ -71,11 +89,11 @@
 
         function SubscribeToChannel(channel)
         {
+            logMessage("Subscribing to channel: " + channel);
             var data = {'channel': '/meta/subscribe',
                         'clientId': clientId,
                         'subscription': '/bayeux/channel' + channel};
 
-            logMessage("Subscribing to channel: " + channel);
             var datastr = JSON.encode(data);
             MakeAjaxRequest("POST", "/bayeux/", HandleChannelEvent(channel), datastr, true);
         }
@@ -124,31 +142,56 @@
     <body>
         <table style="width: 100%; height: 100%" border = 1>
         <tr>
-        <td> <center> Channel 1: <br>
+        <td>
+            <center> Channel 1:
+            <br><input id = "channel1Prompt" name = "channel1Prompt" value = "Hello World" style="width: 100%"/>
+            <br><input id = "channel1SetPrompt" name = "channel1SetPrompt"
+                   type="button" value = "Set" onclick = "return SetPromptForChannel(1);"/>
             <input id = "channel1" name = "channel1"
                    type="button" value = "Start"
                    onclick = "return onChannelClicked(1);"/>
-        </center> </td>
-        <td> <center> Channel 2: <br>
+            </center>
+        </td>
+        <td>
+            <center> Channel 2:
+            <br><input id = "channel2Prompt" name = "channel2Prompt" value = "Hello World" style="width: 100%"/>
+            <br><input id = "channel2SetPrompt" name = "channel2SetPrompt"
+                   type="button" value = "Set" onclick = "return SetPromptForChannel(2);"/>
             <input id = "channel2" name = "channel2"
                    type="button" value = "Start"
                    onclick = "return onChannelClicked(2);"/>
-        </center> </td>
-        <td> <center> Channel 3: <br>
+            </center>
+        </td>
+        <td>
+            <center> Channel 3:
+            <br><input id = "channel3Prompt" name = "channel3Prompt" value = "Hello World" style="width: 100%"/>
+            <br><input id = "channel3SetPrompt" name = "channel3SetPrompt"
+                   type="button" value = "Set" onclick = "return SetPromptForChannel(3);"/>
             <input id = "channel3" name = "channel3"
                    type="button" value = "Start"
                    onclick = "return onChannelClicked(3);"/>
-        </center> </td>
-        <td> <center> Channel 4: <br>
+            </center>
+        </td>
+        <td>
+            <center> Channel 4:
+            <br><input id = "channel4Prompt" name = "channel4Prompt" value = "Hello World" style="width: 100%"/>
+            <br><input id = "channel4SetPrompt" name = "channel4SetPrompt"
+                   type="button" value = "Set" onclick = "return SetPromptForChannel(4);"/>
             <input id = "channel4" name = "channel4"
                    type="button" value = "Start"
                    onclick = "return onChannelClicked(4);"/>
-        </center> </td>
-        <td> <center> Channel 5: <br>
+            </center>
+        </td>
+        <td>
+            <center> Channel 5:
+            <br><input id = "channel5Prompt" name = "channel5Prompt" value = "Hello World" style="width: 100%"/>
+            <br><input id = "channel5SetPrompt" name = "channel5SetPrompt"
+                   type="button" value = "Set" onclick = "return SetPromptForChannel(5);"/>
             <input id = "channel5" name = "channel5"
                    type="button" value = "Start"
                    onclick = "return onChannelClicked(5);"/>
-        </center> </td>
+            </center>
+        </td>
         </tr>
         <tr style="height: 100%">
         <td colspan = 5 style="width: 100%; height: 100%">

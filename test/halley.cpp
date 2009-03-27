@@ -35,11 +35,19 @@ public:
 };
 
 //! our bayeux connection handler
-class MyConnHandler : public SConnHandler
+class MyConnHandler : public SConnHandler, public SChannelListener
 {
 public:
     MyConnHandler(SBayeuxChannel *pChannel, SBayeuxModule *pMod)
-        : pTheChannel(pChannel), pModule(pMod) { }
+        : pTheChannel(pChannel), pModule(pMod), prompt(" Hello World >> ")
+    {
+        pTheChannel->SetChannelListener(this);
+    }
+
+    void HandleEvent(const JsonNodePtr &message, JsonNodePtr &output)
+    {
+        prompt = message->Get<SString>("prompt", "");
+    }
 
 protected:
     //! Handle connection in async mode
@@ -57,7 +65,7 @@ protected:
             if (clientInput->bad() || clientInput->fail() || clientInput->eof())
                 break ;
 
-            JsonNodePtr value = JsonNodeFactory::StringNode(buffer);
+            JsonNodePtr value = JsonNodeFactory::StringNode(prompt + buffer);
             pModule->DeliverEvent(pTheChannel, value);
         }
 
@@ -71,6 +79,9 @@ protected:
 
     //! Module thorough which events are dispatched
     SBayeuxModule *pModule;
+
+    //! The prompt for this.
+    std::string prompt;
 };
 
 class MyConnFactory : public SConnFactory
