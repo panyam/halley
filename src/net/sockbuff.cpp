@@ -97,7 +97,8 @@ int SSocketBuff::sync()
 
     while (count > 0)
     {
-        numWritten = send(sockHandle, pbase() + offset, count, MSG_NOSIGNAL);
+        numWritten = -1; //send(sockHandle, pbase() + offset, count, MSG_NOSIGNAL);
+        errno = EAGAIN;
         if (numWritten < 0)
         {
             // block till written! - not good need to palm this off to
@@ -130,9 +131,19 @@ int SSocketBuff::sync()
                     assert("Too many fds found!!!" && nfds == 1);
 
                     numWritten = send(sockHandle, pbase() + offset, count, MSG_NOSIGNAL);
+                    if (numWritten < 0)
+                    {
+                        std::cerr << "WRITE ERROR: send error: [" << errno << "]: " << strerror(errno) << std::endl;
+                        return -1;
+                    }
                     count -= numWritten;
                     offset += numWritten;
                 }
+            }
+            else
+            {
+                std::cerr << "WRITE ERROR: send error: [" << errno << "]: " << strerror(errno) << std::endl;
+                return -1;
             }
         }
         else

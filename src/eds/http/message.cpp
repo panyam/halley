@@ -51,16 +51,16 @@ void SBodyPart::SetBody(const char *buffer, unsigned size)
     data.assign(buffer, buffer + size);
 }
 
-// Prepends to the body
-void SBodyPart::PrependToBody(const SString &data)
+// Inserts into the body
+void SBodyPart::InsertInBody(const SString &data, size_t offset)
 {
-    PrependToBody(data.c_str(), data.size());
+    InsertInBody(data.c_str(), data.size());
 }
 
-// Prepends to the body
-void SBodyPart::PrependToBody(const char *buffer, unsigned size)
+// Inserts into the body
+void SBodyPart::InsertInBody(const char *buffer, unsigned size, size_t offset)
 {
-    data.insert(data.begin(), buffer, buffer + size);
+    data.insert(data.begin() + offset, buffer, buffer + size);
 }
 
 // Appends to the body

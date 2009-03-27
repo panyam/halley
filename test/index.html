@@ -2,13 +2,14 @@
 <html>
     <head>
     <title>Bayeux Test!!!</title>
+    <script type="text/javascript" src = "/btest/jsonerror.js"> </script>
     <script type="text/javascript" src = "/btest/json.js"> </script>
     <script type="text/javascript" src = "/btest/test.js"> </script>
     <script type="text/javascript" defer >
         // info about each of the channels
         var clientId        = null;
         var NUM_CHANNELS    = 5;
-        var ALL_AT_ONCE     = false;
+        var ALL_AT_ONCE     = true;
         var curr_channel    = 1;
         var channels = [
             null,
@@ -60,7 +61,7 @@
                 }
                 else
                 {
-                    logMessage("Recieved Event: " + request.responseText);
+                    logMessage("Received Event: " + request.responseText);
                 }
 
                 channels[channel]['numevents'] = numevents + 1;

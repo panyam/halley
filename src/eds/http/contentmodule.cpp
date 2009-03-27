@@ -86,10 +86,10 @@ void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData,
             SString boundary(pModData->boundaries.front());
             pModData->boundaries.pop_front();
             pBodyPart->bpType = SBodyPart::BP_NORMAL;  // convert to normal message
-            pBodyPart->SetBody("--", 2);
+            pBodyPart->SetBody(CRLF, 2);
+            pBodyPart->AppendToBody("--", 2);
             pBodyPart->AppendToBody(boundary);
             pBodyPart->AppendToBody("--", 2);
-            pBodyPart->AppendToBody(CRLF, 2);
 
             // send to next module
             SendBodyPartToModule(pConnection, pStage, pBodyPart, pModData, pNextModule);
@@ -113,10 +113,10 @@ void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData,
                 SString boundary(pModData->boundaries.front());
                 pModData->boundaries.pop_front();
 
+                pCloser->AppendToBody(CRLF, 2);
                 pCloser->AppendToBody("--", 2);
                 pCloser->AppendToBody(boundary);
                 pCloser->AppendToBody("--", 2);
-                pCloser->AppendToBody(CRLF, 2);
             }
 
             SendBodyPartToModule(pConnection, pStage, pCloser, pModData, pNextModule);
@@ -151,22 +151,29 @@ void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData,
                     respHeaders.SetIntHeader("Content-Length", bodySize);
                 }
             }
+
+            std::cerr << "  === ContentModule:HandleBodyPart - " << "Sending Body Part to Next Module" << std::endl;
+            SendBodyPartToModule(pConnection, pStage, pBodyPart, pModData, pNextModule);
         }
         else
         {
             // prepend the 'current' boundary and send
             assert("No boundaries found in multi part message" && !pModData->boundaries.empty());
 
-            SBodyPart *pBoundary = pResponse->NewBodyPart();
-            SString boundary = pModData->boundaries.front();
-            pBoundary->SetBody("--", 2);
-            pBoundary->AppendToBody(boundary);
-            pBoundary->AppendToBody(CRLF, 2);
-            SendBodyPartToModule(pConnection, pStage, pBoundary, pModData, pNextModule);
-        }
+            SStringStream boundary;
+            boundary << CRLF << "--" << pModData->boundaries.front() << CRLF;
+            boundary << "Content-Type: " << "text/text" << CRLF;
+            boundary << "Content-Length: " << pBodyPart->Size() << CRLF << CRLF;
 
-        std::cerr << "  === ContentModule:HandleBodyPart - " << "Sending Body Part to Next Module" << std::endl;
-        SendBodyPartToModule(pConnection, pStage, pBodyPart, pModData, pNextModule);
+            pBodyPart->InsertInBody(boundary.str());
+
+            // pBodyPart->AppendToBody(CRLF, 2);
+            // pBodyPart->AppendToBody("--", 2);
+            // pBodyPart->AppendToBody(pModData->boundaries.front());
+
+            std::cerr << "  === ContentModule:HandleBodyPart - " << "Sending Body Part to Next Module" << std::endl;
+            SendBodyPartToModule(pConnection, pStage, pBodyPart, pModData, pNextModule);
+        }
     }
 }
 
