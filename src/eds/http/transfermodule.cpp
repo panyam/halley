@@ -94,7 +94,7 @@ void STransferModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
         {
             SStringStream sizestr;
             sizestr << hex << size << CRLF;
-            pBodyPart->PrependToBody(sizestr.str());
+            pBodyPart->InsertInBody(sizestr.str(), 0);
             pBodyPart->AppendToBody(CRLF, 2);
         }
     }

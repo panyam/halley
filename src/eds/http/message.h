@@ -54,12 +54,6 @@ public:
     //! Clears the body part for later use!
     void Reset();
 
-    //! Prepends a string to the body
-    void PrependToBody(const SString &data);
-
-    //! Prepends raw bytes to the body
-    void PrependToBody(const char *buffer, unsigned size);
-
     //! Sets a string as the body
     void SetBody(const SString &data);
 
