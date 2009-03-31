@@ -28,6 +28,7 @@
 #define _SBAYEUX_CHANNEL_H_
 
 #include "../httpfwd.h"
+#include "../../../json/json.h"
 
 //! Handles events sent to a channel
 class SChannelListener
