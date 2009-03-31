@@ -45,7 +45,7 @@ class SBayeuxChannel
 {
 public:
     //! Constructor
-    SBayeuxChannel(SBayeuxModule *pModule, const std::string &n)
+    SBayeuxChannel(SBayeuxModule *pMod, const std::string &n)
         : pModule(pMod), name(n) { }
 
     //! Destructor
@@ -73,7 +73,7 @@ protected:
     SChannelListener *  pListener;
 
     //! The module to which this channel belongs
-    SbayeuxModule *pModule;
+    SBayeuxModule *pModule;
 
     //! Name of the channel
     SString name;
