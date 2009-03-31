@@ -48,13 +48,13 @@ public:
     virtual ~SThreadListener() { }
 
     //! Called just before a thread starts
-    virtual void    ThreadStarted(SThread *pThread)               = 0;
+    virtual void    ThreadStarted(SThread *pThread) { }
 
     //! Called if thread has been stopped
-    virtual void    ThreadStopped(SThread *pThread)               = 0;
+    virtual void    ThreadStopped(SThread *pThread) { }
 
     //! Called just after thread finishes executing
-    virtual void    ThreadFinished(SThread *pThread, int result)  = 0;
+    virtual void    ThreadFinished(SThread *pThread, int result) { }
 };
 
 //*****************************************************************************
