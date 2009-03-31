@@ -42,6 +42,9 @@ class SHttpModule;
 class SHttpHandlerData;
 class SHttpReaderStage;
 class SHttpHandlerStage;
+class SBayeuxModule;
+class SBayeuxChannel;
+class SChannelListener;
 
 #endif
 
