@@ -63,14 +63,16 @@ public:
 
 public:
     //! Constructor
-    SEvServer(int port_, SHttpReaderStage*pReqReader_)
-        :   serverPort(port_),
-            pRequestReader(pReqReader_)
-    {
-    }
+    SEvServer(int port_, SHttpReaderStage*pReqReader_ = NULL) : serverPort(port_) { }
 
     //! Destructor
     ~SEvServer();
+
+    //! Set the request reader
+    void SetRequestReader(SHttpReaderStage* pReqReader_ = NULL)
+    {
+        pRequestReader = pReqReader_;
+    }
 
     //! Return the server's port
     inline int GetPort() { return this->serverPort; }
