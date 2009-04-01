@@ -46,11 +46,14 @@ class SBayeuxChannel
 {
 public:
     //! Constructor
-    SBayeuxChannel(SBayeuxModule *pMod, const std::string &n)
-        : pModule(pMod), name(n) { }
+    SBayeuxChannel(const std::string &n, SBayeuxModule *pMod = NULL)
+        : pModule(NULL), name(n) { }
 
     //! Destructor
     virtual ~SBayeuxChannel() { }
+
+    //! Sets the module we belong to
+    virtual void SetBayeuxModule(SBayeuxModule *pMod) { pModule = pMod; }
 
     //! Sets the channel listener
     void SetChannelListener(SChannelListener *pList) { pListener = pList; }
