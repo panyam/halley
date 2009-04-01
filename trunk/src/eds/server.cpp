@@ -238,50 +238,52 @@ int SEvServer::Run()
             std::cerr << "ERROR: epoll_wait error: [" << errno << "]: " << strerror(errno) << std::endl;
             break ;
         }
-
-        for (int n = 0;n < nfds;n++)
+        if (errno != EINTR)
         {
-            SConnection *   pConnection = (SConnection *)(events[n].data.ptr);
-            int connSocket  = pConnection == NULL ? serverSocket : pConnection->Socket();
-            if (connSocket == serverSocket)
+            for (int n = 0;n < nfds;n++)
             {
-                sockaddr_in client_sock_addr;
-                socklen_t addlen = sizeof(client_sock_addr);
-                int clientSocket = accept(serverSocket, (struct sockaddr *)&client_sock_addr, &addlen);
+                SConnection *   pConnection = (SConnection *)(events[n].data.ptr);
+                int connSocket  = pConnection == NULL ? serverSocket : pConnection->Socket();
+                if (connSocket == serverSocket)
+                {
+                    sockaddr_in client_sock_addr;
+                    socklen_t addlen = sizeof(client_sock_addr);
+                    int clientSocket = accept(serverSocket, (struct sockaddr *)&client_sock_addr, &addlen);
 
-                if (clientSocket < 0)
-                {
-                    std::cerr << "ERROR: Could not accept connection [" << errno << "]: " << strerror(errno) << "." << std::endl;
-                    break ;
-                }
-                else if (Stopped())
-                {
-                    // server being killed and we have a socket, 
-                    // so close the socket as well
-                    shutdown(clientSocket, SHUT_RDWR);
-                    close(clientSocket);
-                }
-                else
-                {
-                    setnonblocking(clientSocket);
-                    ev.events   = EPOLLIN | EPOLLET;
-                    ev.data.ptr = new SConnection(this, clientSocket);
-
-                    if (epoll_ctl(kdpfd, EPOLL_CTL_ADD, clientSocket, &ev) < 0)
+                    if (clientSocket < 0)
                     {
-                        std::cerr << "ERROR: epoll_ctl error [" << errno << "]: " 
-                             << strerror(errno) << "." << std::endl;
+                        std::cerr << "ERROR: Could not accept connection [" << errno << "]: " << strerror(errno) << "." << std::endl;
                         break ;
                     }
-                    curfds++;
+                    else if (Stopped())
+                    {
+                        // server being killed and we have a socket, 
+                        // so close the socket as well
+                        shutdown(clientSocket, SHUT_RDWR);
+                        close(clientSocket);
+                    }
+                    else
+                    {
+                        setnonblocking(clientSocket);
+                        ev.events   = EPOLLIN | EPOLLET;
+                        ev.data.ptr = new SConnection(this, clientSocket);
+
+                        if (epoll_ctl(kdpfd, EPOLL_CTL_ADD, clientSocket, &ev) < 0)
+                        {
+                            std::cerr << "ERROR: epoll_ctl error [" << errno << "]: " 
+                                 << strerror(errno) << "." << std::endl;
+                            break ;
+                        }
+                        curfds++;
+                    }
                 }
-            }
-            else if (!Stopped())
-            {
-                // means we have data to read off this socket, 
-                // dont read it but give it the request reader task
-                // handler!
-                pRequestReader->ReadSocket(pConnection);
+                else if (!Stopped())
+                {
+                    // means we have data to read off this socket, 
+                    // dont read it but give it the request reader task
+                    // handler!
+                    pRequestReader->ReadSocket(pConnection);
+                }
             }
         }
     }
