@@ -108,7 +108,7 @@ class MyBayeuxChannel : public virtual SBayeuxChannel, public virtual SServer
 public:
     //! Constructor
     MyBayeuxChannel(SBayeuxModule *pMod, const std::string &name, int port) :
-        SBayeuxChannel(name), SServer(port), pModule(pMod)
+        SBayeuxChannel(name, pMod), SServer(port)
     {
         SetConnectionFactory(new MyConnFactory(this, pModule));
     }
@@ -124,10 +124,6 @@ protected:
         value = JsonNodeFactory::StringNode(" ===== Connection Finished on Channel: " + Name());
         pModule->DeliverEvent(this, value);
     }
-
-protected:
-    //! The bayeux module through which events are dispatched
-    SBayeuxModule * pModule;
 };
 
 // This is what drives the server and loads modules depending on how we
