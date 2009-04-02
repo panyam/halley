@@ -92,6 +92,9 @@ protected:
     //! Resource being accessed
     SString     resource;
 
+    //! How the resources have been modified all along
+    SStringList resourceChain;
+
     //! The actually data that is sent as the content - Usually POSTs
     SBodyPart *     pContentBody;
 
