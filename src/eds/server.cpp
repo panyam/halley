@@ -33,6 +33,10 @@
 
 #define MAXEPOLLSIZE 10000
 
+#ifndef EPOLLRDHUP
+#define EPOLLRDHUP  0x2000
+#endif
+
 //*****************************************************************************
 /*!
  *  \brief  Called to stop the server.
@@ -221,7 +225,7 @@ int SEvServer::Run()
     struct epoll_event ev;
     struct epoll_event events[MAXEPOLLSIZE];
 
-    ev.events   = EPOLLIN | EPOLLET;
+    ev.events   = EPOLLIN | EPOLLET | EPOLLHUP | EPOLLRDHUP;
     ev.data.ptr = NULL;
     if (epoll_ctl(kdpfd, EPOLL_CTL_ADD, serverSocket, &ev) < 0)
     {
@@ -244,7 +248,12 @@ int SEvServer::Run()
             {
                 SConnection *   pConnection = (SConnection *)(events[n].data.ptr);
                 int connSocket  = pConnection == NULL ? serverSocket : pConnection->Socket();
-                if (connSocket == serverSocket)
+                if (Stopped() || (events[n].events & (EPOLLRDHUP | EPOLLHUP)) != 0)
+                {
+                    // peer hung up or stop was requested so kill this connection
+                    pConnection->Close();
+                }
+                else if (connSocket == serverSocket)    // its a connection request
                 {
                     sockaddr_in client_sock_addr;
                     socklen_t addlen = sizeof(client_sock_addr);
@@ -277,7 +286,7 @@ int SEvServer::Run()
                         curfds++;
                     }
                 }
-                else if (!Stopped())
+                else
                 {
                     // means we have data to read off this socket, 
                     // dont read it but give it the request reader task
