@@ -166,9 +166,9 @@ void SHttpRequest::SetResource(const SString &r)
 }
 
 //! Get the value of a query param
-const SString &SHttpRequest::GetQueryValue(const SString &param) const
+SString SHttpRequest::GetQueryValue(const SString &param) const
 {
-    for (SStringList::iterator iter = queryValues.begin(); iter != queryValues.end();++iter)
+    for (SStringList::const_iterator iter = queryValues.begin(); iter != queryValues.end();++iter)
     {
         if (*iter == param)
         {

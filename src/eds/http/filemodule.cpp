@@ -39,7 +39,7 @@ void SFileModule::ProcessInput(SHttpHandlerData *   pHandlerData,
                                SBodyPart *          pBodyPart)
 {
     SHttpRequest *pRequest  = pHandlerData->Request();
-    SString resource    = pRequest->Resource();
+    SString resource        = pRequest->Resource();
 
     SString docroot;
     SString filename;
@@ -108,9 +108,11 @@ void SFileModule::ProcessInput(SHttpHandlerData *   pHandlerData,
             if ((fileStat.st_mode & S_IFDIR) != 0)
             {
                 // we are dealing with a folder!
-                SString contents = PrintDirContents(docroot, filename, prefix);
+                SString format      = pRequest->GetQueryValue("format");
+                bool raw            = format == "raw";
+                SString contents    = PrintDirContents(docroot, filename, prefix, raw);
                 respHeaders.SetIntHeader("Content-Length", contents.size());
-                respHeaders.SetHeader("Content-Type", "text/html");
+                respHeaders.SetHeader("Content-Type", (raw ? "text/text" : "text/html"));
                 respHeaders.SetHeader("Cache-Control", "no-cache");
 
                 part->SetBody(contents);
@@ -312,24 +314,31 @@ bool SFileModule::ReadDirectory(const char *dirname, std::vector<DirEnt> &entrie
  *        Created.
  *
  *****************************************************************************/
-SString SFileModule::PrintDirContents(const SString &docroot, const SString &filename, const SString &prefix)
+SString SFileModule::PrintDirContents(const SString &docroot, const SString &filename, const SString &prefix, bool raw)
 {
     SString dirname(docroot + filename);
     int filenamelen = filename.size();
     SStringStream output;
     std::vector<DirEnt> entries;
 
-    output << "<html>";
-    output << "<head>";
-    output << "</head>";
-    output << "<body>";
-    output << "<p><center><h2>Contents of: ";
+    if (raw)
+    {
+        output << "[";
+    }
+    else
+    {
+        output << "<html>";
+        output << "<head>";
+        output << "</head>";
+        output << "<body>";
+        output << "<p><center><h2>Contents of: ";
 
-    // show all parent directories for easy access
-    output << PrintDirParents(docroot, filename);
+        // show all parent directories for easy access
+        output << PrintDirParents(docroot, filename);
 
-    output << "</h2></center>";
-    output << "<hl></hl>";
+        output << "</h2></center>";
+        output << "<hl></hl>";
+    }
 
     if (ReadDirectory(dirname.c_str(), entries))
     {
@@ -337,40 +346,55 @@ SString SFileModule::PrintDirContents(const SString &docroot, const SString &fil
         std::sort(entries.begin(), entries.end(), DirEnt::DirEntCmp);
         std::vector<DirEnt>::iterator iter = entries.begin();
 
-        output << "<table width = \"100%\">";
-        output << "<thead>";
-        output << "<tr>";
-        output << "<td><strong>File Name</strong></td>";
-        output << "<td><strong>Size</strong></td>";
-        // output << "<td><strong>Created</strong></td>";
-        // output << "<td><strong>Modified</strong></td>";
-        output << "</tr>";
-        output << "</thead>";
+        if (!raw)
+        {
+            output << "<table width = \"100%\">";
+            output << "<thead>";
+            output << "<tr>";
+            output << "<td><strong>File Name</strong></td>";
+            output << "<td><strong>Size</strong></td>";
+            // output << "<td><strong>Created</strong></td>";
+            // output << "<td><strong>Modified</strong></td>";
+            output << "</tr>";
+            output << "</thead>";
+        }
         for (;iter != entries.end(); ++iter)
         {
             bool isdir = (iter->entStat.st_mode & S_IFDIR) != 0;
-            output << "<tr>";
 
-            output << "<td><a href=\"";
-            output << prefix;
-            output << (filename[0] == '/' ? filename.c_str() + 1 : filename.c_str());
-            if (filenamelen > 0 && filename[filenamelen - 1] != '/') output << "/";
-            output << (iter->entName[0] == '/' ? iter->entName.c_str() + 1 : iter->entName.c_str());
-            output << "\">";
-
-            if (isdir)
+            if (raw)
             {
-                output << "[" << iter->entName << "]</a></td>";
-                output << "<td>---</td>";
+                output << "{'name': '" << iter->entName << "', " << 
+                            "'isdir': " << isdir << ", " <<
+                            "'size': " << iter->entStat.st_size << "}" << std::endl;
             }
             else
             {
-                output << iter->entName << "</a></td>";
-                output << "<td>" << iter->entStat.st_size << "</td>";
+                output << "<tr>";
+                output << "<td><a href=\"";
+                output << prefix;
+                output << (filename[0] == '/' ? filename.c_str() + 1 : filename.c_str());
+                if (filenamelen > 0 && filename[filenamelen - 1] != '/') output << "/";
+                output << (iter->entName[0] == '/' ? iter->entName.c_str() + 1 : iter->entName.c_str());
+                output << "\">";
+
+                if (isdir)
+                {
+                    output << "[" << iter->entName << "]</a></td>";
+                    output << "<td>---</td>";
+                }
+                else
+                {
+                    output << iter->entName << "</a></td>";
+                    output << "<td>" << iter->entStat.st_size << "</td>";
+                }
+                output << "</tr>";
             }
-            output << "</tr>";
         }
-        output << "</table>";
+        if (!raw)
+        {
+            output << "</table>";
+        }
     }
     else
     {
@@ -378,9 +402,16 @@ SString SFileModule::PrintDirContents(const SString &docroot, const SString &fil
         output << "Error: Cannot open directory: " << strerror(errnum);
     }
 
-    output << "<hl></hl>";
-    output << "</body>";
-    output << "</html>";
+    if (raw)
+    {
+        output << "]" << std::endl;
+    }
+    else
+    {
+        output << "<hl></hl>";
+        output << "</body>";
+        output << "</html>";
+    }
     return output.str();
 }
 
@@ -411,7 +442,7 @@ SString SFileModule::PrintDirParents(const SString &docroot, const SString &file
     while (! (dn[0] == 0 || ((dn[0] == '.' || dn[0] == '/') && dn[1] == 0)))
     {
         temp = 
-        cout << "Bn: " << bn << ", dn: " << dn << endl;
+        cout << "Bn: " << bn << ", dn: " << dn << std::endl;
 
         temp = "<a href=\"" + dn + "\">" + 
         &lt;home&gt;</a>"

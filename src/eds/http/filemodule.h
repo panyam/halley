@@ -92,7 +92,7 @@ public:
     static FILE *OpenFile(const char *filename, const char *mode, SString &errormsg);
 
     //! Print contents of directory
-    static SString PrintDirContents(const SString &docroot, const SString &filename, const SString &prefix);
+    static SString PrintDirContents(const SString &docroot, const SString &filename, const SString &prefix, bool raw = false);
 
     //! Print directory parents.
     static SString PrintDirParents(const SString &docroot, const SString &filename);
