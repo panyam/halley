@@ -67,7 +67,7 @@ public:
     const SString &Resource() const;
 
     //! Get the value of a query param
-    const SString &GetQueryValue(const SString &param) const;
+    SString GetQueryValue(const SString &param) const;
 
     //! Sets the request Resource
     void SetResource(const SString &resource);
