@@ -138,6 +138,7 @@ void SHttpReaderStage::HandleEvent(const SEvent &event)
     char buffer[MAXBUF + 1];
     std::list<SHttpRequest *>   requests;
     int len = read(pConnection->Socket(), buffer, MAXBUF);
+    int errnum = 0;
 
     while (len > 0)
     {
@@ -156,7 +157,8 @@ void SHttpReaderStage::HandleEvent(const SEvent &event)
         }
         else
         {
-            std::cerr << "ERROR: Error in request: [" << errno << "]: " << strerror(errno) << std::endl << std::endl;
+            errnum = errno;
+            std::cerr << "ERROR: Error in request: [" << errnum << "]: " << strerror(errnum) << std::endl << std::endl;
             pConnection->Close();
         }
         len = read(pConnection->Socket(), buffer, MAXBUF);
@@ -164,7 +166,8 @@ void SHttpReaderStage::HandleEvent(const SEvent &event)
 
     if (len < 0)
     {
-        std::cerr << "WARNING: Socket Reading Complete: [" << errno << "]: " << strerror(errno) << std::endl << std::endl;
+        errnum = errno;
+        std::cerr << "WARNING: Socket Reading Complete: [" << errnum << "]: " << strerror(errnum) << std::endl << std::endl;
         // pConnection->Close();
     }
 }

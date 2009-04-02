@@ -65,8 +65,9 @@ void SFileModule::ProcessInput(SHttpHandlerData *   pHandlerData,
         memset(&fileStat, 0, sizeof(struct stat));
         if (stat(fullpath.c_str(), &fileStat) != 0)
         {
-            int statcode = 500;
-            switch (errno)
+            int statcode    = 500;
+            int errnum      = errno;
+            switch (errnum)
             {
                 case EFAULT:
                     errormsg = "Bad address.";
@@ -373,7 +374,8 @@ SString SFileModule::PrintDirContents(const SString &docroot, const SString &fil
     }
     else
     {
-        output << "Error: Cannot open directory: " << strerror(errno);
+        int errnum = errno;
+        output << "Error: Cannot open directory: " << strerror(errnum);
     }
 
     output << "<hl></hl>";

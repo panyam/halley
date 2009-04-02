@@ -33,6 +33,9 @@
 
 // Creates a new http request object
 SHttpRequest::SHttpRequest() :
+    scheme("http"),
+    host(""),
+    port(80),
     method("GET"),
     resource("/"),
     pContentBody(NULL),
@@ -48,6 +51,18 @@ SHttpRequest::~SHttpRequest()
 
     if (pResponse)
         delete pResponse;
+}
+
+// Gets the host
+const SString &SHttpRequest::Host() const
+{
+    return host;
+}
+
+// Gets the port
+int SHttpRequest::Port() const
+{
+    return port;
 }
 
 // Gets the method
@@ -71,7 +86,101 @@ const SString &SHttpRequest::Resource() const
 // Sets the request Resource
 void SHttpRequest::SetResource(const SString &r)
 {
-    resource = r;
+    const char *pStart          = r.c_str();
+    const char *pEnd            = pStart + r.size();
+
+    // set defaults
+    port        = 80;
+    queryValues.clear();
+
+    // remove the scheme out - eg http:// or https://
+    const char *pColSlashSlash  = strstr(pStart, "://");
+    if (pColSlashSlash != NULL)
+    {
+        scheme = SString(pStart, pColSlashSlash - pStart);
+        pStart = pColSlashSlash + 3;
+    }
+    else
+    {
+        scheme = "http";
+    }
+
+    const char *pHostEnd = pStart;
+    // find the end of the host 
+    while (*pHostEnd != 0 && *pHostEnd != ':' && *pHostEnd != '/' && *pHostEnd != '?') pHostEnd++;
+
+    if (*pHostEnd == 0)
+    {
+        host        = pStart;
+        resource    = "";
+        return ;
+    }
+    else if (*pHostEnd == ':')
+    {
+        host = SString(pStart, pHostEnd - pStart);
+
+        // find port and resource
+        pStart = ++pHostEnd;
+        int newport = 0;
+        while (*pHostEnd != 0 && isdigit(*pHostEnd))
+        {
+            newport = (newport * 10) + (*pHostEnd - '0');
+            pHostEnd++;
+        }
+        if (newport != 0)
+            port = newport;
+    }
+
+    pStart = pHostEnd;
+    while (*pHostEnd != 0 && *pHostEnd != '?') pHostEnd++;
+    resource = Unescape(SString(pStart, pHostEnd - pStart));
+
+    if (*pHostEnd == '?')
+    {
+        // we have a query
+        const char *pNextParam = pHostEnd;
+        pStart = pNextParam + 1;
+
+        do
+        {
+            pNextParam = strchr(pStart, '&');
+            if (pNextParam == NULL) pNextParam = pEnd;
+            const char *pEqPos = strchr(pStart, '=');
+            if (pEqPos != NULL)
+            {
+                SString qName(pEqPos > pStart ? Unescape(SString(pStart, pEqPos - pStart)) : "");
+                SString qValue(pEqPos + 1 < pNextParam ? Unescape(SString(pEqPos + 1, pNextParam - (pEqPos + 1))) : "");
+                if (qName != "")
+                {
+                    queryValues.push_back(qName);
+                    queryValues.push_back(qValue);
+                }
+            }
+            else
+            {
+                break ;
+            }
+            pStart = pNextParam + 1;
+        } while (pStart < pEnd);
+    }
+}
+
+//! Get the value of a query param
+const SString &SHttpRequest::GetQueryValue(const SString &param) const
+{
+    for (SStringList::iterator iter = queryValues.begin(); iter != queryValues.end();++iter)
+    {
+        if (*iter == param)
+        {
+            ++iter;
+            return *iter;
+        }
+        else
+        {
+            ++iter;
+        }
+    }
+    return "";
 }
 
 //! Parses the first line
@@ -92,10 +201,7 @@ bool SHttpRequest::ParseFirstLine(const SString &line)
     pCurr = pStart;
     while (*pCurr && !isspace(*pCurr)) pCurr++;
 
-    resource = SString(pStart, pCurr - pStart);
-
-    // TODO: Unescape the resource
-    // TODO: Strip ./ and ../ from resource
+    SetResource(SString(pStart, pCurr - pStart));
 
     pStart = pCurr;
     while (*pStart && isspace(*pStart)) pStart++;
