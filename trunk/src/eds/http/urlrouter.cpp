@@ -77,7 +77,7 @@ void SUrlRouter::ProcessInput(SHttpHandlerData *    pHandlerData,
     }
     else
     {
-        // TODO: return a 500 or 404 error
+        // TODO: error or assert?
     }
 }
 
