@@ -200,6 +200,12 @@ public:
     //! Empty virtual destructor to safeguard against some compilers
     virtual ~SHttpModule() { }
 
+    //! Sets the next module in the chain
+    virtual void SetNextModule(SHttpModule *pNext) { pNextModule = pNext; }
+
+    //! Gets the next module in the chain
+    virtual SHttpModule *GetNextModule() { return pNextModule; }
+
     //! Removes/Destroyes any module specific data it may have stored
     virtual void RemoveModuleData(SHttpModuleData *pData) { if (pData) delete pData; }
 
