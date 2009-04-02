@@ -48,14 +48,26 @@ public:
     virtual         ~SHttpRequest();
 
 public:
+    //! The scheme
+    const SString &Scheme() const;
+
+    //! The host and port of the request target
+    const SString &Host() const;
+
+    //! The port of the request
+    int Port() const ;
+
     //! Gets the method
     const SString &Method() const;
 
     //! Sets the method
     void SetMethod(const SString &method);
 
-    //! Gets the method Resource
+    //! Gets the Resource
     const SString &Resource() const;
+
+    //! Get the value of a query param
+    const SString &GetQueryValue(const SString &param) const;
 
     //! Sets the request Resource
     void SetResource(const SString &resource);
@@ -86,14 +98,23 @@ protected:
     virtual bool ReadFirstLine(std::istream &input);
 
 protected:
+    //! The scheme (eg http, https etc)
+    SString         scheme;
+
+    //! The host the request is for.
+    SString         host;
+
+    //! Port where host is
+    int             port;
+
     //! Current request method
-    SString     method;
+    SString         method;
 
     //! Resource being accessed
-    SString     resource;
+    SString         resource;
 
-    //! How the resources have been modified all along
-    SStringList resourceChain;
+    //! The GET values
+    SStringList     queryValues;
 
     //! The actually data that is sent as the content - Usually POSTs
     SBodyPart *     pContentBody;

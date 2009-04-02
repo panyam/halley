@@ -32,6 +32,75 @@ static const SString base64_chars =
              "abcdefghijklmnopqrstuvwxyz"
              "0123456789+/";
 
+static const SString reserved_chars = ";/?:@&=+$,";
+static const SString mark_chars = "-_.!~*'()";
+
+
+//! Tells if a character is a reserved character
+bool IsReservedChar(char ch)
+{
+    return reserved_chars.find(ch) > 0;
+}
+
+bool IsUnreservedChar(char ch)
+{
+    return isalnum(ch) || (mark_chars.find(ch) > 0);
+}
+
+SString Escape(const SString &str)
+{
+    return str;
+}
+
+char hex2dec(char ch)
+{
+    if (ch >= '0' && ch <= '9')
+        return ch - '0';
+    else if (ch >= 'A' && ch <= 'F')
+        return ch - 'A';
+    else if (ch >= 'a' && ch <= 'f')
+        return ch - 'a';
+    return -1;
+}
+
+SString Unescape(const SString &str)
+{
+    const char *buff    = str.c_str();
+    const char *pStart  = buff;
+    const char *pEnd    = pStart + str.size();
+    SStringStream out;
+
+    while (pStart < pEnd)
+    {
+        const char *pos = strchr(pStart, '%');
+        if (pos == NULL)
+        {
+            out << pStart;
+            pStart = pEnd;
+        }
+        else
+        {
+            out << SString(pStart, pos - pStart);
+
+            pStart = pos;
+            // skip the '%'
+            if (isxdigit(pStart[1]) && isxdigit(pStart[2]))
+            {
+                char ch = (hex2dec(pStart[1]) * 16) + hex2dec(pStart[2]);
+                out << ch;
+                pStart += 3;
+            }
+            else
+            {
+                out << *pStart;
+                pStart++;
+            }
+        }
+    }
+
+    return out.str();
+}
+
 // Reads a line till the CRLF
 SString ReadTillCrLf(std::istream &input)
 {

@@ -40,6 +40,8 @@
 SString ReadTillCrLf(std::istream &input);
 SString base64_encode(unsigned char const* , unsigned int len);
 SString base64_decode(SString const& s);
+SString Escape(const SString &);
+SString Unescape(const SString &);
 
 #endif
 
