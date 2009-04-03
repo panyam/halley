@@ -123,7 +123,7 @@ dep:
 ../bld/debug/halley.o: ../src/eds/http/httpmodule.h ../src/json/json.h
 ../bld/debug/halley.o: ../src/utils/refcount.h ../src/utils/membuff.h
 ../bld/debug/halley.o: ../src/eds/http/bayeux/channel.h
-../bld/debug/halley.o: ../src/eds/http/httpfwd.h
+../bld/debug/halley.o: ../src/eds/http/httpfwd.h ../src/json/json.h
 ../bld/debug/halley.o: ../src/eds/http/contentmodule.h
 ../bld/debug/halley.o: ../src/eds/http/transfermodule.h
 ../bld/debug/halley.o: ../src/eds/http/writermodule.h

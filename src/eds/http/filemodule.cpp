@@ -334,7 +334,7 @@ SString SFileModule::PrintDirContents(const SString &docroot, const SString &fil
         output << "<p><center><h2>Contents of: ";
 
         // show all parent directories for easy access
-        output << PrintDirParents(docroot, filename);
+        output << PrintDirParents(prefix, filename);
 
         output << "</h2></center>";
         output << "<hl></hl>";
@@ -429,32 +429,36 @@ SString SFileModule::PrintDirContents(const SString &docroot, const SString &fil
  *        Created.
  *
  *****************************************************************************/
-SString SFileModule::PrintDirParents(const SString &docroot, const SString &filename)
+SString SFileModule::PrintDirParents(const SString &prefix, const SString &filename)
 {
-    /*
-    char *buff = strdup(dirname.c_str());
+    SStringStream parentPathHtml;
+    SString lastPath("/");
+    SString fullpath("/" + prefix + filename);
+    const char *pStart      = fullpath.c_str();
+    const char *pEnd        = pStart + fullpath.size();
 
-    SString bn = basename(buff);
-    SString dn = dirname(buff);
+    // skip initial slashes and spaces
+    while (*pStart != 0 && (isspace(*pStart) || (*pStart == '/'))) pStart++;
+    const char *pCurr       = pStart;
 
-    SString temp;
+    parentPathHtml << "<a href='/'>[Home]</a> / " << std::endl;
 
-    while (! (dn[0] == 0 || ((dn[0] == '.' || dn[0] == '/') && dn[1] == 0)))
+    do
     {
-        temp = 
-        cout << "Bn: " << bn << ", dn: " << dn << std::endl;
+        const char *pSlashPos   = strchr(pCurr, '/');
+        if (pSlashPos == NULL) pSlashPos = pEnd;
+        if (pSlashPos != pCurr + 1)
+        {
+            SString currdir(pCurr, pSlashPos - pCurr);
+            parentPathHtml << "<a href='" << lastPath << currdir << "/'>" << currdir << "</a> / " << std::endl;
+            lastPath = lastPath + currdir + "/";
+        }
 
-        temp = "<a href=\"" + dn + "\">" + 
-        &lt;home&gt;</a>"
-        bn = basename(buff);
-        dn = dirname(buff);
-    }
-    cout << "Bn: " << bn << ", dn: " << dn << endl;
+        pCurr = pSlashPos + 1;
+    } while (pCurr < pEnd);
 
-    free(buff);
-
-    return "<a href=\"/\">&lt;home&gt;</a>" + temp 
-    */
-
-    return docroot + filename;
+    if (pCurr == pStart)
+        return fullpath;
+    else
+        return parentPathHtml.str();
 }
