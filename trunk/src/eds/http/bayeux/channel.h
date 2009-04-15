@@ -47,7 +47,7 @@ class SBayeuxChannel
 public:
     //! Constructor
     SBayeuxChannel(const std::string &n, SBayeuxModule *pMod = NULL)
-        : pModule(NULL), name(n) { }
+        : pModule(pMod), name(n) { }
 
     //! Destructor
     virtual ~SBayeuxChannel() { }
