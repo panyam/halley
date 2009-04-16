@@ -82,7 +82,7 @@ class SCondition
 public:
     SCondition(SMutex &mutex);
     ~SCondition();
-    int Wait();
+    int Wait(int milliseconds = 0);
     int Signal();
 
 private:
