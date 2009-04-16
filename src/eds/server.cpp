@@ -39,6 +39,21 @@
 
 //*****************************************************************************
 /*!
+ *  \brief  Creates a new server.
+ *
+ *  \version
+ *      - Sri Panyam      16/04/2009
+ *        Created.
+ *
+ *****************************************************************************/
+SEvServer::SEvServer(int port_, SHttpReaderStage*pReqReader_) :
+    serverPort(port_),
+    pRequestReader(pReqReader_)
+{
+}
+
+//*****************************************************************************
+/*!
  *  \brief  Called to stop the server.
  *
  *  \version
