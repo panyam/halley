@@ -251,7 +251,8 @@ int SEvServer::Run()
                 if (Stopped() || (events[n].events & (EPOLLRDHUP | EPOLLHUP)) != 0)
                 {
                     // peer hung up or stop was requested so kill this connection
-                    pConnection->Close();
+                    if (pConnection != NULL)
+                        pConnection->Close();
                 }
                 else if (connSocket == serverSocket)    // its a connection request
                 {
