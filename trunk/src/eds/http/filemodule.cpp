@@ -19,7 +19,7 @@
  *  \brief  Module for routing to other modules based on Urls.
  *
  *  \version
- *      - S Panyam      05/03/2009
+ *      - Sri Panyam      05/03/2009
  *        Created
  *
  *****************************************************************************/
@@ -107,6 +107,10 @@ void SFileModule::ProcessInput(SHttpHandlerData *   pHandlerData,
         {
             if ((fileStat.st_mode & S_IFDIR) != 0)
             {
+                if (showIndexes)
+                {
+                }
+
                 // we are dealing with a folder!
                 SString format      = pRequest->GetQueryValue("format");
                 bool raw            = format == "raw";
@@ -119,29 +123,7 @@ void SFileModule::ProcessInput(SHttpHandlerData *   pHandlerData,
             }
             else
             {
-                FILE *fptr = OpenFile(fullpath.c_str(), "rb", errormsg);
-                if (fptr == NULL)
-                {
-                    pResponse->SetStatus(404, "Cannot read file");
-                    respHeaders.SetIntHeader("Content-Length", errormsg.size());
-                    respHeaders.SetHeader("Content-Type", "text/text");
-
-                    part->SetBody(errormsg);
-                }
-                else
-                {
-                    respHeaders.SetIntHeader("Content-Length", fileStat.st_size);
-                    respHeaders.SetHeader("Content-Type", SMimeTypes::GetInstance()->GetMimeType(fullpath));
-
-                    const static int MAX_READ_SIZE = (1 << 15);
-                    char fileBuffer[MAX_READ_SIZE];
-                    int nRead = 0;
-                    while ((nRead = fread(fileBuffer, 1, MAX_READ_SIZE, fptr)) > 0)
-                    {
-                        part->AppendToBody(fileBuffer, nRead);
-                    }
-                    fclose(fptr);
-                }
+                SendFile(fullpath, fileStat, part, pResponse, respHeaders);
             }
         }
     }
@@ -152,11 +134,52 @@ void SFileModule::ProcessInput(SHttpHandlerData *   pHandlerData,
 
 //*****************************************************************************
 /*!
+ *  \brief  Helper to send down a file.
+ *
+ *  \version
+ *      - Sri Panyam      16/04/2009
+ *        Created.
+ *
+ *****************************************************************************/
+void SFileModule::SendFile(const SString &  fullpath,
+                           struct stat      fileStat,
+                           SBodyPart *      pPart,
+                           SHttpResponse *  pResponse,
+                           SHeaderTable &   respHeaders)
+{
+    SString errormsg;
+    FILE *fptr = OpenFile(fullpath.c_str(), "rb", errormsg);
+    if (fptr == NULL)
+    {
+        pResponse->SetStatus(404, "Cannot read file");
+        respHeaders.SetIntHeader("Content-Length", errormsg.size());
+        respHeaders.SetHeader("Content-Type", "text/text");
+
+        pPart->SetBody(errormsg);
+    }
+    else
+    {
+        respHeaders.SetIntHeader("Content-Length", fileStat.st_size);
+        respHeaders.SetHeader("Content-Type", SMimeTypes::GetInstance()->GetMimeType(fullpath));
+
+        const static int MAX_READ_SIZE = (1 << 15);
+        char fileBuffer[MAX_READ_SIZE];
+        int nRead = 0;
+        while ((nRead = fread(fileBuffer, 1, MAX_READ_SIZE, fptr)) > 0)
+        {
+            pPart->AppendToBody(fileBuffer, nRead);
+        }
+        fclose(fptr);
+    }
+}
+
+//*****************************************************************************
+/*!
  *  \brief  Goes through our docroot table and sees which doc root the
  *  given path matches.
  *
  *  \version
- *      - S Panyam      11/03/2009
+ *      - Sri Panyam      11/03/2009
  *        Created.
  *
  *****************************************************************************/
@@ -183,7 +206,7 @@ bool SFileModule::ParsePath(const SString &path, SString &docroot, SString &chil
  *  \brief  Tries to open a file.
  *
  *  \version
- *      - S Panyam      10/03/2009
+ *      - Sri Panyam      10/03/2009
  *        Created.
  *
  *****************************************************************************/
@@ -310,7 +333,7 @@ bool SFileModule::ReadDirectory(const char *dirname, std::vector<DirEnt> &entrie
  *  \return The html formatted directory contents string
  *
  *  \version
- *      - S Panyam      02/02/2009
+ *      - Sri Panyam      02/02/2009
  *        Created.
  *
  *****************************************************************************/
@@ -425,7 +448,7 @@ SString SFileModule::PrintDirContents(const SString &docroot, const SString &fil
  *  \return The html formatted parent folders.
  *
  *  \version
- *      - S Panyam      10/03/2009
+ *      - Sri Panyam      10/03/2009
  *        Created.
  *
  *****************************************************************************/

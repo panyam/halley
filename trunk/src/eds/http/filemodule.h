@@ -91,6 +91,13 @@ public:
     //! Tries to open a file.
     static FILE *OpenFile(const char *filename, const char *mode, SString &errormsg);
 
+    //! Helper to send file
+    static void SendFile(const SString &    fullpath,
+                         struct stat        fileStat,
+                         SBodyPart *        pPart,
+                         SHttpResponse *    pResponse,
+                         SHeaderTable &     respHeaders);
+
     //! Print contents of directory
     static SString PrintDirContents(const SString &docroot, const SString &filename, const SString &prefix, bool raw = false);
 
