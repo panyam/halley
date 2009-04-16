@@ -31,11 +31,15 @@
 #include <iostream>
 #include <algorithm>
 #include <signal.h>
+#include <time.h>
+#include <sys/time.h>
+#include <errno.h>
 
 #include "thread/mutex.h"
 
 using std::cerr;
 using std::endl;
+
 
 //*****************************************************************************
 /*!
@@ -196,9 +200,35 @@ SCondition::~SCondition()
  *        Created.
  *
  *****************************************************************************/
-int SCondition::Wait()
+int SCondition::Wait(int milliseconds)
 {
-    return pthread_cond_wait(&condVar, reinterpret_cast<pthread_mutex_t *>(pTheMutex->pMutex));
+    if (milliseconds > 0)
+    {
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+
+        struct timespec stoptime;
+        stoptime.tv_sec     = tv.tv_sec + milliseconds / 1000;
+        stoptime.tv_nsec    = (tv.tv_usec * 1000) + ((milliseconds % 1000) * 1000000);
+        if (stoptime.tv_nsec >= 1000000000)
+        {
+            stoptime.tv_nsec -= 1000000000;
+            stoptime.tv_sec++;
+        }
+
+        int result = pthread_cond_timedwait(&condVar,
+                                            reinterpret_cast<pthread_mutex_t *>(pTheMutex->pMutex),
+                                            &stoptime);
+
+        if (result == 0 || result == ETIMEDOUT)
+            return 0;
+        else
+            return result;
+    }
+    else
+    {
+        return pthread_cond_wait(&condVar, reinterpret_cast<pthread_mutex_t *>(pTheMutex->pMutex));
+    }
 }
 
 //*****************************************************************************
