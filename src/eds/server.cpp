@@ -251,6 +251,7 @@ int SEvServer::Run()
                 if (Stopped() || (events[n].events & (EPOLLRDHUP | EPOLLHUP)) != 0)
                 {
                     // peer hung up or stop was requested so kill this connection
+                    // TODO: if server was Stopped, kill ALL connections
                     if (pConnection != NULL)
                         pConnection->Close();
                 }
