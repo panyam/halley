@@ -100,14 +100,6 @@ void SThread::Start()
     // put task in started stated
     threadState = THREAD_STARTED;
 
-    {
-        SMutexLock listenerLock(listenerMutex);
-        for (Listeners::iterator iter = listeners.begin(); iter != listeners.end();++iter)
-        {
-            (*iter)->ThreadStarted(this);
-        }
-    }
-
     pthread_create(&theThread, NULL, ThreadStartFunc, this);
 
     // detach it so its resources can be reclaimed when it is done
