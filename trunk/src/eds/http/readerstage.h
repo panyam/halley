@@ -63,6 +63,9 @@ public:
     //! Called when bytes are available
     void    ReadSocket(SConnection *pConnection);
 
+    //! Called when a job is destroyed
+    virtual void JobDestroyed(SJob *pJob);
+
 protected:
     //! Does the actual event handling.
     virtual void HandleEvent(const SEvent &event);

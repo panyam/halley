@@ -32,20 +32,7 @@
 #include <queue>
 #include "thread/thread.h"
 #include "eds/event.h"
-
-//*****************************************************************************
-/*!
- *  \class  SStageData
- *
- *  \brief  Data that belongs to a stage.
- *****************************************************************************/
-class SStageData
-{
-public:
-    virtual ~SStageData() { }
-protected:
-    SConnection *pConnection;
-};
+#include "eds/job.h"
 
 //*****************************************************************************
 /*!
@@ -56,7 +43,7 @@ protected:
  *  can handle the event when they become free.
  *
  *****************************************************************************/
-class SStage
+class SStage : public SJobListener
 {
 public:
     // Creates a new handler
@@ -76,6 +63,9 @@ public:
 
     //! Pops and gets the next event in the queue
     virtual SEvent GetEvent();
+
+    //! Called when a job is destroyed
+    virtual void JobDestroyed(SJob *pJob) { }
 
     //! Get the stage ID.
     int ID() { return stageID; }

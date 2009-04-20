@@ -118,6 +118,19 @@ void SHttpReaderStage::ReadSocket(SConnection *pConnection)
     QueueEvent(SEvent(EVT_BYTES_RECIEVED, pConnection));
 }
 
+void SHttpReaderStage::JobDestroyed(SJob *pJob)
+{
+    if (pJob != NULL)
+    {
+        SHttpReaderState *pStageData = (SHttpReaderState *)pJob->GetStageData(this);
+        if (pStageData == NULL)
+        {
+            delete pStageData;
+            pJob->SetStageData(this, NULL);
+        }
+    }
+}
+
 //! Handles "read request" events.
 //
 // Will call the RequestHandler stage when a complete request has been
@@ -131,6 +144,7 @@ void SHttpReaderStage::HandleEvent(const SEvent &event)
     {
         pStageData = new SHttpReaderState();
         pConnection->SetStageData(this, pStageData);
+        pConnection->AddListener(this);
     }
     SHttpReaderState *pReaderState = (SHttpReaderState *)pStageData;
 
