@@ -59,7 +59,7 @@ void SUrlRouter::ProcessInput(SHttpHandlerData *    pHandlerData,
                               SHttpHandlerStage *   pStage,
                               SBodyPart *           pBodyPart)
 {
-    SHttpRequest *pRequest = pHandlerData->Request();
+    SHttpRequest *pRequest      = pHandlerData->Request();
     for (UrlMatcherList::const_iterator iter = urlMatchers.begin();
                 iter != urlMatchers.end();++iter)
     {

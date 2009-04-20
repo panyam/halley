@@ -67,41 +67,53 @@ void SHttpHandlerStage::SetDBHelper(SDBHelperStage *pHelper)
 //! Handle a new request - will be called by external request reader
 void SHttpHandlerStage::HandleRequest(SConnection *pConnection, SHttpRequest *pRequest)
 {
-    QueueEvent(SEvent(EVT_REQUEST_ARRIVED, pConnection, pRequest));
+    if (pConnection->IsAlive())
+    {
+        QueueEvent(SEvent(EVT_REQUEST_ARRIVED, pConnection, pRequest));
+    }
 }
     
 //! Sends input to be processed by a module
 void SHttpHandlerStage::InputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart)
 {
-    if (pBodyPart)
+    if (pConnection->IsAlive())
     {
-        pBodyPart->extra_data = pModule;
-        QueueEvent(SEvent(EVT_INPUT_BODY_TO_MODULE, pConnection, pBodyPart));
-    }
-    else
-    {
-        QueueEvent(SEvent(EVT_NEXT_INPUT_MODULE, pConnection, pModule));
+        if (pBodyPart)
+        {
+            pBodyPart->extra_data = pModule;
+            QueueEvent(SEvent(EVT_INPUT_BODY_TO_MODULE, pConnection, pBodyPart));
+        }
+        else
+        {
+            QueueEvent(SEvent(EVT_NEXT_INPUT_MODULE, pConnection, pModule));
+        }
     }
 }
 
 //! Sends output to be processed by a module
 void SHttpHandlerStage::OutputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart)
 {
-    if (pBodyPart)
+    if (pConnection->IsAlive())
     {
-        pBodyPart->extra_data = pModule;
-        QueueEvent(SEvent(EVT_OUTPUT_BODY_TO_MODULE, pConnection, pBodyPart));
-    }
-    else
-    {
-        QueueEvent(SEvent(EVT_NEXT_OUTPUT_MODULE, pConnection, pModule));
+        if (pBodyPart)
+        {
+            pBodyPart->extra_data = pModule;
+            QueueEvent(SEvent(EVT_OUTPUT_BODY_TO_MODULE, pConnection, pBodyPart));
+        }
+        else
+        {
+            QueueEvent(SEvent(EVT_NEXT_OUTPUT_MODULE, pConnection, pModule));
+        }
     }
 }
 
 //! Request to close the connection
 void SHttpHandlerStage::CloseConnection(SConnection *pConnection)
 {
-    QueueEvent(SEvent(EVT_CLOSE_CONNECTION, pConnection));
+    if (pConnection->IsAlive())
+    {
+        QueueEvent(SEvent(EVT_CLOSE_CONNECTION, pConnection));
+    }
 }
 
 //! Handles a request after it has been read.
@@ -112,6 +124,7 @@ void SHttpHandlerStage::HandleEvent(const SEvent &event)
 {
     // The connection currently being processed
     SConnection *pConnection            = (SConnection *)(event.pSource);
+    if (!pConnection->IsAlive()) return;
     SHttpHandlerData *pHandlerData      = (SHttpHandlerData *)pConnection->GetStageData(this);
 
     // create the response if none yet - it MUST be an "arrived" event
