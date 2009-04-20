@@ -30,6 +30,41 @@
 
 #include "eds/fwd.h"
 
+class RefCountable
+{
+public:
+    RefCountable() : refCount(0) { }
+
+    //! Increases the reference count
+    void IncRef() { refCount++; }
+
+    //! Decreases the reference count
+    void DecRef() { refCount--; }
+
+    //! Get the ref count
+    unsigned RefCount() { return refCount; }
+
+private:
+    unsigned refCount;
+};
+
+//*****************************************************************************
+/*!
+ *  \class  SJobListener
+ *
+ *  \brief  Handles events from a job.
+ *
+ *****************************************************************************/
+class SJobListener
+{
+public:
+    //! Destructor
+    virtual ~SJobListener() { }
+
+    //! Called when the job id destroyed
+    virtual void JobDestroyed(SJob *pJob) { }
+};
+
 //*****************************************************************************
 /*!
  *  \class  SJob
@@ -37,7 +72,7 @@
  *  \brief A job that is handled in different stages.
  *
  *****************************************************************************/
-class SJob
+class SJob : public RefCountable
 {
 public:
     //! Destroys the connection object
@@ -50,10 +85,10 @@ public:
     virtual void Destroy();
 
     //! Get the stage specific data for this connection
-    void *  GetStageData(SStage *pStage);
+    void *GetStageData(SStage *pStage);
 
     //! Set the stage specific data for this connection
-    void *  SetStageData(SStage *pStage, void * data);
+    void *SetStageData(SStage *pStage, void * data);
 
     //! Tells if the job is alive.
     bool IsAlive();
@@ -61,12 +96,21 @@ public:
     //! Sets the alive status of the job
     void SetAlive(bool alive);
 
+    //! Adds a job listener
+    virtual bool AddListener(SJobListener *pListener);
+
+    //! Removes a job listener
+    virtual bool RemoveListener(SJobListener *pListener);
+
 private:
     //! Connection specific data that handlers can manipulate to their will.
-    std::vector<void *>     stageData;
+    std::vector<void *>   stageData;
 
     //! Is the connection alive?
-    bool                isAlive;
+    bool                        isAlive;
+
+    //! Job listeners
+    std::list<SJobListener *>   listeners;
 };
 
 #endif

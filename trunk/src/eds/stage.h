@@ -35,6 +35,20 @@
 
 //*****************************************************************************
 /*!
+ *  \class  SStageData
+ *
+ *  \brief  Data that belongs to a stage.
+ *****************************************************************************/
+class SStageData
+{
+public:
+    virtual ~SStageData() { }
+protected:
+    SConnection *pConnection;
+};
+
+//*****************************************************************************
+/*!
  *  \class  SStage
  *
  *  \brief  A dispatcher that stores events in a queue and palms them off
