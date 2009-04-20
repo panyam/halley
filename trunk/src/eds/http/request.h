@@ -110,7 +110,10 @@ protected:
     //! Current request method
     SString         method;
 
-    //! Resource being accessed
+    //! The real resource with query vals and all
+    SString         realResource;
+
+    //! Resource being accessed with the query vals stripped out
     SString         resource;
 
     //! The GET values
