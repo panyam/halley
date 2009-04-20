@@ -38,7 +38,8 @@
 **************************************************************************************/
 SJob::SJob()
 {
-    isAlive = true;
+    isAlive     = true;
+
     // create space for the first 5 stages
     for (int i = 0;i < 5;i++)
     {
@@ -55,8 +56,50 @@ SJob::SJob()
 **************************************************************************************/
 SJob::~SJob()
 {
-    isAlive = true;
+    isAlive = false;
     stageData.clear();
+}
+
+/**************************************************************************************
+*   \brief  Adds a job listener.
+*
+*   \version
+*       - Sri Panyam  20/04/2009
+*         Created
+**************************************************************************************/
+bool SJob::AddListener(SJobListener *pListener)
+{
+    if (pListener != NULL)
+    {
+        std::list<SJobListener *>::iterator iter = find(listeners.begin(), listeners.end(), pListener);
+        if (iter == listeners.end())
+        {
+            listeners.push_back(pListener);
+            return true;
+        }
+    }
+    return false;
+}
+
+/**************************************************************************************
+*   \brief  Removes a job listener.
+*
+*   \version
+*       - Sri Panyam  20/04/2009
+*         Created
+**************************************************************************************/
+bool SJob::RemoveListener(SJobListener *pListener)
+{
+    if (pListener != NULL)
+    {
+        std::list<SJobListener *>::iterator iter = find(listeners.begin(), listeners.end(), pListener);
+        if (iter != listeners.end())
+        {
+            listeners.erase(iter);
+            return true;
+        }
+    }
+    return false;
 }
 
 /**************************************************************************************
@@ -69,15 +112,11 @@ SJob::~SJob()
 void SJob::Destroy()
 {
     SetAlive(false);
-
-    // go through all stage data and free it
-    for (int i = 0, size = stageData.size();i < size;i++)
+    for (std::list<SJobListener *>::iterator iter = listeners.begin();
+            iter != listeners.end();
+            ++iter)
     {
-        if (stageData[i] != NULL)
-        {
-            delete stageData[i];
-            stageData[i] = NULL;
-        }
+        (*iter)->JobDestroyed(this);
     }
 }
 
