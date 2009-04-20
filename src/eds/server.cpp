@@ -64,21 +64,6 @@ SEvServer::SEvServer(int port_, SHttpReaderStage*pReqReader_) :
 int
 SEvServer::RealStop()
 {
-    if (serverSocket >= 0)
-    {
-        // and kill all the connections
-        while ( ! connections.empty())
-        {
-            std::set<SConnection *>::iterator iter = connections.begin();
-            ConnectionComplete(*iter);
-        }
-        
-        // and finally the server socket
-        shutdown(serverSocket, SHUT_RDWR);
-        close(serverSocket);
-        serverSocket = -1;
-    }
-
     return 0;
 }
 
@@ -327,9 +312,22 @@ int SEvServer::Run()
         }
     }
 
+    // Close all server and client sockets.  Note we could do all this in
+    // RealStop, but the problem is that RealStop is (usually) called from 
+    // a different thread which means while we are closing these sockets 
+    // there could be action on the main server thread which we dont want.
+    while ( ! connections.empty())
+    {
+        std::set<SConnection *>::iterator iter = connections.begin();
+        ConnectionComplete(*iter);
+    }
+
     if (serverSocket >= 0)
     {
-        RealStop();
+        // and finally the server socket
+        shutdown(serverSocket, SHUT_RDWR);
+        close(serverSocket);
+        serverSocket = -1;
     }
 
     return result;
