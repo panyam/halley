@@ -85,6 +85,9 @@ public:
     //! Request to close the connection
     virtual void CloseConnection(SConnection *pConnection);
 
+    //! Called when a job is destroyed
+    virtual void JobDestroyed(SJob *pJob);
+
 protected:
     //! Handle the actual event
     virtual void HandleEvent(const SEvent &event);

@@ -116,6 +116,19 @@ void SHttpHandlerStage::CloseConnection(SConnection *pConnection)
     }
 }
 
+void SHttpHandlerStage::JobDestroyed(SJob *pJob)
+{
+    if (pJob != NULL)
+    {
+        SHttpHandlerData *pStageData = (SHttpHandlerData *)pJob->GetStageData(this);
+        if (pStageData == NULL)
+        {
+            delete pStageData;
+            pJob->SetStageData(this, NULL);
+        }
+    }
+}
+
 //! Handles a request after it has been read.
 //
 // Will call the RequestHandler stage when a complete request 

@@ -46,6 +46,7 @@
 #include <iostream>
 
 class SJob;
+class SJobListener;
 class SConnection;
 
 typedef std::string                     SString;
