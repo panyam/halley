@@ -86,6 +86,7 @@ const SString &SHttpRequest::Resource() const
 // Sets the request Resource
 void SHttpRequest::SetResource(const SString &r)
 {
+    realResource                = r;
     const char *pStart          = r.c_str();
     const char *pEnd            = pStart + r.size();
 
