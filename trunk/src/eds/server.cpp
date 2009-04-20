@@ -322,10 +322,9 @@ int SEvServer::Run()
     if (serverSocket >= 0)
     {
         // and kill all the connections
-        for (std::set<SConnection *>::iterator iter = connections.begin();
-             iter != connections.end();
-             ++iter)
+        while ( ! connections.empty())
         {
+            std::set<SConnection *>::iterator iter = connections.begin();
             ConnectionComplete(*iter);
         }
         
