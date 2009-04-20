@@ -41,10 +41,10 @@ void STransferModule::ProcessOutput(SHttpHandlerData *  pHandlerData,
 
     // already being processed quit
     // TODO: not yet thread safe
-    if (pModData->processing)
+    if (pModData->IsProcessing())
         return ;
 
-    pModData->processing    = true;
+    pModData->SetProcessing(true);
 
     // how do we handle empty bodies?
     if (pBodyPart != NULL)
@@ -65,7 +65,7 @@ void STransferModule::ProcessOutput(SHttpHandlerData *  pHandlerData,
     }
 
     // turn off processing flag so it can be resumed in the future
-    pModData->processing    = false;
+    pModData->SetProcessing(false);
 }
 
 

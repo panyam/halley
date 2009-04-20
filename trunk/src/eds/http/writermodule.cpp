@@ -42,11 +42,11 @@ void SWriterModule::ProcessOutput(SHttpHandlerData *    pHandlerData,
 
     // already being processed quit
     // TODO: not yet thread safe - use "trylock"ed mutexes for this
-    if (pModData->processing)
+    if (pModData->IsProcessing())
         return ;
 
     std::ostream &outStream(pHandlerData->pConnection->GetOutputStream());
-    pModData->processing    = true;
+    pModData->SetProcessing(true);
 
     // first send the headers regardless of whether there are any 
     // body parts so it is done with
@@ -81,7 +81,7 @@ void SWriterModule::ProcessOutput(SHttpHandlerData *    pHandlerData,
     }
 
     // turn off processing flag so it can be resumed in the future
-    pModData->processing    = false;
+    pModData->SetProcessing(false);
 }
 
 

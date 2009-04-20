@@ -38,13 +38,13 @@ void SContentModule::ProcessOutput(SHttpHandlerData *   pHandlerData,
 
     // already being processed quit
     // TODO: not yet thread safe
-    if (pModData->processing)
+    if (pModData->IsProcessing())
     {
         std::cerr << "  === ContentModule:ProcessOutput - " << "Already procesing - Quitting." << pBodyPart << std::endl;
         return ;
     }
 
-    pModData->processing    = true;
+    pModData->SetProcessing(true);
 
     if (pBodyPart != NULL) // we have multi part messages
     {
@@ -63,7 +63,7 @@ void SContentModule::ProcessOutput(SHttpHandlerData *   pHandlerData,
     }
 
     // turn off processing flag so it can be resumed in the future
-    pModData->processing    = false;
+    pModData->SetProcessing(false);
 }
 
 void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData, 

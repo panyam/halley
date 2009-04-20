@@ -49,6 +49,12 @@ public:
         processing = false;
     }
 
+    //! Tells if this module is processing the given request
+    inline bool IsProcessing() { return processing; }
+
+    //! Sets whether a module is being processed or not
+    inline void SetProcessing(bool yes) { processing = yes; }
+
 public:
     //! Gets the next body part that can be processed (if any).
     virtual void PutBodyPart(SBodyPart *pCurrPart);
@@ -120,6 +126,7 @@ public:
 
     BPIndexType nextBPToSend;
 
+protected:
     //! true if this module is currently processing this body part.
     bool        processing;
 
