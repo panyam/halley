@@ -47,6 +47,34 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
 }
 
 /**************************************************************************************
+*   \brief  Destroys the connection without release its memory
+*
+*   \version
+*       - Sri Panyam  20/04/2009
+*         Created
+**************************************************************************************/
+void SConnection::Destroy()
+{
+    SJob::Destroy();
+    if (connSocket > 0)
+    {
+        shutdown(connSocket, SHUT_RDWR);
+        close(connSocket);
+        connSocket = -1;
+    }
+    if (socketBuff != NULL)
+    {
+        delete socketBuff;
+        socketBuff = NULL;
+    }
+    if (clientOutput != NULL)
+    {
+        delete clientOutput;
+        clientOutput = NULL;
+    }
+}
+
+/**************************************************************************************
 *   \brief  Destroys the connection and associated data.
 *
 *   \version
@@ -55,8 +83,6 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
 **************************************************************************************/
 SConnection::~SConnection()
 {
-    delete socketBuff;
-    delete clientOutput;
 }
 
 /**************************************************************************************

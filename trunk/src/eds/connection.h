@@ -73,6 +73,9 @@ public:
     //! Get the socket associated with the connection
     SEvServer *Server() { return pServer; }
 
+    //! Destroys the connection.
+    virtual void Destroy();
+
     //! Closes the connection
     void Close();
 

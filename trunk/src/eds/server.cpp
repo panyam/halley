@@ -251,64 +251,69 @@ int SEvServer::Run()
     // now run the server asynchronously
     while (!Stopped())
     {
-        int nfds = epoll_wait(kdpfd, events, curfds, -1);
-        if (nfds < 0 && errno != EINTR)
+        int nfds = epoll_wait(kdpfd, events, curfds, 1000);
+        if (nfds != 0)
         {
-            std::cerr << "ERROR: epoll_wait error: [" << errno << "]: " << strerror(errno) << std::endl;
-            break ;
-        }
-        if (errno != EINTR)
-        {
-            for (int n = 0;n < nfds;n++)
+            if (nfds < 0 && errno != EINTR)
             {
-                SConnection *   pConnection = (SConnection *)(events[n].data.ptr);
-                int connSocket  = pConnection == NULL ? serverSocket : pConnection->Socket();
-                if (Stopped() || (events[n].events & (EPOLLRDHUP | EPOLLHUP)) != 0)
+                std::cerr << "ERROR: epoll_wait error: [" << errno << "]: " << strerror(errno) << std::endl;
+                break ;
+            }
+            if (errno != EINTR)
+            {
+                for (int n = 0;n < nfds;n++)
                 {
-                    // peer hung up or stop was requested so kill this connection
-                    // TODO: if server was Stopped, kill ALL connections
-                    if (pConnection != NULL)
-                        pConnection->Close();
-                }
-                else if (connSocket == serverSocket)    // its a connection request
-                {
-                    sockaddr_in client_sock_addr;
-                    socklen_t addlen = sizeof(client_sock_addr);
-                    int clientSocket = accept(serverSocket, (struct sockaddr *)&client_sock_addr, &addlen);
-
-                    if (clientSocket < 0)
+                    SConnection *   pConnection = (SConnection *)(events[n].data.ptr);
+                    int connSocket  = pConnection == NULL ? serverSocket : pConnection->Socket();
+                    if (Stopped() || (events[n].events & (EPOLLRDHUP | EPOLLHUP)) != 0)
                     {
-                        std::cerr << "ERROR: Could not accept connection [" << errno << "]: " << strerror(errno) << "." << std::endl;
-                        break ;
+                        // peer hung up or stop was requested so kill this connection
+                        // TODO: if server was Stopped, kill ALL connections
+                        if (pConnection != NULL)
+                            pConnection->Close();
                     }
-                    else if (Stopped())
+                    else if (connSocket == serverSocket)    // its a connection request
                     {
-                        // server being killed and we have a socket, 
-                        // so close the socket as well
-                        shutdown(clientSocket, SHUT_RDWR);
-                        close(clientSocket);
+                        sockaddr_in client_sock_addr;
+                        socklen_t addlen = sizeof(client_sock_addr);
+                        int clientSocket = accept(serverSocket, (struct sockaddr *)&client_sock_addr, &addlen);
+
+                        if (clientSocket < 0)
+                        {
+                            std::cerr << "ERROR: Could not accept connection [" << errno << "]: " << strerror(errno) << "." << std::endl;
+                            break ;
+                        }
+                        else if (Stopped())
+                        {
+                            // server being killed and we have a socket, 
+                            // so close the socket as well
+                            shutdown(clientSocket, SHUT_RDWR);
+                            close(clientSocket);
+                        }
+                        else
+                        {
+                            setnonblocking(clientSocket);
+                            ev.events   = EPOLLIN | EPOLLET | EPOLLHUP | EPOLLRDHUP;
+                            SConnection *pConn  = new SConnection(this, clientSocket);
+                            ev.data.ptr         = pConn;
+                            connections.insert(pConn);
+
+                            if (epoll_ctl(kdpfd, EPOLL_CTL_ADD, clientSocket, &ev) < 0)
+                            {
+                                std::cerr << "ERROR: epoll_ctl error [" << errno << "]: " 
+                                     << strerror(errno) << "." << std::endl;
+                                break ;
+                            }
+                            curfds++;
+                        }
                     }
                     else
                     {
-                        setnonblocking(clientSocket);
-                        ev.events   = EPOLLIN | EPOLLET;
-                        ev.data.ptr = new SConnection(this, clientSocket);
-
-                        if (epoll_ctl(kdpfd, EPOLL_CTL_ADD, clientSocket, &ev) < 0)
-                        {
-                            std::cerr << "ERROR: epoll_ctl error [" << errno << "]: " 
-                                 << strerror(errno) << "." << std::endl;
-                            break ;
-                        }
-                        curfds++;
+                        // means we have data to read off this socket, 
+                        // dont read it but give it the request reader task
+                        // handler!
+                        pRequestReader->ReadSocket(pConnection);
                     }
-                }
-                else
-                {
-                    // means we have data to read off this socket, 
-                    // dont read it but give it the request reader task
-                    // handler!
-                    pRequestReader->ReadSocket(pConnection);
                 }
             }
         }
@@ -316,6 +321,15 @@ int SEvServer::Run()
 
     if (serverSocket >= 0)
     {
+        // and kill all the connections
+        for (std::set<SConnection *>::iterator iter = connections.begin();
+             iter != connections.end();
+             ++iter)
+        {
+            ConnectionComplete(*iter);
+        }
+        
+        // and finally the server socket
         shutdown(serverSocket, SHUT_RDWR);
         close(serverSocket);
         serverSocket = -1;
@@ -400,8 +414,11 @@ SStage *SEvServer::GetStage(const SString &name)
 **************************************************************************************/
 void SEvServer::ConnectionComplete(SConnection *pConnection)
 {
-    // TODO: how to let the epoll thing know we are done with ??
-    close(pConnection->Socket());
-    delete pConnection;
+    if (connections.end() != connections.find(pConnection))
+    {
+        connections.erase(pConnection);
+        pConnection->Destroy();
+        delete pConnection;
+    }
 }
 

@@ -38,10 +38,46 @@
 **************************************************************************************/
 SJob::SJob()
 {
+    isAlive = true;
     // create space for the first 5 stages
     for (int i = 0;i < 5;i++)
     {
         stageData.push_back(NULL);
+    }
+}
+
+/**************************************************************************************
+*   \brief  Destroys a job and clears the stage data
+*
+*   \version
+*       - Sri Panyam  20/04/2009
+*         Created
+**************************************************************************************/
+SJob::~SJob()
+{
+    isAlive = true;
+    stageData.clear();
+}
+
+/**************************************************************************************
+*   \brief  Destroys the job without release its memory
+*
+*   \version
+*       - Sri Panyam  20/04/2009
+*         Created
+**************************************************************************************/
+void SJob::Destroy()
+{
+    SetAlive(false);
+
+    // go through all stage data and free it
+    for (int i = 0, size = stageData.size();i < size;i++)
+    {
+        if (stageData[i] != NULL)
+        {
+            delete stageData[i];
+            stageData[i] = NULL;
+        }
     }
 }
 
@@ -54,6 +90,7 @@ SJob::SJob()
 **************************************************************************************/
 void *SJob::GetStageData(SStage *pStage)
 {
+    // if (pStage->ID() >= stageData.size()) return NULL;
     int id = pStage->ID();
     int size = stageData.size();
     for (int i = size;i <= id;i++)
@@ -68,13 +105,39 @@ void *SJob::GetStageData(SStage *pStage)
 *       - Sri Panyam  20/02/2009
 *         Created
 **************************************************************************************/
-void SJob::SetStageData(SStage *pStage, void * data)
+void *SJob::SetStageData(SStage *pStage, void * data)
 {
     int id = pStage->ID();
     int size = stageData.size();
     for (int i = size;i <= id;i++)
         stageData.push_back(NULL);
+    void *old = stageData[id];
     stageData[id] = data;
+    return old;
+}
+
+/**************************************************************************************
+*   \brief  Sets the alive status.
+*
+*   \version
+*       - Sri Panyam  20/04/2009
+*         Created
+**************************************************************************************/
+void SJob::SetAlive(bool alive)
+{
+    isAlive = alive;
+}
+
+/**************************************************************************************
+*   \brief  Gets the alive status.
+*
+*   \version
+*       - Sri Panyam  20/04/2009
+*         Created
+**************************************************************************************/
+bool SJob::IsAlive()
+{
+    return isAlive;
 }
 
 
