@@ -44,19 +44,30 @@ public:
     SJob();
 
     //! Destroys the connection object
-    virtual ~SJob() { }
+    virtual ~SJob();
+
+    //! Destroys the job.
+    virtual void Destroy();
 
     //! Get the stage specific data for this connection
     void *  GetStageData(SStage *pStage);
 
     //! Set the stage specific data for this connection
-    void    SetStageData(SStage *pStage, void * data);
+    void *  SetStageData(SStage *pStage, void * data);
+
+    //! Tells if the job is alive.
+    bool IsAlive();
+
+    //! Sets the alive status of the job
+    void SetAlive(bool alive);
 
 private:
     //! Connection specific data that handlers can manipulate to their will.
     std::vector<void *>     stageData;
-};
 
+    //! Is the connection alive?
+    bool                isAlive;
+};
 
 #endif
 

@@ -126,6 +126,9 @@ private:
 
     //! All other stages by name
     std::map<std::string, SStage *> eventStages;
+
+    //! List of all connections
+    std::set<SConnection *>         connections;
 };
 
 #endif
