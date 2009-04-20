@@ -66,6 +66,14 @@ SEvServer::RealStop()
 {
     if (serverSocket >= 0)
     {
+        // and kill all the connections
+        while ( ! connections.empty())
+        {
+            std::set<SConnection *>::iterator iter = connections.begin();
+            ConnectionComplete(*iter);
+        }
+        
+        // and finally the server socket
         shutdown(serverSocket, SHUT_RDWR);
         close(serverSocket);
         serverSocket = -1;
@@ -321,17 +329,7 @@ int SEvServer::Run()
 
     if (serverSocket >= 0)
     {
-        // and kill all the connections
-        while ( ! connections.empty())
-        {
-            std::set<SConnection *>::iterator iter = connections.begin();
-            ConnectionComplete(*iter);
-        }
-        
-        // and finally the server socket
-        shutdown(serverSocket, SHUT_RDWR);
-        close(serverSocket);
-        serverSocket = -1;
+        RealStop();
     }
 
     return result;
