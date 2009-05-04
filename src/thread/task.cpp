@@ -64,7 +64,18 @@ int STask::Start()
 {
     taskRunning = true;
     taskStopped = false;
-    int result = Run();
+    taskDead    = false;
+    int result = 0;
+    try
+    {
+        result = Run();
+    }
+    catch (...)
+    {
+        cerr << "Task " << this << " dead..." << endl;
+        result      = -1;
+        taskDead    = true;
+    }
     taskRunning = false;
     return result;
 }
@@ -111,5 +122,19 @@ bool STask::Running()
 bool STask::Stopped()
 {
     return taskStopped;
+}
+
+//*****************************************************************************
+/*!
+ *  \brief  Tells if the task finished normally or died.
+ *
+ *  \version
+ *      - Sri Panyam      04/05/2009
+ *        Created.
+ *
+ *****************************************************************************/
+bool STask::Dead()
+{
+    return taskDead;
 }
 

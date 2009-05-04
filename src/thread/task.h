@@ -42,7 +42,7 @@ class STask
 {
 public:
     // Constructor
-    STask() : taskStopped(false), taskRunning(false) { }
+    STask() : taskStopped(false), taskRunning(false), taskDead(false) { }
 
     // Destructor
     virtual ~STask();
@@ -55,6 +55,9 @@ public:
 
     // Tells if the task has been stopped.
     bool    Running();
+
+    // Tells if the task is died or not
+    bool    Dead();
 
     // Tells if the task has been stopped.
     bool    Stopped();
@@ -72,6 +75,9 @@ private:
 
     //! Tells if the task is running
     bool    taskRunning;
+
+    //! Tells if task died or finished normally
+    bool    taskDead;
 };
 
 #endif
