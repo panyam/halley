@@ -65,7 +65,7 @@ void SWriterModule::ProcessOutput(SHttpHandlerData *    pHandlerData,
         std::cerr << "  === WriterModule - " << "Writing Message Headers" << std::endl;
         outStream << pResponse->Version() << " "
                   << pResponse->StatusCode() << " "
-                  << pResponse->StatusMessage() << CRLF;
+                  << pResponse->StatusMessage() << HttpUtils::CRLF;
         respHeaders.WriteHeaders(outStream);
     }
 

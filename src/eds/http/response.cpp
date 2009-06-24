@@ -65,7 +65,7 @@ void SHttpResponse::SetStatus(int status, const SString &msg)
 //! Writes the response to a stream
 bool SHttpResponse::WriteToStream(std::ostream &output)
 {
-    output << version << " " << statusCode << " " << statusMessage << CRLF;
+    output << version << " " << statusCode << " " << statusMessage << HttpUtils::CRLF;
 
     // set the content length
     // SetUIntHeader("Content-Length", body.size());

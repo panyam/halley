@@ -37,10 +37,10 @@ bool SHeaderTable::WriteHeaders(std::ostream &output)
     HeaderMap::const_iterator iter = headers.begin();
     for (;iter != headers.end();++iter)
     {
-       output << iter->first << ": " << iter->second << CRLF;
+       output << iter->first << ": " << iter->second << HttpUtils::CRLF;
     }
-    // and an extra CRLF
-    output << CRLF;
+    // and an extra HttpUtils::CRLF
+    output << HttpUtils::CRLF;
     output.flush();
 
     return true;
@@ -50,7 +50,7 @@ bool SHeaderTable::WriteHeaders(std::ostream &output)
 // Headers are read till a line with only a CRLF is found.
 bool SHeaderTable::ReadNextHeader(std::istream &input, SString &name, SString &value)
 {
-    SString line = ReadTillCrLf(input);
+    SString line = HttpUtils::ReadTillCrLf(input);
 
     return ParseHeaderLine(line, name, value);
 }
@@ -80,7 +80,7 @@ bool SHeaderTable::ParseHeaderLine(const SString &line, SString &name, SString &
     // empty line?
     if (*pCurr == 0) return false;
 
-    while (!iscontrol(*pCurr) && !isseperator(*pCurr))
+    while (!HttpUtils::iscontrol(*pCurr) && !HttpUtils::isseperator(*pCurr))
         pCurr++;
 
     // found a colon?

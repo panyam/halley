@@ -200,14 +200,14 @@ bool SHttpReaderState::ProcessBytes(const char *buffer, size_t len, std::list<SH
                 currState == READING_CHUNK_SIZE))
         {
             // go to the first CRLF or LF
-            while ((pCurr < pLast) && (*pCurr != CR) && (*pCurr != LF)) pCurr++;
+            while ((pCurr < pLast) && (*pCurr != HttpUtils::CR) && (*pCurr != HttpUtils::LF)) pCurr++;
 
             currentLine << SString(pStart, pCurr - pStart);
-            if (*pCurr == CR)
+            if (*pCurr == HttpUtils::CR)
             {
                 pCurr += 2;
             }
-            else if (*pCurr == LF)
+            else if (*pCurr == HttpUtils::LF)
             {
                 pCurr++;
             }

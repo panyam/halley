@@ -93,9 +93,9 @@ void STransferModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
         if (transferEncoding == "chunked")
         {
             SStringStream sizestr;
-            sizestr << hex << size << CRLF;
+            sizestr << hex << size << HttpUtils::CRLF;
             pBodyPart->InsertInBody(sizestr.str(), 0);
-            pBodyPart->AppendToBody(CRLF, 2);
+            pBodyPart->AppendToBody(HttpUtils::CRLF, 2);
         }
     }
 
