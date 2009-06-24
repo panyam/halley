@@ -30,18 +30,26 @@
 
 #include "httpfwd.h"
 
-#define CR                  '\r'
-#define LF                  '\n'
-#define CRLF                "\r\n"
-#define SEPARATORS          "()<>@,;:\\\"/[]?={} \t"
-#define isseperator(ch)     (strchr(SEPARATORS, (ch)) != 0)
-#define iscontrol(ch)       ( ((ch) == 127) || (((ch) >= 0) && ((ch) <= 31)))
+//! Generic utilities for HTTP
+class HttpUtils
+{
+public:
+    const static char   CR;
+    const static char   LF;
+    const static char * CRLF;
+    const static char * SEPARATORS;
 
-SString ReadTillCrLf(std::istream &input);
-SString base64_encode(unsigned char const* , unsigned int len);
-SString base64_decode(SString const& s);
-SString Escape(const SString &);
-SString Unescape(const SString &);
+    static inline bool isseperator(char ch)     { return  (strchr(SEPARATORS, (ch)) != 0); }
+    static inline bool iscontrol(char ch)       { return ( ((ch) == 127) || (((ch) >= 0) && ((ch) <= 31))); }
+
+public:
+    static SString ReadTillCrLf(std::istream &input);
+    static SString base64_encode(unsigned char const* , unsigned int len);
+    static SString base64_decode(SString const& s);
+    static SString Escape(const SString &);
+    static SString Unescape(const SString &);
+};
+
 
 #endif
 

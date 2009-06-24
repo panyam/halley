@@ -99,7 +99,7 @@ void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData,
             SString boundary(pModData->boundaries.front());
             pModData->boundaries.pop_front();
             pBodyPart->bpType = SBodyPart::BP_NORMAL;  // convert to normal message
-            pBodyPart->SetBody(CRLF, 2);
+            pBodyPart->SetBody(HttpUtils::CRLF, 2);
             pBodyPart->AppendToBody("--", 2);
             pBodyPart->AppendToBody(boundary);
             pBodyPart->AppendToBody("--", 2);
@@ -126,7 +126,7 @@ void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData,
                 SString boundary(pModData->boundaries.front());
                 pModData->boundaries.pop_front();
 
-                pCloser->AppendToBody(CRLF, 2);
+                pCloser->AppendToBody(HttpUtils::CRLF, 2);
                 pCloser->AppendToBody("--", 2);
                 pCloser->AppendToBody(boundary);
                 pCloser->AppendToBody("--", 2);
@@ -173,9 +173,9 @@ void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData,
             assert("No boundaries found in multi part message" && !pModData->boundaries.empty());
 
             SStringStream boundary;
-            boundary << CRLF << "--" << pModData->boundaries.front() << CRLF;
-            // boundary << "Content-Type: " << "text/text" << CRLF;
-            boundary << "Content-Length: " << pBodyPart->Size() << CRLF << CRLF;
+            boundary << HttpUtils::CRLF << "--" << pModData->boundaries.front() << HttpUtils::CRLF;
+            // boundary << "Content-Type: " << "text/text" << HttpUtils::CRLF;
+            boundary << "Content-Length: " << pBodyPart->Size() << HttpUtils::CRLF << HttpUtils::CRLF;
 
             pBodyPart->InsertInBody(boundary.str());
 

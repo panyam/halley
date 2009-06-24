@@ -134,7 +134,7 @@ void SHttpRequest::SetResource(const SString &r)
 
     pStart = pHostEnd;
     while (*pHostEnd != 0 && *pHostEnd != '?') pHostEnd++;
-    resource = Unescape(SString(pStart, pHostEnd - pStart));
+    resource = HttpUtils::Unescape(SString(pStart, pHostEnd - pStart));
 
     if (*pHostEnd == '?')
     {
@@ -149,8 +149,8 @@ void SHttpRequest::SetResource(const SString &r)
             const char *pEqPos = strchr(pStart, '=');
             if (pEqPos != NULL)
             {
-                SString qName(pEqPos > pStart ? Unescape(SString(pStart, pEqPos - pStart)) : "");
-                SString qValue(pEqPos + 1 < pNextParam ? Unescape(SString(pEqPos + 1, pNextParam - (pEqPos + 1))) : "");
+                SString qName(pEqPos > pStart ? HttpUtils::Unescape(SString(pStart, pEqPos - pStart)) : "");
+                SString qValue(pEqPos + 1 < pNextParam ? HttpUtils::Unescape(SString(pEqPos + 1, pNextParam - (pEqPos + 1))) : "");
                 if (qName != "")
                 {
                     queryValues.push_back(qName);
@@ -215,7 +215,7 @@ bool SHttpRequest::ParseFirstLine(const SString &line)
 // Reads the request line
 bool SHttpRequest::ReadFirstLine(std::istream &input)
 {
-    SString line = ReadTillCrLf(input);
+    SString line = HttpUtils::ReadTillCrLf(input);
 
     return ParseFirstLine(line);
 

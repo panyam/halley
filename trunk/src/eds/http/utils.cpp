@@ -27,10 +27,14 @@
 
 #include "utils.h"
 
-static const SString base64_chars = 
-             "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-             "abcdefghijklmnopqrstuvwxyz"
-             "0123456789+/";
+const char   HttpUtils::CR          = '\r';
+const char   HttpUtils::LF          = '\n';
+const char * HttpUtils::CRLF        = "\r\n";
+const char * HttpUtils::SEPARATORS  = "()<>@,;:\\\"/[]?={} \t";
+static const SString base64_chars   = 
+                         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                         "abcdefghijklmnopqrstuvwxyz"
+                         "0123456789+/";
 
 static const SString reserved_chars = ";/?:@&=+$,";
 static const SString mark_chars = "-_.!~*'()";
@@ -47,7 +51,7 @@ bool IsUnreservedChar(char ch)
     return isalnum(ch) || (mark_chars.find(ch) > 0);
 }
 
-SString Escape(const SString &str)
+SString HttpUtils::Escape(const SString &str)
 {
     return str;
 }
@@ -63,7 +67,7 @@ char hex2dec(char ch)
     return -1;
 }
 
-SString Unescape(const SString &str)
+SString HttpUtils::Unescape(const SString &str)
 {
     const char *buff    = str.c_str();
     const char *pStart  = buff;
@@ -102,7 +106,7 @@ SString Unescape(const SString &str)
 }
 
 // Reads a line till the CRLF
-SString ReadTillCrLf(std::istream &input)
+SString HttpUtils::ReadTillCrLf(std::istream &input)
 {
     SStringStream out;
     int ch = input.get();
@@ -120,7 +124,7 @@ static inline bool is_base64(unsigned char c) {
   return (isalnum(c) || (c == '+') || (c == '/'));
 }
 
-SString base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
+SString HttpUtils::base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
   SString ret;
   int i = 0;
   int j = 0;
@@ -163,7 +167,7 @@ SString base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len)
 
 }
 
-SString base64_decode(SString const& encoded_string) {
+SString HttpUtils::base64_decode(SString const& encoded_string) {
   int in_len = encoded_string.size();
   int i = 0;
   int j = 0;
