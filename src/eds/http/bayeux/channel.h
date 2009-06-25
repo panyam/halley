@@ -59,7 +59,7 @@ public:
     void SetChannelListener(SChannelListener *pList) { pListener = pList; }
 
     //! Handles an event
-    void HandleEvent(const JsonNodePtr &event, JsonNodePtr &output)
+    virtual void HandleEvent(const JsonNodePtr &event, JsonNodePtr &output)
     {
         if (pListener)
             pListener->HandleEvent(event, output);
