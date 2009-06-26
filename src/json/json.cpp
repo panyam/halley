@@ -367,8 +367,7 @@ JsonNode::IsEmpty()
  *        Created.
  *
  *****************************************************************************/
-unsigned
-JsonNode::Size()
+unsigned JsonNode::Size() const
 {
     return 0;
 }
@@ -522,8 +521,7 @@ JsonListNode::IsEmpty()
  *        Created.
  *
  *****************************************************************************/
-unsigned
-JsonListNode::Size()
+unsigned JsonListNode::Size() const
 {
     return size();
 }
@@ -631,8 +629,7 @@ JsonObjectNode::IsEmpty()
  *        Created.
  *
  *****************************************************************************/
-unsigned
-JsonObjectNode::Size()
+unsigned JsonObjectNode::Size() const
 {
     return size();
 }
