@@ -85,7 +85,7 @@ public:
     template<typename T> T  Value() const;
 
     // Return child count
-    virtual unsigned        Size();
+    virtual unsigned        Size() const;
 
     // Add a child node if possible
     virtual bool            Add(const JsonNodePtr &child, int index = -1);
@@ -194,7 +194,7 @@ public:
     virtual bool            Add(const JsonNodePtr &child, int index = -1);
 
     // Return child count
-    virtual unsigned        Size();
+    virtual unsigned        Size() const;
 
     // Get a child node by index
     virtual JsonNodePtr     Get(unsigned index) const;
@@ -234,7 +234,7 @@ public:
     virtual bool            IsEmpty();
 
     // Return child count
-    virtual unsigned        Size();
+    virtual unsigned        Size() const;
 
     // Add a named value
     virtual bool            Set(const std::string &name, const JsonNodePtr &child);
@@ -246,6 +246,7 @@ public:
     virtual bool            Contains(const std::string &attr);
 
 public:
+    using JsonNodeMap::const_iterator;
     using JsonNodeMap::iterator;
     using JsonNodeMap::begin;
     using JsonNodeMap::end;
