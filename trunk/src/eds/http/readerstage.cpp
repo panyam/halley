@@ -352,7 +352,7 @@ bool SHttpReaderState::ProcessCurrentLine(std::list<SHttpRequest *> & requests)
                 SString transferEncoding;
                 if (pCurrRequest->Headers().HeaderIfExists("Transfer-Encoding", transferEncoding))
                 {
-                    if (transferEncoding == "chunked")
+                    if (strcasecmp(transferEncoding.c_str(), "chunked") == 0)
                     {
                         currState = READING_CHUNK_SIZE;
                     }
