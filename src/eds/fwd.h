@@ -62,6 +62,7 @@ class SEvent;
 class SEventDispatcher;
 class SEventHandler;
 class SEventHandlerFactory;
+class SEventQueue;
 class SEvServer;
 
 class SStage;

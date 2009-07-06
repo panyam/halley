@@ -29,10 +29,10 @@
 #ifndef _SEVENT_STAGE_H_
 #define _SEVENT_STAGE_H_
 
-#include <queue>
 #include "thread/thread.h"
 #include "eds/event.h"
 #include "eds/job.h"
+#include "eds/equeue.h"
 
 //*****************************************************************************
 /*!
@@ -84,7 +84,7 @@ private:
     SCondition              evtQueueCondition;
 
     //! Event queues for unhandled events.
-    std::priority_queue<SEvent>    eventQueue;
+    SEventQueue             eventQueue;
 
     //! The threads that will handle the events
     std::vector<SThread *>  handlerThreads;
