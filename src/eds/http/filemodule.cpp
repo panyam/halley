@@ -113,7 +113,7 @@ void SFileModule::ProcessInput(SHttpHandlerData *   pHandlerData,
 
                 // we are dealing with a folder!
                 SString format      = pRequest->GetQueryValue("format");
-                bool raw            = format == "raw";
+                bool raw            = (strcasecmp(format.c_str(), "raw") == 0);
                 SString contents    = PrintDirContents(docroot, filename, prefix, raw);
                 respHeaders.SetIntHeader("Content-Length", contents.size());
                 respHeaders.SetHeader("Content-Type", (raw ? "text/text" : "text/html"));

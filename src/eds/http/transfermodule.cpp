@@ -90,7 +90,7 @@ void STransferModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
     {
         // write size first then the content
         unsigned size = pBodyPart->Size();
-        if (transferEncoding == "chunked")
+        if (strcasecmp(transferEncoding.c_str(), "chunked") == 0)
         {
             SStringStream sizestr;
             sizestr << hex << size << HttpUtils::CRLF;
