@@ -24,8 +24,8 @@
  *
  *****************************************************************************/
 
-#ifndef _SEVENT_QUEUE_H_
-#define _SEVENT_QUEUE_H_
+#ifndef _SEVENT_H_
+#define _SEVENT_H_
 
 #include "eds/fwd.h"
 
