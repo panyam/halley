@@ -1,4 +1,6 @@
 
+#include <iostream>
+#include <signal.h>
 #include "eds/server.h"
 #include "eds/connection.h"
 #include "eds/stage.h"
@@ -18,7 +20,6 @@
 #include "net/connfactory.h"
 #include "net/server.h"
 #include "thread/thread.h"
-#include <iostream>
 using namespace std;
 
 // we generate the content!!
@@ -126,10 +127,36 @@ protected:
     }
 };
 
+void termination_handler(int signum)
+{
+    // do clean up here
+    std::cerr << "Signal Recieved (" << signum << ") - Terminating..." << std::endl;
+    exit(0);
+}
+
 // This is what drives the server and loads modules depending on how we
 // want it.
 int main(int argc, char *argv[])
 {
+    // setup signal handlers
+    struct sigaction new_action, old_action;
+    /* Set up the structure to specify the new action. */
+    new_action.sa_handler = termination_handler;
+    sigemptyset (&new_action.sa_mask);
+   
+    sigaction (SIGINT, NULL, &old_action);
+    if (old_action.sa_handler != SIG_IGN)
+        sigaction (SIGINT, &new_action, NULL);
+
+    sigaction (SIGHUP, NULL, &old_action);
+    if (old_action.sa_handler != SIG_IGN)
+        sigaction (SIGHUP, &new_action, NULL);
+
+    sigaction (SIGTERM, NULL, &old_action);
+    if (old_action.sa_handler != SIG_IGN)
+        sigaction (SIGTERM, &new_action, NULL);
+
+
     SHttpReaderStage    requestReader;
     SHttpHandlerStage   requestHandler;
     SFileIOHelper       fileHelper;
@@ -141,6 +168,7 @@ int main(int argc, char *argv[])
     SMyModule           myModule(&contentModule);
     SFileModule         testModule(&contentModule, true);
     SUrlRouter          urlRouter(&myModule);
+    SContainsUrlMatcher microscapeUrlMatch("/microscape/", SContainsUrlMatcher::PREFIX_MATCH, &rootFileModule);
     SContainsUrlMatcher staticUrlMatch("/static/", SContainsUrlMatcher::PREFIX_MATCH, &rootFileModule);
     SContainsUrlMatcher testUrlMatch("/btest/", SContainsUrlMatcher::PREFIX_MATCH, &testModule);
     SContainsUrlMatcher dsUrlMatch("/bayeux/", SContainsUrlMatcher::PREFIX_MATCH, &bayeuxModule);
@@ -149,6 +177,7 @@ int main(int argc, char *argv[])
     rootFileModule.AddDocRoot("/microscape/", "/home/sri/sandbox/cpp/halley/test/microscape/");
     rootFileModule.AddDocRoot("/static/", "/");
 
+    urlRouter.AddUrlMatch(&microscapeUrlMatch);
     urlRouter.AddUrlMatch(&staticUrlMatch);
     urlRouter.AddUrlMatch(&testUrlMatch);
     urlRouter.AddUrlMatch(&dsUrlMatch);
