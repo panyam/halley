@@ -145,7 +145,8 @@ int main(int argc, char *argv[])
     SContainsUrlMatcher testUrlMatch("/btest/", SContainsUrlMatcher::PREFIX_MATCH, &testModule);
     SContainsUrlMatcher dsUrlMatch("/bayeux/", SContainsUrlMatcher::PREFIX_MATCH, &bayeuxModule);
 
-    testModule.AddDocRoot("/btest/", "/home/spanyam/personal/halley/test/");
+    testModule.AddDocRoot("/btest/", "/home/sri/sandbox/cpp/halley/test/");
+    rootFileModule.AddDocRoot("/microscape/", "/home/sri/sandbox/cpp/halley/test/microscape/");
     rootFileModule.AddDocRoot("/static/", "/");
 
     urlRouter.AddUrlMatch(&staticUrlMatch);
