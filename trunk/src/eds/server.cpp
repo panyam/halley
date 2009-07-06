@@ -411,6 +411,7 @@ void SEvServer::ConnectionComplete(SConnection *pConnection)
 {
     if (connections.end() != connections.find(pConnection))
     {
+        std::cerr << "Closing Connection: " << pConnection << std::endl;
         connections.erase(pConnection);
         pConnection->Destroy();
         delete pConnection;

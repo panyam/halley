@@ -192,7 +192,7 @@ bool SHttpReaderState::ProcessBytes(const char *buffer, size_t len, std::list<SH
     const char *pStart  = buffer;
     const char *pCurr   = buffer;
     const char *pLast   = buffer + len;
-    while (true)
+    while (pCurr < pLast)
     {
         while (pCurr < pLast && 
                 (currState == READING_FIRST_LINE ||
@@ -238,6 +238,7 @@ bool SHttpReaderState::ProcessBytes(const char *buffer, size_t len, std::list<SH
             currState = READING_FIRST_LINE;
         }
     }
+    return false;
 }
 
 // Reads body data and returns the number of bytes processed
