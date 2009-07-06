@@ -309,8 +309,7 @@ bool SFileModule::ReadDirectory(const char *dirname, std::vector<DirEnt> &entrie
     {
         // ignore "." and ".." entries
         if (!(pDirEnt->d_name[0] == '.' && pDirEnt->d_name[1] == 0) &&
-            !(pDirEnt->d_name[0] == '.' && pDirEnt->d_name[1] == '.' ||
-                    pDirEnt->d_name[2] == 0))
+            !(pDirEnt->d_name[0] == '.' && (pDirEnt->d_name[1] == '.' || pDirEnt->d_name[2] == 0)))
         {
             DirEnt entry(pDirEnt->d_name);
             SStringStream entnamestream;
