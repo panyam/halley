@@ -79,8 +79,14 @@ public:
 protected:
     friend class SEventDispatcher;
 
+    //! Called before an event is handled
+    virtual void PreHandleEvent(const SEvent &event);
+
     //! Called to actually process the event
     virtual void HandleEvent(const SEvent &event) { }
+
+    //! Called after an event is handled
+    virtual void PostHandleEvent(const SEvent &event);
 
 private:
     //! Mutex on the event queue

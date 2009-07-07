@@ -123,6 +123,20 @@ void SStage::Stop()
     }
 }
 
+//! Called before an event is handled
+void SStage::PreHandleEvent(const SEvent &event)
+{
+    SLogger::Get()->Log(0, "PRE Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x\n",
+                                Name().c_str(), event.evType, event.pSource, event.pData);
+}
+
+//! Called after an event is handled
+void SStage::PostHandleEvent(const SEvent &event)
+{
+    SLogger::Get()->Log(0, "POST Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x\n",
+                                Name().c_str(), event.evType, event.pSource, event.pData);
+}
+
 //! Handles events continuosly
 int SEventDispatcher::Run()
 {
@@ -131,9 +145,11 @@ int SEventDispatcher::Run()
         // get the event
         SEvent event = pStage->GetEvent();
 
+        pStage->PreHandleEvent(event);
         SLogger::Get()->Log(0, "Handling Event, Stage: %s, Type: %d, Source: %x, Data: %x\n",
                                     pStage->Name().c_str(), event.evType, event.pSource, event.pData);
         pStage->HandleEvent(event);
+        pStage->PostHandleEvent(event);
     }
     return 0;
 }
@@ -143,7 +159,9 @@ void SStage::QueueEvent(const SEvent &event)
 {
     if (handlerThreads.empty())
     {
-        this->HandleEvent(event);
+        PreHandleEvent(event);
+        HandleEvent(event);
+        PostHandleEvent(event);
     }
     else
     {
