@@ -105,7 +105,7 @@ int SEvServer::PrepareClientSocket(int clientSocket)
     }
 
 
-    /*
+#ifndef DISABLE_SO_LINGER
     struct linger linger;
     linger.l_onoff = 1;
     linger.l_linger = 0;
@@ -115,7 +115,7 @@ int SEvServer::PrepareClientSocket(int clientSocket)
              << strerror(errno) << std::endl << std::endl;
         return -errno;
     }
-    */
+#endif
 
     return 0;
 }
