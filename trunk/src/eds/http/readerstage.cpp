@@ -104,9 +104,9 @@ public:
 };
 
 // Creates a new file io helper stage
-SHttpReaderStage::SHttpReaderStage(int numThreads)
+SHttpReaderStage::SHttpReaderStage(const SString &name, int numThreads)
 :
-    SStage(numThreads),
+    SStage(name, numThreads),
     pHandlerStage(NULL)
 {
 }

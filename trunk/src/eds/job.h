@@ -102,6 +102,10 @@ public:
     //! Removes a job listener
     virtual bool RemoveListener(SJobListener *pListener);
 
+public:
+    //! The stage that owns this job - only one stage can be processing a job at a time
+    SStage *                    pOwner;
+
 private:
     //! Connection specific data that handlers can manipulate to their will.
     std::vector<void *>   stageData;

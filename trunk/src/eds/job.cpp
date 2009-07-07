@@ -38,6 +38,7 @@
 **************************************************************************************/
 SJob::SJob()
 {
+    pOwner      = NULL;
     isAlive     = true;
 
     // create space for the first 5 stages

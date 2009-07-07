@@ -27,8 +27,6 @@
 
 #include "request.h"
 #include "response.h"
-#include "eds/fileiohelper.h"
-#include "eds/dbhelperstage.h"
 #include "eds/connection.h"
 #include "eds/server.h"
 #include "eds/stage.h"
@@ -41,27 +39,12 @@
 using std::cerr;
 using std::endl;
 
-// Creates a new file io helper stage
-SHttpHandlerStage::SHttpHandlerStage(int numThreads)
+// Creates a handler stage
+SHttpHandlerStage::SHttpHandlerStage(const SString &name, int numThreads)
 :
-    SStage(numThreads),
-    pIOHelper(NULL),
-    pDBHelper(NULL),
+    SStage(name, numThreads),
     pRootModule(NULL)
 {
-}
-
-
-// Set the File IO Helper stage
-void SHttpHandlerStage::SetIOHelper(SFileIOHelper *pHelper)
-{
-    pIOHelper = pHelper;
-}
-
-// Set the DB helper stage
-void SHttpHandlerStage::SetDBHelper(SDBHelperStage *pHelper)
-{
-    pDBHelper = pHelper;
 }
 
 //! Handle a new request - will be called by external request reader

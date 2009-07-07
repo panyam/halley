@@ -50,7 +50,7 @@ public:
 
 public:
     // Creates a new handler
-    SStage(int numThreads = DEFAULT_NUM_THREADS);
+    SStage(const SString &name, int numThreads = DEFAULT_NUM_THREADS);
     
     // Destroys the stage - MUST call Stop before this
     virtual ~SStage();
@@ -73,6 +73,9 @@ public:
     //! Get the stage ID.
     int ID() { return stageID; }
 
+    //! Get the name
+    const SString &Name() { return stageName; }
+
 protected:
     friend class SEventDispatcher;
 
@@ -91,6 +94,9 @@ private:
 
     //! The threads that will handle the events
     std::vector<SThread *>  handlerThreads;
+
+    //! Name of the stage
+    SString                 stageName;
 
 private:
     //! Stage ID

@@ -53,22 +53,10 @@ public:
 
 public:
     // Creates a new fileio helper stage
-    SHttpHandlerStage(int numThreads = DEFAULT_NUM_THREADS);
+    SHttpHandlerStage(const SString &name, int numThreads = DEFAULT_NUM_THREADS);
     
     // Destroys the stage
     virtual ~SHttpHandlerStage() { }
-
-    //! Set the file IO stage
-    virtual void    SetIOHelper(SFileIOHelper *pIOHelper);
-
-    //! Set the db helper stage
-    virtual void    SetDBHelper(SDBHelperStage *pDBHelper);
-
-    //! Get the file IO stage
-    virtual SFileIOHelper *GetIOHelper() { return pIOHelper; }
-
-    //! Get the db helper stage
-    virtual SDBHelperStage *GetDBHelper() { return pDBHelper; }
 
     //! Sets the root processing module.
     virtual void SetRootModule(SHttpModule *pModule) { pRootModule = pModule; }
@@ -93,12 +81,6 @@ protected:
     virtual void HandleEvent(const SEvent &event);
 
 protected:
-    //! IO Helper
-    SFileIOHelper *         pIOHelper;
-    
-    //! DB Helper
-    SDBHelperStage *        pDBHelper;
-
     //! The starting module for all requests
     SHttpModule *           pRootModule;
 };
