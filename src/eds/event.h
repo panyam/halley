@@ -40,13 +40,13 @@ class SEvent
 {
 public:
     //! Creates a new event with defaults
-    SEvent(int type = -1, void *pSource = NULL, void *data = NULL, int priority_ = 1000)
+    SEvent(int type = -1, SJob *pSource = NULL, void *data = NULL, int priority_ = 1000)
     {
         Reset(type, pSource, data, priority_);
     }
 
     //! Reset the event.
-    void Reset(int type = -1, void *pSource_ = NULL, void *data = NULL, int priority_ = 1000)
+    void Reset(int type = -1, SJob *pSource_ = NULL, void *data = NULL, int priority_ = 1000)
     {
         // default priority = 1000
         priority    = priority_;
@@ -62,7 +62,7 @@ public:
     int     evType;
 
     //! The source that is responsible for this event.
-    void *  pSource;
+    SJob *  pSource;
 
     //! The actual event data - can be a bucket, string, anything really -
     // specific to the module and event type
