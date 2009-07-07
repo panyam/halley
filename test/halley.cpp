@@ -161,8 +161,8 @@ public:
         dsUrlMatch("/bayeux/", SContainsUrlMatcher::PREFIX_MATCH, &bayeuxModule),
         pServer(port, &requestReader)
     {
-        testModule.AddDocRoot("/btest/", "/home/sri/sandbox/cpp/halley/test/");
-        rootFileModule.AddDocRoot("/microscape/", "/home/sri/sandbox/cpp/halley/test/microscape/");
+        testModule.AddDocRoot("/btest/", "/home/sri/sandbox/cpp/halley/trunk/test/");
+        rootFileModule.AddDocRoot("/microscape/", "/home/sri/sandbox/cpp/halley/trunk/test/microscape/");
         rootFileModule.AddDocRoot("/static/", "/");
 
         urlRouter.AddUrlMatch(&microscapeUrlMatch);
@@ -176,6 +176,11 @@ public:
 
         pServer.SetStage("RequestReader", &requestReader);
         pServer.SetStage("RequestHandler", &requestHandler);
+
+        // start the stages... note that these must be started before the
+        // server is started
+        requestReader.Start();
+        requestHandler.Start();
 
         /*
         for (int i = 0;i < 5;i++)

@@ -49,7 +49,7 @@ public:
 
 public:
     // Creates a new fileio helper stage
-    SHttpReaderStage(int numThreads = 0);
+    SHttpReaderStage(int numThreads = DEFAULT_NUM_THREADS);
     
     // Destroys the stage
     virtual ~SHttpReaderStage() { }

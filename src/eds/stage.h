@@ -46,8 +46,11 @@
 class SStage : public SJobListener
 {
 public:
+    const static int DEFAULT_NUM_THREADS;
+
+public:
     // Creates a new handler
-    SStage(int numThreads = 0);
+    SStage(int numThreads = DEFAULT_NUM_THREADS);
     
     // Destroys the stage - MUST call Stop before this
     virtual ~SStage();
@@ -62,7 +65,7 @@ public:
     virtual void QueueEvent(const SEvent &event);
 
     //! Pops and gets the next event in the queue
-    virtual SEvent GetEvent();
+    virtual const SEvent &GetEvent();
 
     //! Called when a job is destroyed
     virtual void JobDestroyed(SJob *pJob) { }

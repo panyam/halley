@@ -86,7 +86,7 @@ class SFileIOStage : public SStage
 {
 public:
     // Creates a new fileio helper stage
-    SFileIOStage(int numThreads = 0);
+    SFileIOStage(int numThreads = DEFAULT_NUM_THREADS);
     
     // Destroys the stage
     virtual ~SFileIOStage() { }
