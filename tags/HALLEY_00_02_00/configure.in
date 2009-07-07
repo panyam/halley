@@ -1,0 +1,72 @@
+
+AC_INIT(halley, 0.2.0, sri.panyam@gmail.com)
+
+##########  Default Values  ##############
+
+# 
+# Change the version number below and 
+# in the AC_INIT line above on every release.
+#
+MAJOR_VERSION=0
+MINOR_VERSION=2
+BUILD_VERSION=0
+RELEASE_DATE="07 July 2009"
+build_mode=release
+enable_memcheck=no
+
+##########  DO NOT EDIT BELOW THIS LINE  ##############
+
+dnl Check for required programs
+AC_PROG_CXX
+AC_PROG_CC
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+
+dnl Check for required libraries
+
+dnl Check for header files
+AC_HEADER_STDC
+AC_CHECK_HEADERS([fcntl.h stdlib.h string.h sys/time.h unistd.h])
+
+AC_ARG_ENABLE(debug,
+              [  --enable-debug         To enable debug build],
+              build_mode=debug)
+
+AC_ARG_ENABLE(memcheck,
+              [  --enable-memcheck      To enable memcheck build],
+              [ enable_memcheck=yes ])
+
+dnl Check for required typedefs, structures and compiler characteristics
+AC_HEADER_STDBOOL
+AC_C_CONST
+AC_TYPE_UID_T
+AC_C_INLINE
+AC_TYPE_MODE_T
+AC_TYPE_OFF_T
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+AC_STRUCT_TM
+
+dnl Check for required library functions
+AC_FUNC_MALLOC
+AC_FUNC_MKTIME
+AC_FUNC_REALLOC
+AC_FUNC_STAT
+AC_FUNC_VPRINTF
+AC_CHECK_FUNCS([gettimeofday localtime_r memset mkdir strcasecmp])
+
+dnl Check for required system services
+
+AC_SUBST(MAJOR_VERSION)
+AC_SUBST(MINOR_VERSION)
+AC_SUBST(BUILD_VERSION)
+AC_SUBST(build_mode)
+AC_SUBST(enable_memcheck)
+AC_SUBST(RELEASE_DATE)
+
+dnl Create the necessary files.
+
+AC_OUTPUT([ Makefile.common Makefile src/Makefile test/Makefile ])
+
+echo Generating make dependancies...
+make dep
