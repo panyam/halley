@@ -27,6 +27,44 @@
 #ifndef _SMARTPTR_H_
 #define _SMARTPTR_H_
 
+/**
+ * Superclass of all reference countable objects.
+ */
+class RefCountable
+{
+public:
+    //! Constructor
+    RefCountable() : refCount(0) { }
+
+    //! virtual destructor
+    virtual ~RefCountable() { }
+
+    //! Increase reference count
+    virtual void IncRef(unsigned delta = 1) { refCount += delta; }
+
+    //! Decrease reference count
+    // Returns true if reference count reaches 0
+    virtual bool    DecRef(unsigned delta = 1)
+    {
+        // TODO: Should we assert on refCount < delta?
+        if (refCount > delta)
+        {
+            refCount -= delta;
+            return false;
+        }
+
+        refCount = 0;
+        return true;
+    }
+
+    //! Return the reference count
+    virtual unsigned Count() const { return refCount; }
+
+private:
+    //! ref count of this object
+    unsigned    refCount;
+};
+
 //*****************************************************************************
 /*!
  *  \class CRefCount

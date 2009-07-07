@@ -29,24 +29,7 @@
 #define _SEDS_JOB_H_
 
 #include "eds/fwd.h"
-
-class RefCountable
-{
-public:
-    RefCountable() : refCount(0) { }
-
-    //! Increases the reference count
-    void IncRef() { refCount++; }
-
-    //! Decreases the reference count
-    void DecRef() { refCount--; }
-
-    //! Get the ref count
-    unsigned RefCount() { return refCount; }
-
-private:
-    unsigned refCount;
-};
+#include "utils/refcount.h"
 
 //*****************************************************************************
 /*!
