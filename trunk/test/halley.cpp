@@ -127,10 +127,80 @@ protected:
     }
 };
 
+class ServerContext
+{
+public:
+    SHttpReaderStage    requestReader;
+    SHttpHandlerStage   requestHandler;
+    SFileIOHelper       fileHelper;
+    SWriterModule       writerModule;
+    // STransferModule     transferModule(&writerModule);
+    SContentModule      contentModule;
+    SBayeuxModule       bayeuxModule;
+    SFileModule         rootFileModule;
+    SMyModule           myModule;
+    SFileModule         testModule;
+    SUrlRouter          urlRouter;
+    SContainsUrlMatcher microscapeUrlMatch;
+    SContainsUrlMatcher staticUrlMatch;
+    SContainsUrlMatcher testUrlMatch;
+    SContainsUrlMatcher dsUrlMatch;
+    SEvServer           pServer;
+
+public:
+    ServerContext(int port = 80)    :
+        contentModule(&writerModule),
+        bayeuxModule(&contentModule, "MyTestBoundary"),
+        rootFileModule(&contentModule, true),
+        myModule(&contentModule),
+        testModule(&contentModule, true),
+        urlRouter(&myModule),
+        microscapeUrlMatch("/microscape/", SContainsUrlMatcher::PREFIX_MATCH, &rootFileModule),
+        staticUrlMatch("/static/", SContainsUrlMatcher::PREFIX_MATCH, &rootFileModule),
+        testUrlMatch("/btest/", SContainsUrlMatcher::PREFIX_MATCH, &testModule),
+        dsUrlMatch("/bayeux/", SContainsUrlMatcher::PREFIX_MATCH, &bayeuxModule),
+        pServer(port, &requestReader)
+    {
+        testModule.AddDocRoot("/btest/", "/home/sri/sandbox/cpp/halley/test/");
+        rootFileModule.AddDocRoot("/microscape/", "/home/sri/sandbox/cpp/halley/test/microscape/");
+        rootFileModule.AddDocRoot("/static/", "/");
+
+        urlRouter.AddUrlMatch(&microscapeUrlMatch);
+        urlRouter.AddUrlMatch(&staticUrlMatch);
+        urlRouter.AddUrlMatch(&testUrlMatch);
+        urlRouter.AddUrlMatch(&dsUrlMatch);
+
+        requestReader.SetHandlerStage(&requestHandler);
+        requestHandler.SetRootModule(&urlRouter);
+
+
+        pServer.SetStage("RequestReader", &requestReader);
+        pServer.SetStage("RequestHandler", &requestHandler);
+
+        /*
+        for (int i = 0;i < 5;i++)
+        {
+            SStringStream sstr;
+            sstr << "/bayeux/channel" << (i + 1);
+            int port = 1010 + (i * 10);
+            MyBayeuxChannel *pChannel = new MyBayeuxChannel(&bayeuxModule, sstr.str(), port);
+            cerr << "Starting bayeux channel: " << sstr.str() << " on port: " << port << endl;
+            bayeuxModule.RegisterChannel(pChannel);
+            SThread *pChannelThread = new SThread(pChannel);
+            pChannelThread->Start();
+        }
+        */
+    }
+};
+
+ServerContext *serverContext = NULL;
+
 void termination_handler(int signum)
 {
     // do clean up here
     std::cerr << "Signal Recieved (" << signum << ") - Terminating..." << std::endl;
+    if (serverContext != NULL)
+        delete serverContext;
     exit(0);
 }
 
@@ -157,54 +227,10 @@ int main(int argc, char *argv[])
         sigaction (SIGTERM, &new_action, NULL);
 
 
-    SHttpReaderStage    requestReader;
-    SHttpHandlerStage   requestHandler;
-    SFileIOHelper       fileHelper;
-    SWriterModule       writerModule;
-    // STransferModule     transferModule(&writerModule);
-    SContentModule      contentModule(&writerModule);
-    SBayeuxModule       bayeuxModule(&contentModule, "MyTestBoundary");
-    SFileModule         rootFileModule(&contentModule, true);
-    SMyModule           myModule(&contentModule);
-    SFileModule         testModule(&contentModule, true);
-    SUrlRouter          urlRouter(&myModule);
-    SContainsUrlMatcher microscapeUrlMatch("/microscape/", SContainsUrlMatcher::PREFIX_MATCH, &rootFileModule);
-    SContainsUrlMatcher staticUrlMatch("/static/", SContainsUrlMatcher::PREFIX_MATCH, &rootFileModule);
-    SContainsUrlMatcher testUrlMatch("/btest/", SContainsUrlMatcher::PREFIX_MATCH, &testModule);
-    SContainsUrlMatcher dsUrlMatch("/bayeux/", SContainsUrlMatcher::PREFIX_MATCH, &bayeuxModule);
-
-    testModule.AddDocRoot("/btest/", "/home/sri/sandbox/cpp/halley/test/");
-    rootFileModule.AddDocRoot("/microscape/", "/home/sri/sandbox/cpp/halley/test/microscape/");
-    rootFileModule.AddDocRoot("/static/", "/");
-
-    urlRouter.AddUrlMatch(&microscapeUrlMatch);
-    urlRouter.AddUrlMatch(&staticUrlMatch);
-    urlRouter.AddUrlMatch(&testUrlMatch);
-    urlRouter.AddUrlMatch(&dsUrlMatch);
-
-    requestReader.SetHandlerStage(&requestHandler);
-    requestHandler.SetRootModule(&urlRouter);
-
     int port = argc <= 1 ? 80 : atoi(argv[1]);
-    SEvServer pServer(port, &requestReader);
-
-    pServer.SetStage("RequestReader", &requestReader);
-    pServer.SetStage("RequestHandler", &requestHandler);
-
-    for (int i = 0;i < 5;i++)
-    {
-        SStringStream sstr;
-        sstr << "/bayeux/channel" << (i + 1);
-        int port = 1010 + (i * 10);
-        MyBayeuxChannel *pChannel = new MyBayeuxChannel(&bayeuxModule, sstr.str(), port);
-        cerr << "Starting bayeux channel: " << sstr.str() << " on port: " << port << endl;
-        bayeuxModule.RegisterChannel(pChannel);
-        SThread *pChannelThread = new SThread(pChannel);
-        pChannelThread->Start();
-    }
-
+    serverContext = new ServerContext(port);
     cerr << "Server Started on port: " << port << "..." << endl;
-    pServer.Start();
+    serverContext->pServer.Start();
     cerr << "Server Finished..." << endl;
 
     return 0;
@@ -283,7 +309,6 @@ void SMyModule::ProcessInput(SHttpHandlerData *     pHandlerData,
     part->AppendToBody("</title></head><body bgcolor='" + bgcolor + "'>");
     part->AppendToBody(body);
 
-    std::cerr << " === MyModule: Sending to next module" << std::endl;
     pStage->OutputToModule(pHandlerData->pConnection, pNextModule, part);
     pStage->OutputToModule(pHandlerData->pConnection, pNextModule,
                            pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED, pNextModule));

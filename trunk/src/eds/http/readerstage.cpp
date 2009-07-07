@@ -61,12 +61,17 @@ public:
         pCurrRequest(NULL),
         pCurrBodyPart(NULL),
         currBodySize(0),
-        currBodyRead(0) { }
+        currBodyRead(0)
+    {
+        std::cerr << "Creating Stage Data: " << this << std::endl;
+    }
 
 
     // Destroys the request data - Request object to be 
     // deleted by later stages
-    ~SHttpReaderState() { }
+    ~SHttpReaderState() {
+        std::cerr << "Destroying Stage Data: " << this << std::endl;
+    }
 
 public:
     bool ProcessCurrentLine(std::list<SHttpRequest *> & requests);
@@ -123,7 +128,7 @@ void SHttpReaderStage::JobDestroyed(SJob *pJob)
     if (pJob != NULL)
     {
         SHttpReaderState *pStageData = (SHttpReaderState *)pJob->GetStageData(this);
-        if (pStageData == NULL)
+        if (pStageData != NULL)
         {
             delete pStageData;
             pJob->SetStageData(this, NULL);
@@ -183,6 +188,13 @@ void SHttpReaderStage::HandleEvent(const SEvent &event)
         errnum = errno;
         std::cerr << "WARNING: Socket Reading Complete: [" << errnum << "]: " << strerror(errnum) << std::endl << std::endl;
         // pConnection->Close();
+    }
+    else if (len == 0)
+    {
+        // peer closed socket
+        std::cerr << "WARNING: Peer Closed Socket........." << std::endl << std::endl;
+        // close(pConnection->Socket());
+        // pConnection->CloseSocket();
     }
 }
 

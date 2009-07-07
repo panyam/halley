@@ -121,7 +121,7 @@ void SHttpHandlerStage::JobDestroyed(SJob *pJob)
     if (pJob != NULL)
     {
         SHttpHandlerData *pStageData = (SHttpHandlerData *)pJob->GetStageData(this);
-        if (pStageData == NULL)
+        if (pStageData != NULL)
         {
             delete pStageData;
             pJob->SetStageData(this, NULL);
@@ -176,8 +176,8 @@ void SHttpHandlerStage::HandleEvent(const SEvent &event)
             event.Data<SHttpModule *>()->ProcessOutput(pHandlerData, this, NULL);
             break ;
         case EVT_CLOSE_CONNECTION: // close the connection
-            pConnection->Close();
             pConnection->SetStageData(this, NULL);
+            pConnection->Close();
             delete pHandlerData;
             pHandlerData = NULL;
             break ;

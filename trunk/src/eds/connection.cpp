@@ -42,7 +42,9 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
         pServer(pSrv),
         connSocket(sock),
         socketBuff(new SSocketBuff(sock)),
-        clientOutput(new std::ostream(socketBuff))
+        clientOutput(new std::ostream(socketBuff)),
+        socketClosed(false),
+        createdAt(time(NULL))
 {
 }
 
@@ -56,12 +58,7 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
 void SConnection::Destroy()
 {
     SJob::Destroy();
-    if (connSocket > 0)
-    {
-        shutdown(connSocket, SHUT_RDWR);
-        close(connSocket);
-        connSocket = -1;
-    }
+    CloseSocket();
     if (socketBuff != NULL)
     {
         delete socketBuff;
@@ -71,6 +68,24 @@ void SConnection::Destroy()
     {
         delete clientOutput;
         clientOutput = NULL;
+    }
+}
+
+/**************************************************************************************
+*   \brief  Closes the sockets so that no furhter data can be read.
+*
+*   \version
+*       - Sri Panyam  07/07/2009
+*         Created
+**************************************************************************************/
+void SConnection::CloseSocket()
+{
+    if (connSocket > 0)
+    {
+        // shutdown(connSocket, SHUT_RDWR);
+        close(connSocket);
+        connSocket = -1;
+        socketClosed = true;
     }
 }
 

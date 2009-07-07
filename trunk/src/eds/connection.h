@@ -79,6 +79,9 @@ public:
     //! Closes the connection
     void Close();
 
+    //! Closes only socket but not the entire connection
+    void CloseSocket();
+
     //! Get the output stream associated with the socket
     std::ostream &GetOutputStream() const { return *clientOutput; }
 
@@ -94,6 +97,12 @@ private:
 
     //! output stream for the socket
     std::ostream *      clientOutput;
+
+    //! Has the socket been closed?
+    bool                socketClosed;
+
+    //! Time of connection acceptance
+    time_t              createdAt;
 };
 
 

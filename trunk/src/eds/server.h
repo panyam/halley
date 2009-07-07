@@ -90,9 +90,6 @@ public:
     void        ConnectionComplete(SConnection *pConnection);
 
 protected:
-    // Creates the socket
-    // virtual int CreateSocket();
-
     // Called to stop the task.
     virtual int RealStop();
 
@@ -101,6 +98,9 @@ protected:
 
     // Creates a server socket 
     virtual int CreateSocket();
+
+    // Perpares client socket 
+    virtual int PrepareClientSocket(int clientSocket);
 
     // Binds the socket
     virtual int BindSocket();
@@ -120,6 +120,9 @@ private:
     //! The server socket
     int                 serverSocket;
 
+    //! The epoll file descriptor
+    int                 serverEpollFD;
+
 private:
     //! The request reader stage
     SHttpReaderStage *              pRequestReader;
@@ -129,6 +132,12 @@ private:
 
     //! List of all connections
     std::set<SConnection *>         connections;
+
+    //! This is true if we have too many sockets in TIME_WAIT stage
+    bool                            serverFlooded;
+
+    //! After a flooding, tells when we can start accepting again
+    int                             startAcceptingAt;
 };
 
 #endif
