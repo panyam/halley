@@ -101,32 +101,3 @@ help:
 dep:
 	makedepend -Y -p"$(OUTPUT_DIR)/" -I../src   -- $(HALLEYTEST_SRCS)
 
-# DO NOT DELETE
-
-../bld/debug/halley.o: ../src/eds/server.h ../src/thread/thread.h
-../bld/debug/halley.o: ../src/utils/listeners.h ../src/thread/mutex.h
-../bld/debug/halley.o: ../src/thread/task.h ../src/thread/mutex.h
-../bld/debug/halley.o: ../src/eds/fwd.h ../src/eds/http/httpfwd.h
-../bld/debug/halley.o: ../src/eds/fwd.h ../src/eds/connection.h
-../bld/debug/halley.o: ../src/net/sockbuff.h ../src/eds/job.h
-../bld/debug/halley.o: ../src/eds/stage.h ../src/eds/event.h
-../bld/debug/halley.o: ../src/eds/equeue.h ../src/eds/fileiohelper.h
-../bld/debug/halley.o: ../src/thread/task.h ../src/eds/http/request.h
-../bld/debug/halley.o: ../src/eds/http/message.h ../src/eds/http/headers.h
-../bld/debug/halley.o: ../src/eds/http/utils.h ../src/eds/http/httpfwd.h
-../bld/debug/halley.o: ../src/eds/http/response.h
-../bld/debug/halley.o: ../src/eds/http/readerstage.h
-../bld/debug/halley.o: ../src/eds/http/handlerstage.h
-../bld/debug/halley.o: ../src/eds/http/urlrouter.h
-../bld/debug/halley.o: ../src/eds/http/httpmodule.h
-../bld/debug/halley.o: ../src/eds/http/filemodule.h
-../bld/debug/halley.o: ../src/eds/http/bayeux/bayeuxmodule.h
-../bld/debug/halley.o: ../src/eds/http/httpmodule.h ../src/json/json.h
-../bld/debug/halley.o: ../src/utils/refcount.h ../src/utils/membuff.h
-../bld/debug/halley.o: ../src/eds/http/bayeux/channel.h
-../bld/debug/halley.o: ../src/eds/http/httpfwd.h ../src/json/json.h
-../bld/debug/halley.o: ../src/eds/http/contentmodule.h
-../bld/debug/halley.o: ../src/eds/http/transfermodule.h
-../bld/debug/halley.o: ../src/eds/http/writermodule.h
-../bld/debug/halley.o: ../src/net/connhandler.h ../src/net/connfactory.h
-../bld/debug/halley.o: ../src/net/server.h
