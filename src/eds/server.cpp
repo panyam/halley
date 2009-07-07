@@ -31,7 +31,7 @@
 #include "connection.h"
 #include "http/readerstage.h"
 
-#define MAXEPOLLSIZE 10000
+#define MAXEPOLLSIZE    10000
 
 #ifndef EPOLLRDHUP
 #define EPOLLRDHUP  0x2000
@@ -48,6 +48,8 @@
  *****************************************************************************/
 SEvServer::SEvServer(int port_, SHttpReaderStage*pReqReader_) :
     serverPort(port_),
+    serverSocket(-1),
+    serverEpollFD(-1),
     pRequestReader(pReqReader_)
 {
 }
@@ -64,6 +66,55 @@ SEvServer::SEvServer(int port_, SHttpReaderStage*pReqReader_) :
 int
 SEvServer::RealStop()
 {
+    return 0;
+}
+
+//*****************************************************************************
+/*!
+ *  \brief  Prepares a client socket by setting options specific to the
+ *  application.
+ *
+ *  \version
+ *      - Sri Panyam      07/07/2009
+ *        Created.
+ *
+ *****************************************************************************/
+int SEvServer::PrepareClientSocket(int clientSocket)
+{
+    if (setnonblocking(clientSocket))
+    {
+        std::cerr << "ERROR: Cannot make client socket non blocking: [" << errno << "]: " << strerror(errno) << std::endl << std::endl;
+        return -1;
+    }
+
+    // set it so we can reuse the socket immediately after closing it.
+    int reuse = 1;
+    if (setsockopt(clientSocket, SOL_SOCKET, SO_REUSEADDR, (const void *)&reuse, sizeof(reuse)) != 0)
+    {
+        std::cerr << "ERROR: setsockopt (SO_REUSEADDR) failed: [" << errno << "]: " 
+             << strerror(errno) << std::endl << std::endl;
+        return -errno;
+    }
+
+    int nodelay = 1;
+    if (setsockopt(clientSocket, IPPROTO_TCP, TCP_NODELAY, (const void *)&nodelay, sizeof(nodelay)) != 0)
+    {
+        std::cerr << "ERROR: Could not set TCP_NODELAY [" << errno << "]: " 
+             << strerror(errno) << std::endl << std::endl;
+        return -errno;
+    }
+
+
+    struct linger linger;
+    linger.l_onoff = 1;
+    linger.l_linger = 0;
+    if (setsockopt(clientSocket, SOL_SOCKET, SO_LINGER, (const void *)&linger, sizeof(struct linger)) != 0)
+    {
+        std::cerr << "ERROR: Could not set SO_LINGER [" << errno << "]: " 
+             << strerror(errno) << std::endl << std::endl;
+        return -errno;
+    }
+
     return 0;
 }
 
@@ -97,31 +148,25 @@ int SEvServer::CreateSocket()
 
     // set it so we can reuse the socket immediately after closing it.
     int reuse = 1;
-    if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) != 0)
+    if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEADDR, (const void *)&reuse, sizeof(reuse)) != 0)
     {
-        std::cerr << "ERROR: setsockopt failed: [" << errno << "]: " 
+        std::cerr << "ERROR: setsockopt (SO_REUSEADDR) failed: [" << errno << "]: " 
              << strerror(errno) << std::endl << std::endl;
         return -errno;
     }
 
     int nodelay = 1;
-    if (setsockopt(newSocket, IPPROTO_TCP, TCP_NODELAY, (char *)&nodelay, sizeof(nodelay)) != 0)
+    if (setsockopt(newSocket, IPPROTO_TCP, TCP_NODELAY, (const void *)&nodelay, sizeof(nodelay)) != 0)
     {
         std::cerr << "ERROR: Could not set TCP_NODELAY [" << errno << "]: " 
              << strerror(errno) << std::endl << std::endl;
         return -errno;
     }
 
-    if (setsockopt(newSocket, SOL_SOCKET, TCP_NODELAY, (char *)&nodelay, sizeof(nodelay)) != 0)
+    int timeout = 0;
+    if (setsockopt(newSocket, IPPROTO_TCP, TCP_DEFER_ACCEPT, (const void *)&timeout, sizeof(timeout)) != 0)
     {
-        std::cerr << "ERROR: Could not set TCP_NODELAY [" << errno << "]: " 
-             << strerror(errno) << std::endl << std::endl;
-        return -errno;
-    }
-
-    if (setsockopt(newSocket, SOL_TCP, TCP_NODELAY, (char *)&nodelay, sizeof(nodelay)) != 0)
-    {
-        std::cerr << "ERROR: Could not set TCP_NODELAY [" << errno << "]: " 
+        std::cerr << "ERROR: Could not set TCP_DEFER_ACCEPT [" << errno << "]: " 
              << strerror(errno) << std::endl << std::endl;
         return -errno;
     }
@@ -224,27 +269,36 @@ int SEvServer::Run()
     }
 #endif
 
+    if (serverEpollFD >= 0)
+    {
+        close(serverEpollFD);
+        serverEpollFD = -1;
+    }
+
     // Ignore SIGPIPE' so we can ignore error's 
     // thrown by out of band data
     signal(SIGPIPE, SIG_IGN);
 
-    int         kdpfd   = epoll_create(MAXEPOLLSIZE);
+    serverEpollFD       = epoll_create(MAXEPOLLSIZE);
     int         curfds  = 1;
     struct epoll_event ev;
     struct epoll_event events[MAXEPOLLSIZE];
 
     ev.events   = EPOLLIN | EPOLLET | EPOLLHUP | EPOLLRDHUP;
     ev.data.ptr = NULL;
-    if (epoll_ctl(kdpfd, EPOLL_CTL_ADD, serverSocket, &ev) < 0)
+    if (epoll_ctl(serverEpollFD, EPOLL_CTL_ADD, serverSocket, &ev) < 0)
     {
         std::cerr << "ERROR: epoll_ctl error: [" << errno << "]: " << strerror(errno) << std::endl;
+        close(serverEpollFD);
+        serverEpollFD = -1;
         return errno;
     }
 
     // now run the server asynchronously
     while (!Stopped())
     {
-        int nfds = epoll_wait(kdpfd, events, curfds, 1000);
+        int nfds = epoll_wait(serverEpollFD, events, curfds, 1000);
+
         if (nfds != 0)
         {
             if (nfds < 0 && errno != EINTR)
@@ -252,6 +306,7 @@ int SEvServer::Run()
                 std::cerr << "ERROR: epoll_wait error: [" << errno << "]: " << strerror(errno) << std::endl;
                 break ;
             }
+
             if (errno != EINTR)
             {
                 for (int n = 0;n < nfds;n++)
@@ -269,6 +324,7 @@ int SEvServer::Run()
                     {
                         sockaddr_in client_sock_addr;
                         socklen_t addlen = sizeof(client_sock_addr);
+
                         int clientSocket = accept(serverSocket, (struct sockaddr *)&client_sock_addr, &addlen);
 
                         if (clientSocket < 0)
@@ -280,18 +336,24 @@ int SEvServer::Run()
                         {
                             // server being killed and we have a socket, 
                             // so close the socket as well
-                            shutdown(clientSocket, SHUT_RDWR);
-                            close(clientSocket);
+                            int result = close(clientSocket);
+                            if (result != 0)
+                            {
+                                std::cerr << "ERROR: Close failed: [" << errno << "]: " << strerror(errno) << "." << std::endl;
+                            }
                         }
                         else
                         {
-                            setnonblocking(clientSocket);
+                            // Set additional options on the client socket
+                            // including non-blocking
+                            PrepareClientSocket(clientSocket);
+
                             ev.events   = EPOLLIN | EPOLLET | EPOLLHUP | EPOLLRDHUP;
                             SConnection *pConn  = new SConnection(this, clientSocket);
                             ev.data.ptr         = pConn;
                             connections.insert(pConn);
 
-                            if (epoll_ctl(kdpfd, EPOLL_CTL_ADD, clientSocket, &ev) < 0)
+                            if (epoll_ctl(serverEpollFD, EPOLL_CTL_ADD, clientSocket, &ev) < 0)
                             {
                                 std::cerr << "ERROR: epoll_ctl error [" << errno << "]: " 
                                      << strerror(errno) << "." << std::endl;
@@ -325,11 +387,16 @@ int SEvServer::Run()
     if (serverSocket >= 0)
     {
         // and finally the server socket
-        shutdown(serverSocket, SHUT_RDWR);
+        // shutdown(serverSocket, SHUT_RDWR);
         close(serverSocket);
         serverSocket = -1;
     }
 
+    if (serverEpollFD >= 0)
+    {
+        close(serverEpollFD);
+        serverEpollFD = -1;
+    }
     return result;
 }
 
@@ -343,6 +410,18 @@ int SEvServer::Run()
 SEvServer::~SEvServer()
 {
     Stop();
+
+    if (serverSocket >= 0)
+    {
+        close(serverSocket);
+        serverSocket = -1;
+    }
+
+    if (serverEpollFD >= 0)
+    {
+        close(serverEpollFD);
+        serverEpollFD = -1;
+    }
 }
 
 /**************************************************************************************

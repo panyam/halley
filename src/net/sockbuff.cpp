@@ -66,8 +66,8 @@ SSocketBuff::SSocketBuff(int sock, size_t bsize) :
  *****************************************************************************/
 SSocketBuff::~SSocketBuff()
 {
-    if (pReadBuffer) delete pReadBuffer;
-    if (pWriteBuffer) delete pWriteBuffer;
+    if (pReadBuffer) delete [] pReadBuffer;
+    if (pWriteBuffer) delete [] pWriteBuffer;
 }
 
 //*****************************************************************************
@@ -130,6 +130,7 @@ int SSocketBuff::sync()
                 if (epoll_ctl(kdpfd, EPOLL_CTL_ADD, sockHandle, &ev) < 0)
                 {
                     std::cerr << "WRITE ERROR: epoll_ctl error: [" << errno << "]: " << strerror(errno) << std::endl;
+                    close(kdpfd);
                     return -1;
                 }
 
@@ -139,6 +140,7 @@ int SSocketBuff::sync()
                     if (nfds < 0)
                     {
                         std::cerr << "WRITE ERROR: epoll_wait error: [" << errno << "]: " << strerror(errno) << std::endl;
+                        close(kdpfd);
                         return -1;
                     }
 
@@ -148,11 +150,13 @@ int SSocketBuff::sync()
                     if (numWritten < 0)
                     {
                         std::cerr << "WRITE ERROR: send error: [" << errno << "]: " << strerror(errno) << std::endl;
+                        close(kdpfd);
                         return -1;
                     }
                     count -= numWritten;
                     offset += numWritten;
                 }
+                close(kdpfd);
             }
             else
             {

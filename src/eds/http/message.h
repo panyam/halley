@@ -49,7 +49,9 @@ public:
     SBodyPart(unsigned index = 0, int btype = BP_NORMAL, void *data = NULL);
 
     // Token Destructor
-    virtual ~SBodyPart() { }
+    virtual ~SBodyPart()
+    {
+    }
 
     //! Clears the body part for later use!
     void Reset();
