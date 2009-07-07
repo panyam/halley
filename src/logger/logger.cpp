@@ -26,6 +26,9 @@
 
 #include "logger.h"
 
+// Init the static logger array
+std::vector<SLogger *> SLogger::loggers;
+
 //*****************************************************************************
 /*!
  *  \brief  Gets a logger by index/purpose.
@@ -54,5 +57,24 @@ int SLogger::Add(SLogger *pLogger)
     // are duplicates allowed?
     loggers.push_back(pLogger);
     return loggers.size() - 1;
+}
+
+
+//*****************************************************************************
+/*!
+ *  \brief  Default logging method.
+ *
+ *  \version
+ *      - Sri Panyam     08/07/2009
+ *        Created.
+ *
+ *****************************************************************************/
+int SLogger::Log(int level, const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int result = vfprintf(stderr, fmt, ap);
+    va_end(ap);
+    return result;
 }
 

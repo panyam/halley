@@ -45,6 +45,7 @@
 #include <list>
 #include <iomanip>
 #include <iostream>
+#include "logger/logger.h"
 
 class SJob;
 class SJobListener;

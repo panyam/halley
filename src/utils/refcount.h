@@ -27,6 +27,60 @@
 #ifndef _SMARTPTR_H_
 #define _SMARTPTR_H_
 
+//*****************************************************************************
+/*!
+ *  \class CRefCount
+ *
+ *  \brief  Base-Class for all objects that need to be ref-counted so they
+ *  can be automatically freed when out of scope (and fashion)!
+ *
+ *  TODO: Specify Locking policy
+ *
+ *****************************************************************************/
+template <typename T>
+class CRefCount
+{
+public:
+    // Constructor
+    CRefCount(T *data) : refData(data), refCount(1) {  }
+
+    // Destructor
+    inline ~CRefCount() { delete refData; }
+
+    //! Increase reference count
+    inline void    IncRef(unsigned delta = 1) { refCount += delta; }
+
+    //! Decrease reference count
+    // Returns true if reference count reaches 0
+    inline bool    DecRef(unsigned delta = 1)
+    {
+        // TODO: Should we assert on refCount < delta?
+        if (refCount > delta)
+        {
+            refCount -= delta;
+            return false;
+        }
+
+        refCount = 0;
+        return true;
+    }
+
+    //! Return the reference count
+    inline unsigned Count() const { return refCount; }
+
+    //! Get the data held within
+    inline T* Data() const { return refData; }
+
+private:
+    //! Constructor
+    //! TODO: Enable pooling of objects to avoid 
+    //  unnecessary creations and destructions.
+    CRefCount();
+
+private:
+    T *         refData;
+    unsigned    refCount;
+};
 
 //*****************************************************************************
 /*!
@@ -38,72 +92,16 @@
 template <typename T>
 class CSmartPtr
 {
-private:
-    //*****************************************************************************
-    /*!
-     *  \class CRefCount
-     *
-     *  \brief  Base-Class for all objects that need to be ref-counted so they
-     *  can be automatically freed when out of scope (and fashion)!
-     *
-     *  TODO: Specify Locking policy
-     *
-     *****************************************************************************/
-    // template <typename U>
-    class CRefCount
-    {
-    public:
-        // Constructor
-        CRefCount(T *data) : refData(data), refCount(1) {  }
-
-        // Destructor
-        inline ~CRefCount() { delete refData; }
-
-        //! Increase reference count
-        inline void    IncRef(unsigned delta = 1) { refCount += delta; }
-
-        //! Decrease reference count
-        // Returns true if reference count reaches 0
-        inline bool    DecRef(unsigned delta = 1)
-        {
-            // TODO: Should we assert on refCount < delta?
-            if (refCount > delta)
-            {
-                refCount -= delta;
-                return false;
-            }
-
-            refCount = 0;
-            return true;
-        }
-
-        //! Return the reference count
-        inline unsigned Count() const { return refCount; }
-
-        //! Get the data held within
-        inline T *Data() const { return refData; }
-
-    private:
-        //! Constructor
-        //! TODO: Enable pooling of objects to avoid 
-        //  unnecessary creations and destructions.
-        CRefCount();
-
-    private:
-        T *         refData;
-        unsigned    refCount;
-    };
-
 public:
     // Default Constructor - creates a NULL pointer
     CSmartPtr() { Reset(); }
 
     //! Constructor
-    CSmartPtr(const T *obj) : rcObject(new CRefCount(const_cast<T*>(obj))), isConst(true) { }
+    CSmartPtr(const T *obj) : rcObject(new CRefCount<T>(const_cast<T*>(obj))), isConst(true) { }
 
     //! Constructor
     CSmartPtr(T *obj, bool is_const = false) :
-        rcObject(new CRefCount(obj)),
+        rcObject(new CRefCount<T>(obj)),
         isConst(is_const && obj != NULL) { }
 
     //! Copy constructor for constant objects
@@ -153,7 +151,7 @@ private:
 
 private:
     // Object reference count
-    CRefCount *     rcObject;
+    CRefCount<T> *  rcObject;
 
     //! Is the object constant
     bool            isConst;
