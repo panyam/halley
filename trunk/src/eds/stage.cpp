@@ -84,9 +84,9 @@ SStage::~SStage()
         {
             std::cerr << "Stopping stage thread: " << i << std::endl;
             handlerThreads[i]->Stop();
+            assert("Stage::Stop MUST be called before destruction." && !handlerThreads[i]->IsRunning());
             delete handlerThreads[i];
             handlerThreads[i] = NULL;
-            assert("Stage::Stop MUST be called before destruction." && !handlerThreads[i]->IsRunning());
         }
     }
 }
@@ -131,7 +131,7 @@ int SEventDispatcher::Run()
         // get the event
         SEvent event = pStage->GetEvent();
 
-        std::cerr << "About to Handle event: Stage: " << pStage->Name() <<
+        std::cerr << "Handleing event: Stage: " << pStage->Name() <<
                                           ", Type: " << event.evType <<
                                           ", Source: " << event.pSource <<
                                           ", Data: " << event.pData << std::endl;
@@ -151,7 +151,7 @@ void SStage::QueueEvent(const SEvent &event)
     {
         {
             SMutexLock locker(evtQueueMutex);
-            std::cerr << "About to Queue event: Stage: " << Name() <<
+            std::cerr << "Queueing event: Stage: " << Name() <<
                                               ", Type: " << event.evType <<
                                               ", Source: " << event.pSource <<
                                               ", Data: " << event.pData << std::endl;

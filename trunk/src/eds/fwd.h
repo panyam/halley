@@ -66,9 +66,6 @@ class SEventQueue;
 class SEvServer;
 
 class SStage;
-class SFileIOHelper;
-class SFileIOStage;
-class SDBHelperStage;
 
 #endif
 

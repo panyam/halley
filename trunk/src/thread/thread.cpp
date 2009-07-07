@@ -298,7 +298,7 @@ int SThread::WaitForThreadBegin()
 int SThread::WaitForThreadFinish()
 {
     while (pTask->Running())
-        return threadDeadCond.Wait(500);
+        return threadDeadCond.Wait(50);
     return 0;
 }
 
