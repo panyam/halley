@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <signal.h>
+#include "logger/logger.h"
 #include "eds/server.h"
 #include "eds/connection.h"
 #include "eds/stage.h"
@@ -231,6 +232,9 @@ int main(int argc, char *argv[])
     if (old_action.sa_handler != SIG_IGN)
         sigaction (SIGTERM, &new_action, NULL);
 
+    SLogger ourLogger;
+    // create a new logger we use everywhere
+    SLogger::Add(&ourLogger);
 
     int port = argc <= 1 ? 80 : atoi(argv[1]);
     serverContext = new ServerContext(port);

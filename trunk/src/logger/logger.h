@@ -28,6 +28,9 @@
 #define _SLOGGER_H_
 
 #include <vector>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
 
 //*****************************************************************************
 /*!
@@ -40,22 +43,23 @@ class SLogger
 {
 public:
     // Constructor
-    SLogger();
+    SLogger() { }
 
     //! virtual destructor
     virtual ~SLogger() { }
 
-    virtual int Log(int level, const char *fmt, ...)    = 0;
+    //! Does the actual logging
+    virtual int Log(int level, const char *fmt, ...);
 
     //! Get a specific logger
     static SLogger *Get(int index = 0);
 
     //! Adds a new logger to our list
-    static int SLogger *Add(SLogger *pLogger);
+    static int Add(SLogger *pLogger);
 
 private:
     //! A map of all loggers
-    std::vector<SLogger *>    loggers;
+    static std::vector<SLogger *>    loggers;
 };
 
 #endif

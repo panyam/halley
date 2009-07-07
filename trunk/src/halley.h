@@ -30,11 +30,9 @@
 
 #include "eds/connection.h"
 #include "eds/server.h"
-#include "eds/fileiohelper.h"
 #include "eds/sockwriterstage.h"
 #include "eds/stage.h"
 #include "eds/event.h"
-#include "eds/dbhelperstage.h"
 #include "eds/http/urlrouter.h"
 #include "eds/http/writermodule.h"
 #include "eds/http/message.h"
@@ -53,7 +51,6 @@
 #include "eds/http/headers.h"
 #include "eds/http/response.h"
 #include "eds/fwd.h"
-#include "eds/fileiostage.h"
 #include "eds/handler.h"
 #include "eds/job.h"
 #include "halley.h"
@@ -71,6 +68,7 @@
 #include "net/defaultconnfactory.h"
 #include "json/tokenizer.h"
 #include "json/json.h"
+#include "logger/logger.h"
 
 #endif
 
