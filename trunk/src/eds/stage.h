@@ -65,7 +65,7 @@ public:
     virtual void QueueEvent(const SEvent &event);
 
     //! Pops and gets the next event in the queue
-    virtual const SEvent &GetEvent();
+    virtual SEvent GetEvent();
 
     //! Called when a job is destroyed
     virtual void JobDestroyed(SJob *pJob) { }
