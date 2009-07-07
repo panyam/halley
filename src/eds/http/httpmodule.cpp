@@ -26,8 +26,6 @@
 
 #include "request.h"
 #include "response.h"
-#include "eds/fileiohelper.h"
-#include "eds/dbhelperstage.h"
 #include "eds/connection.h"
 #include "eds/server.h"
 #include "eds/http/handlerstage.h"

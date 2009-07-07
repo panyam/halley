@@ -4,7 +4,6 @@
 #include "eds/server.h"
 #include "eds/connection.h"
 #include "eds/stage.h"
-#include "eds/fileiohelper.h"
 #include "eds/http/request.h"
 #include "eds/http/response.h"
 #include "eds/http/readerstage.h"
@@ -132,7 +131,6 @@ class ServerContext
 public:
     SHttpReaderStage    requestReader;
     SHttpHandlerStage   requestHandler;
-    SFileIOHelper       fileHelper;
     SWriterModule       writerModule;
     // STransferModule     transferModule(&writerModule);
     SContentModule      contentModule;
@@ -149,8 +147,8 @@ public:
 
 public:
     ServerContext(int port = 80)    :
-        requestReader(0),
-        requestHandler(1),
+        requestReader("Reader", 0),
+        requestHandler("Handler", 5),
         contentModule(&writerModule),
         bayeuxModule(&contentModule, "MyTestBoundary"),
         rootFileModule(&contentModule, true),

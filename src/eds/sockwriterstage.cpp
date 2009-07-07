@@ -31,7 +31,7 @@
 #include "sockwriterstage.h"
 
 // Creates a new file io helper stage
-SSockWriterStage::SSockWriterStage(int numThreads) : SStage(numThreads)
+SSockWriterStage::SSockWriterStage(const SString &name, int numThreads) : SStage(name, numThreads)
 {
 }
 

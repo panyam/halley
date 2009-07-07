@@ -110,8 +110,7 @@ dep:
 ../bld/debug/halley.o: ../src/eds/fwd.h ../src/eds/connection.h
 ../bld/debug/halley.o: ../src/net/sockbuff.h ../src/eds/job.h
 ../bld/debug/halley.o: ../src/eds/stage.h ../src/eds/event.h
-../bld/debug/halley.o: ../src/eds/equeue.h ../src/eds/fileiohelper.h
-../bld/debug/halley.o: ../src/thread/task.h ../src/eds/http/request.h
+../bld/debug/halley.o: ../src/eds/equeue.h ../src/eds/http/request.h
 ../bld/debug/halley.o: ../src/eds/http/message.h ../src/eds/http/headers.h
 ../bld/debug/halley.o: ../src/eds/http/utils.h ../src/eds/http/httpfwd.h
 ../bld/debug/halley.o: ../src/eds/http/response.h
@@ -128,5 +127,5 @@ dep:
 ../bld/debug/halley.o: ../src/eds/http/contentmodule.h
 ../bld/debug/halley.o: ../src/eds/http/transfermodule.h
 ../bld/debug/halley.o: ../src/eds/http/writermodule.h
-../bld/debug/halley.o: ../src/net/connhandler.h ../src/net/connfactory.h
-../bld/debug/halley.o: ../src/net/server.h
+../bld/debug/halley.o: ../src/net/connhandler.h ../src/thread/task.h
+../bld/debug/halley.o: ../src/net/connfactory.h ../src/net/server.h
