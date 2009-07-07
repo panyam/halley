@@ -946,12 +946,9 @@ AMFFormatter::Format(SMemBuff *pMem, const JsonNodePtr &node)
 {
     if (!node)
     {
-        std::cerr << "Encoding Null Node @ Position: " << pMem->Length() << std::endl;
         pMem->Write(&MARKER_NULL, 1);
         return ;
     }
-
-    std::cerr << "Encoding Node (type: " << node->Type() << ") @ Position: " << pMem->Length() << std::endl;
 
     double d;
     unsigned char intBytes[4];

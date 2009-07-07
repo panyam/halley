@@ -118,9 +118,11 @@ void SHttpHandlerStage::CloseConnection(SConnection *pConnection)
 
 void SHttpHandlerStage::JobDestroyed(SJob *pJob)
 {
+    std::cerr << "Destroying HttpHandler Stage: " << this << std::endl;
     if (pJob != NULL)
     {
         SHttpHandlerData *pStageData = (SHttpHandlerData *)pJob->GetStageData(this);
+        std::cerr << "Destroying HttpHandler Stage Data: " << pStageData << std::endl;
         if (pStageData != NULL)
         {
             delete pStageData;
@@ -145,6 +147,7 @@ void SHttpHandlerStage::HandleEvent(const SEvent &event)
     {
         pHandlerData = new SHttpHandlerData(pConnection);
         pConnection->SetStageData(this, pHandlerData);
+        pConnection->AddListener(this);
     }
 
     SBodyPart *pBodyPart    = NULL;

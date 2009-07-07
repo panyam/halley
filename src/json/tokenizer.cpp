@@ -171,8 +171,6 @@ JsonTokenizer::JsonToken JsonTokenizer::NextToken()
  *****************************************************************************/
 JsonTokenizer::JsonToken JsonTokenizer::RealToken()
 {
-    // static int numtokens = 0;
-    // cerr << "Num Tokens: " << numtokens++ << endl;
     int     ch  = pInputStream->GetChar();
 
     while (ch >= 0 && isspace(ch))
