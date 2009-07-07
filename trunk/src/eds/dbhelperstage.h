@@ -42,7 +42,7 @@ class SDBHelperStage : public SStage
 {
 public:
     // Creates a new handler
-    SDBHelperStage(int numThreads = 0);
+    SDBHelperStage(int numThreads = DEFAULT_NUM_THREADS);
     
     // Destroys the stage
     virtual ~SDBHelperStage() { }

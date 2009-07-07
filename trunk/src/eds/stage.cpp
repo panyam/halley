@@ -29,6 +29,9 @@
 #include "stage.h"
 #include "handler.h"
 
+//! Number of threads to begin with in each stage
+const int SStage::DEFAULT_NUM_THREADS = 2;
+
 //! The dispatcher handles events as they arrive.
 class SEventDispatcher : public STask
 {
@@ -52,24 +55,8 @@ private:
 int SStage::STAGE_COUNTER = 0;
 
 //! Creates and resets the event dispatcher
-SEventDispatcher::SEventDispatcher(SStage *stage)
-:
-    pStage(stage)
+SEventDispatcher::SEventDispatcher(SStage *stage) : pStage(stage)
 {
-}
-
-//! Handles events continuosly
-int SEventDispatcher::Run()
-{
-    while (!Stopped())
-    {
-        // get the event
-        SEvent event = pStage->GetEvent();
-
-        // pHandler->HandleEvent(event);
-        pStage->HandleEvent(event);
-    }
-    return 0;
 }
 
 //! Creates a new stage
@@ -105,8 +92,9 @@ void SStage::Start()
     {
         for (int i = 0, numThreads = handlerThreads.size();i < numThreads;i++)
         {
-            if (handlerThreads[i] != NULL)
+            if (handlerThreads[i] == NULL)
             {
+                // create the thread if necessary
                 handlerThreads[i] = new SThread(new SEventDispatcher(this));
             }
             handlerThreads[i]->Start();
@@ -129,6 +117,24 @@ void SStage::Stop()
     }
 }
 
+//! Handles events continuosly
+int SEventDispatcher::Run()
+{
+    while (!Stopped())
+    {
+        // get the event
+        SEvent event = pStage->GetEvent();
+
+        std::cerr << "About to Handle event: Stage: " << pStage <<
+                                          ", Type: " << event.evType <<
+                                          ", Source: " << event.pSource <<
+                                          ", Data: " << event.pData << std::endl;
+        // pHandler->HandleEvent(event);
+        pStage->HandleEvent(event);
+    }
+    return 0;
+}
+
 //! Queue an event to be handled later
 void SStage::QueueEvent(const SEvent &event)
 {
@@ -138,17 +144,27 @@ void SStage::QueueEvent(const SEvent &event)
     }
     else
     {
-        SMutexLock locker(evtQueueMutex);
+        bool wasEmpty = false;
 
-        eventQueue.push(event);
+        if (true)
+        {
+            SMutexLock locker(evtQueueMutex);
+            wasEmpty = eventQueue.empty();
+            std::cerr << "About to Handle event: Stage: " << this <<
+                                              ", Type: " << event.evType <<
+                                              ", Source: " << event.pSource <<
+                                              ", Data: " << event.pData << std::endl;
+            eventQueue.push(event);
+        }
 
-        // signal waiting threads to wakeup
-        evtQueueCondition.Signal();
+        if (wasEmpty)
+            // signal waiting threads to wakeup
+            evtQueueCondition.Signal();
     }
 }
 
 //! Queue an event to be handled later
-SEvent SStage::GetEvent()
+const SEvent &SStage::GetEvent()
 {
     assert("Handler thread is empty" && !handlerThreads.empty());
 

@@ -56,7 +56,7 @@ class SSockWriterStage : public SStage
 {
 public:
     // Creates a new handler
-    SSockWriterStage(int numThreads = 0);
+    SSockWriterStage(int numThreads = DEFAULT_NUM_THREADS);
     
     // Destroys the stage
     virtual ~SSockWriterStage() { }

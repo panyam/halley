@@ -53,7 +53,7 @@ public:
 
 public:
     // Creates a new fileio helper stage
-    SHttpHandlerStage(int numThreads = 0);
+    SHttpHandlerStage(int numThreads = DEFAULT_NUM_THREADS);
     
     // Destroys the stage
     virtual ~SHttpHandlerStage() { }
