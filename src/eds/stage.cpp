@@ -30,7 +30,7 @@
 #include "handler.h"
 
 //! Number of threads to begin with in each stage
-const int SStage::DEFAULT_NUM_THREADS = 2;
+const int SStage::DEFAULT_NUM_THREADS = 1;
 
 //! The dispatcher handles events as they arrive.
 class SEventDispatcher : public STask
@@ -62,6 +62,7 @@ SEventDispatcher::SEventDispatcher(SStage *stage) : pStage(stage)
 //! Creates a new stage
 SStage::SStage(int numThreads)
 :
+    evtQueueMutex(PTHREAD_MUTEX_RECURSIVE),
     evtQueueCondition(evtQueueMutex)
 {
     // increment stage count!
@@ -129,7 +130,6 @@ int SEventDispatcher::Run()
                                           ", Type: " << event.evType <<
                                           ", Source: " << event.pSource <<
                                           ", Data: " << event.pData << std::endl;
-        // pHandler->HandleEvent(event);
         pStage->HandleEvent(event);
     }
     return 0;
@@ -144,12 +144,8 @@ void SStage::QueueEvent(const SEvent &event)
     }
     else
     {
-        bool wasEmpty = false;
-
-        if (true)
         {
             SMutexLock locker(evtQueueMutex);
-            wasEmpty = eventQueue.empty();
             std::cerr << "About to Handle event: Stage: " << this <<
                                               ", Type: " << event.evType <<
                                               ", Source: " << event.pSource <<
@@ -157,14 +153,13 @@ void SStage::QueueEvent(const SEvent &event)
             eventQueue.push(event);
         }
 
-        if (wasEmpty)
-            // signal waiting threads to wakeup
-            evtQueueCondition.Signal();
+        // signal waiting threads to wakeup
+        evtQueueCondition.Signal();
     }
 }
 
 //! Queue an event to be handled later
-const SEvent &SStage::GetEvent()
+SEvent SStage::GetEvent()
 {
     assert("Handler thread is empty" && !handlerThreads.empty());
 
