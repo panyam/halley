@@ -66,6 +66,19 @@ void SHttpHandlerStage::HandleRequest(SConnection *pConnection, SHttpRequest *pR
         }
     }
 }
+
+//! Request to close the connection
+void SHttpHandlerStage::CloseConnection(SConnection *pConnection)
+{
+    if (pConnection->IsAlive())
+    {
+        pConnection->SetState(SConnection::STATE_CLOSED);
+        // tell the reader we are ready for more
+        pReaderStage->ReadSocket(pConnection);
+
+        // QueueEvent(SEvent(EVT_CLOSE_CONNECTION, pConnection));
+    }
+}
     
 //! Sends input to be processed by a module
 void SHttpHandlerStage::InputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart)
@@ -98,15 +111,6 @@ void SHttpHandlerStage::OutputToModule(SConnection *pConnection, SHttpModule *pM
         {
             QueueEvent(SEvent(EVT_NEXT_OUTPUT_MODULE, pConnection, pModule));
         }
-    }
-}
-
-//! Request to close the connection
-void SHttpHandlerStage::CloseConnection(SConnection *pConnection)
-{
-    if (pConnection->IsAlive())
-    {
-        QueueEvent(SEvent(EVT_CLOSE_CONNECTION, pConnection));
     }
 }
 
@@ -169,12 +173,6 @@ void SHttpHandlerStage::HandleEvent(const SEvent &event)
             break ;
         case EVT_NEXT_OUTPUT_MODULE:
             event.Data<SHttpModule *>()->ProcessOutput(pHandlerData, this, NULL);
-            break ;
-        case EVT_CLOSE_CONNECTION: // close the connection
-            pConnection->SetStageData(this, NULL);
-            pConnection->Close();
-            delete pHandlerData;
-            pHandlerData = NULL;
             break ;
     }
 }

@@ -48,7 +48,6 @@ public:
         EVT_INPUT_BODY_TO_MODULE,
         EVT_NEXT_OUTPUT_MODULE,
         EVT_OUTPUT_BODY_TO_MODULE,
-        EVT_CLOSE_CONNECTION,
     } SHandlerEvent;
 
 public:

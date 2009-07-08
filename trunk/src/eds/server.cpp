@@ -308,10 +308,17 @@ int SEvServer::Run()
                     int connSocket  = pConnection == NULL ? serverSocket : pConnection->Socket();
                     if (Stopped() || (events[n].events & (EPOLLRDHUP | EPOLLHUP)) != 0)
                     {
-                        // peer hung up or stop was requested so kill this connection
-                        // TODO: if server was Stopped, kill ALL connections
+                        // we remove this socket from the epoll list but do
+                        // not kill this as it will be done from a
+                        // different point (reader stage) anyway
                         if (pConnection != NULL)
-                            pConnection->Close();
+                        {
+                            if (epoll_ctl(serverEpollFD, EPOLL_CTL_DEL, pConnection->Socket(), &ev) < 0)
+                            {
+                                SLogger::Get()->Log(0, "ERROR: epoll_ctl delete error [%d]: %s\n", errno, strerror(errno));
+                            }
+                            // pConnection->Close();
+                        }
                     }
                     else if (connSocket == serverSocket)    // its a connection request
                     {
