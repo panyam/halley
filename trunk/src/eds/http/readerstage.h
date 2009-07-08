@@ -61,11 +61,11 @@ public:
     virtual SHttpHandlerStage *GetHandlerStage() { return pHandlerStage; }
 
 protected:
-    //! Creates the protocol specific reader state object
-    virtual void *  CreateReaderState();
+    //! Creates the state specific object
+    virtual void *  CreateStageData();
 
-    //! Destroys the the protocol specific reader state object
-    virtual void    DestroyReaderState(void *pStateData);
+    //! Destroys the state specific object
+    virtual void    DestroyStageData(void *pStateData);
 
     //! Tries to assemble the request object from a byte buffer
     virtual void *  AssembleRequest(char *&pStart, char *&pLast, void *pState);

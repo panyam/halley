@@ -62,12 +62,6 @@ protected:
     //! Does the actual event handling.
     virtual void    HandleEvent(const SEvent &event);
 
-    //! Creates the protocol specific reader state object
-    virtual void *  CreateReaderState() { return NULL; }
-
-    //! Destroys the the protocol specific reader state object
-    virtual void    DestroyReaderState(void *pStateData) { }
-
     //! Tries to assemble the request object from a byte buffer
     virtual void *  AssembleRequest(char *&pStart, char *&pLast, void *pState) { return NULL; }
 

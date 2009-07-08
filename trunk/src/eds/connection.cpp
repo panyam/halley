@@ -44,7 +44,7 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
         socketBuff(new SSocketBuff(sock)),
         clientOutput(new std::ostream(socketBuff)),
         createdAt(time(NULL)),
-        connState(STATE_ACCEPTED)
+        connState(STATE_READING)
 {
 }
 

@@ -79,6 +79,12 @@ public:
 protected:
     friend class SEventDispatcher;
 
+    //! Creates the state specific object
+    virtual void *  CreateStageData() { return NULL; }
+
+    //! Destroys the state specific object
+    virtual void    DestroyStageData(void *pStateData) { }
+
     //! Called before an event is handled
     virtual void PreHandleEvent(const SEvent &event);
 
