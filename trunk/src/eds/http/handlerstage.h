@@ -67,16 +67,16 @@ public:
     virtual void SetRootModule(SHttpModule *pModule) { pRootModule = pModule; }
 
     //! Handle a new request
-    virtual void HandleRequest(SConnection *pConnection, SHttpRequest *pRequest);
+    virtual bool SendEvent_HandleRequest(SConnection *pConnection, SHttpRequest *pRequest);
     
     //! Sends input to be processed by a module
-    virtual void InputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart = NULL);
+    virtual bool SendEvent_InputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart = NULL);
     
     //! Sends output to be processed by a module
-    virtual void OutputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart = NULL);
+    virtual bool SendEvent_OutputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart = NULL);
 
     //! Request to close the connection
-    virtual void CloseConnection(SConnection *pConnection);
+    virtual bool SendEvent_CloseConnection(SConnection *pConnection);
 
     //! Called when a job is destroyed
     virtual void JobDestroyed(SJob *pJob);

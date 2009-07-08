@@ -53,7 +53,7 @@ public:
     virtual         ~SReaderStage();
 
     //! Called when data is available to be read.
-    virtual void    ReadSocket(SConnection *pConnection);
+    virtual bool    SendEvent_ReadRequest(SConnection *pConnection);
 
     //! Called when a job is destroyed
     virtual void    JobDestroyed(SJob *pJob);

@@ -50,67 +50,57 @@ SHttpHandlerStage::SHttpHandlerStage(const SString &name, int numThreads)
 }
 
 //! Handle a new request - will be called by external request reader
-void SHttpHandlerStage::HandleRequest(SConnection *pConnection, SHttpRequest *pRequest)
+bool SHttpHandlerStage::SendEvent_HandleRequest(SConnection *pConnection, SHttpRequest *pRequest)
 {
-    if (pConnection->IsAlive())
+    if (pRequest)
     {
-        if (pRequest)
-        {
-            QueueEvent(SEvent(EVT_REQUEST_ARRIVED, pConnection, pRequest));
-        }
-        else
-        {
-            pConnection->SetState(SConnection::STATE_READING);
-            // tell the reader we are ready for more
-            pReaderStage->ReadSocket(pConnection);
-        }
+        return QueueEvent(SEvent(EVT_REQUEST_ARRIVED, pConnection, pRequest));
+    }
+    else
+    {
+        pConnection->SetState(SConnection::STATE_READING);
+        // tell the reader we are ready for more
+        return pReaderStage->SendEvent_ReadRequest(pConnection);
     }
 }
 
 //! Request to close the connection
-void SHttpHandlerStage::CloseConnection(SConnection *pConnection)
+bool SHttpHandlerStage::SendEvent_CloseConnection(SConnection *pConnection)
 {
-    if (pConnection->IsAlive())
-    {
-        pConnection->SetState(SConnection::STATE_CLOSED);
-        // tell the reader we are ready for more
-        pReaderStage->ReadSocket(pConnection);
+    pConnection->SetState(SConnection::STATE_CLOSED);
 
-        // QueueEvent(SEvent(EVT_CLOSE_CONNECTION, pConnection));
-    }
+    // tell the reader we are ready for more
+    // pReaderStage->ReadSocket(pConnection);
+
+    // return QueueEvent(SEvent(EVT_CLOSE_CONNECTION, pConnection));
+    return true;
 }
     
 //! Sends input to be processed by a module
-void SHttpHandlerStage::InputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart)
+bool SHttpHandlerStage::SendEvent_InputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart)
 {
-    if (pConnection->IsAlive())
+    if (pBodyPart)
     {
-        if (pBodyPart)
-        {
-            pBodyPart->extra_data = pModule;
-            QueueEvent(SEvent(EVT_INPUT_BODY_TO_MODULE, pConnection, pBodyPart));
-        }
-        else
-        {
-            QueueEvent(SEvent(EVT_NEXT_INPUT_MODULE, pConnection, pModule));
-        }
+        pBodyPart->extra_data = pModule;
+        return QueueEvent(SEvent(EVT_INPUT_BODY_TO_MODULE, pConnection, pBodyPart));
+    }
+    else
+    {
+        return QueueEvent(SEvent(EVT_NEXT_INPUT_MODULE, pConnection, pModule));
     }
 }
 
 //! Sends output to be processed by a module
-void SHttpHandlerStage::OutputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart)
+bool SHttpHandlerStage::SendEvent_OutputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart)
 {
-    if (pConnection->IsAlive())
+    if (pBodyPart)
     {
-        if (pBodyPart)
-        {
-            pBodyPart->extra_data = pModule;
-            QueueEvent(SEvent(EVT_OUTPUT_BODY_TO_MODULE, pConnection, pBodyPart));
-        }
-        else
-        {
-            QueueEvent(SEvent(EVT_NEXT_OUTPUT_MODULE, pConnection, pModule));
-        }
+        pBodyPart->extra_data = pModule;
+        return QueueEvent(SEvent(EVT_OUTPUT_BODY_TO_MODULE, pConnection, pBodyPart));
+    }
+    else
+    {
+        return QueueEvent(SEvent(EVT_NEXT_OUTPUT_MODULE, pConnection, pModule));
     }
 }
 

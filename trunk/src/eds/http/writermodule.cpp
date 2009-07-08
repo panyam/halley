@@ -106,8 +106,8 @@ bool SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
             pRequest->Headers().CloseConnection())
         {
             std::cerr << "  === WriterModule - " << "Closing Connection" << std::endl;
-            pStage->CloseConnection(pConnection);
-            return false;
+            pStage->SendEvent_CloseConnection(pConnection);
+            // return false;
         }
         else
         {
@@ -118,7 +118,7 @@ bool SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
             pHandlerData->DestroyRequest();
 
             // Trigger the handling of the next request
-            pStage->HandleRequest(pConnection, NULL);
+            pStage->SendEvent_HandleRequest(pConnection, NULL);
         }
     }
     else // treat as normal message

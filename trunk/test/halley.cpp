@@ -321,8 +321,8 @@ void SMyModule::ProcessInput(SHttpHandlerData *     pHandlerData,
     part->AppendToBody("</title></head><body bgcolor='" + bgcolor + "'>");
     part->AppendToBody(body);
 
-    pStage->OutputToModule(pHandlerData->pConnection, pNextModule, part);
-    pStage->OutputToModule(pHandlerData->pConnection, pNextModule,
+    pStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule, part);
+    pStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule,
                            pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED, pNextModule));
 }
 

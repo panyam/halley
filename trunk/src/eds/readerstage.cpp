@@ -57,9 +57,9 @@ SReaderStage::~SReaderStage()
 }
 
 // Read bytes
-void SReaderStage::ReadSocket(SConnection *pConnection)
+bool SReaderStage::SendEvent_ReadRequest(SConnection *pConnection)
 {
-    QueueEvent(SEvent(EVT_BYTES_RECIEVED, pConnection));
+    return QueueEvent(SEvent(EVT_BYTES_RECIEVED, pConnection));
 }
 
 //! Called when a connection is going to be destroyed so we can do our
@@ -98,7 +98,7 @@ void SReaderStage::HandleEvent(const SEvent &event)
     // "message" has been read...
     if (pConnection->GetState() == SConnection::STATE_READING)
     {
-        while (true)
+        while (pConnection->GetState() == SConnection::STATE_READING)
         {
             // refill read buffer if necessary
             if (pCurrPos >= pBuffEnd)
@@ -140,10 +140,13 @@ void SReaderStage::HandleEvent(const SEvent &event)
 
                 // sends request to be handled by the next stage
                 HandleRequest(pConnection, pRequest);
+
+                SLogger::Get()->Log(0, "DEBUG: HandleRequest Exited\n\n");
             }
         }
     }
-    else if (pConnection->GetState() == SConnection::STATE_CLOSED)
+
+    if (pConnection->GetState() == SConnection::STATE_CLOSED)
     {
         // close the connection
         pConnection->Close();

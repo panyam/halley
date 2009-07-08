@@ -128,8 +128,8 @@ void SFileModule::ProcessInput(SHttpHandlerData *   pHandlerData,
         }
     }
 
-    pStage->OutputToModule(pHandlerData->pConnection, pNextModule, part);
-    pStage->OutputToModule(pHandlerData->pConnection, pNextModule,
+    pStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule, part);
+    pStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule,
                            pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED, pNextModule));
 }
 

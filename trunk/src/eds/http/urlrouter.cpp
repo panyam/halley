@@ -65,7 +65,7 @@ void SUrlRouter::ProcessInput(SHttpHandlerData *    pHandlerData,
     {
         if ((*iter)->Matches(pRequest->Resource()))
         {
-            pStage->InputToModule(pHandlerData->pConnection, (*iter)->Module());
+            pStage->SendEvent_InputToModule(pHandlerData->pConnection, (*iter)->Module());
             return ;
         }
     }
@@ -73,7 +73,7 @@ void SUrlRouter::ProcessInput(SHttpHandlerData *    pHandlerData,
     // see if there is a default module to send to
     if (pNextModule != NULL)
     {
-        pStage->InputToModule(pHandlerData->pConnection, pNextModule);
+        pStage->SendEvent_InputToModule(pHandlerData->pConnection, pNextModule);
     }
     else
     {
