@@ -313,17 +313,33 @@ int SEvServer::Run()
                         // different point (reader stage) anyway
                         if (pConnection != NULL)
                         {
+                            // move the connection to the closed connection list
+                            pConnection->SetState(SConnection::STATE_CLOSED);
                             if (epoll_ctl(serverEpollFD, EPOLL_CTL_DEL, pConnection->Socket(), &ev) < 0)
                             {
                                 SLogger::Get()->Log(0, "ERROR: epoll_ctl delete error [%d]: %s\n", errno, strerror(errno));
                             }
-                            // pConnection->Close();
+                            if (pConnection->Count() == 0)
+                            {
+                                // no more references so close it!!
+                                pConnection->Close();
+                            }
+                            else
+                            {
+                                // move the connection to the closed connections list
+                                connections.erase(pConnection);
+                                closedConnections.insert(pConnection);
+                            }
                         }
                     }
                     else if (connSocket == serverSocket)    // its a connection request
                     {
                         sockaddr_in client_sock_addr;
                         socklen_t addlen = sizeof(client_sock_addr);
+
+                        // go through and remove connections that are
+                        // marked as close if their reference counts are 0
+                        CloseMarkedConnections();
 
                         int clientSocket = accept(serverSocket, (struct sockaddr *)&client_sock_addr, &addlen);
 
@@ -495,5 +511,26 @@ void SEvServer::ConnectionComplete(SConnection *pConnection)
         pConnection->Destroy();
         delete pConnection;
     }
+}
+
+/**************************************************************************************
+*   \brief  Destroys connections marked as closed if their refcounts have
+*   reached 0.
+*
+*   \version
+*       - Sri Panyam  08/07/2009
+*         Created
+**************************************************************************************/
+void SEvServer::CloseMarkedConnections()
+{
+    for (std::list<SConnection *>::iterator iter = closedConnections.begin();
+            iter != closedConnections.end();
+            ++iter)
+    {
+        SConnection *pConnection = *iter;
+        pConnection->Destroy();
+        delete pConnection;
+    }
+    closedConnections.clear();
 }
 

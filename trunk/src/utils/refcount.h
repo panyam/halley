@@ -40,7 +40,10 @@ public:
     virtual ~RefCountable() { }
 
     //! Increase reference count
-    virtual void IncRef(unsigned delta = 1) { refCount += delta; }
+    virtual void IncRef(unsigned delta = 1)
+    {
+        refCount += delta;
+    }
 
     //! Decrease reference count
     // Returns true if reference count reaches 0

@@ -85,6 +85,22 @@ public:
     //! Removes a job listener
     virtual bool RemoveListener(SJobListener *pListener);
 
+    //! Increase reference count
+    virtual void IncRef(unsigned delta = 1)
+    {
+        RefCountable::IncRef(delta);
+        SLogger::Get()->Log(0, "DEBUG: IncRefed %x to %d\n", this, Count());
+    }
+
+    //! Decrease reference count
+    // Returns true if reference count reaches 0
+    virtual bool    DecRef(unsigned delta = 1)
+    {
+        bool result = RefCountable::DecRef(delta);
+        SLogger::Get()->Log(0, "DEBUG: DecRefed %x to %d\n", this, Count());
+        return result;
+    }
+
 public:
     //! The stage that owns this job - only one stage can be processing a job at a time
     SStage *                    pOwner;

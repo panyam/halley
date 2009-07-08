@@ -42,7 +42,8 @@ public:
     // Allowed events in this stage
     typedef enum
     {
-        EVT_BYTES_RECIEVED = 0,
+        EVT_READ_REQUEST,
+        EVT_CLOSE_CONNECTION
     } EventType;
 
 public:
@@ -52,11 +53,14 @@ public:
     // Destroys the stage
     virtual         ~SReaderStage();
 
+    //! Called when a job is destroyed
+    virtual void    JobDestroyed(SJob *pJob);
+
     //! Called when data is available to be read.
     virtual bool    SendEvent_ReadRequest(SConnection *pConnection);
 
-    //! Called when a job is destroyed
-    virtual void    JobDestroyed(SJob *pJob);
+    //! Called when connection is ready to be closed
+    virtual bool    SendEvent_CloseConnection(SConnection *pConnection);
 
 protected:
     //! Does the actual event handling.
@@ -66,7 +70,7 @@ protected:
     virtual void *  AssembleRequest(char *&pStart, char *&pLast, void *pState) { return NULL; }
 
     //! Handles the newly assembled request
-    virtual void    HandleRequest(SConnection *pConnection, void *pRequest) { }
+    virtual bool    HandleRequest(SConnection *pConnection, void *pRequest) { return true; }
 
     //! Current read buffer - to store "Extra" data that may be remaining
     char *          pReadBuffer;
