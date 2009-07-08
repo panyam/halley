@@ -43,14 +43,31 @@ SHttpRequest::SHttpRequest() :
 {
 }
 
+//! Resets to start all over again
+void SHttpRequest::Reset()
+{
+    SHttpMessage::Reset();
+    if (pContentBody)
+        pContentBody->Reset();
+
+    if (pResponse)
+        pResponse->Reset();
+}
+
 // Clears a http req object
 SHttpRequest::~SHttpRequest()
 {
     if (pContentBody)
+    {
         delete pContentBody;
+        pContentBody = NULL;
+    }
 
     if (pResponse)
+    {
         delete pResponse;
+        pResponse = NULL;
+    }
 }
 
 // Gets the host

@@ -277,6 +277,7 @@ int SEvServer::Run()
     struct epoll_event ev;
     struct epoll_event events[MAXEPOLLSIZE];
 
+    bzero(&ev, sizeof(ev));
     ev.events   = EPOLLIN | EPOLLET | EPOLLHUP | EPOLLRDHUP;
     ev.data.ptr = NULL;
     if (epoll_ctl(serverEpollFD, EPOLL_CTL_ADD, serverSocket, &ev) < 0)
@@ -313,22 +314,24 @@ int SEvServer::Run()
                         // different point (reader stage) anyway
                         if (pConnection != NULL)
                         {
+                            events[n].data.ptr = NULL;
                             // move the connection to the closed connection list
                             pConnection->SetState(SConnection::STATE_CLOSED);
                             if (epoll_ctl(serverEpollFD, EPOLL_CTL_DEL, pConnection->Socket(), &ev) < 0)
                             {
                                 SLogger::Get()->Log(0, "ERROR: epoll_ctl delete error [%d]: %s\n", errno, strerror(errno));
                             }
-                            if (pConnection->Count() == 0)
+                            connections.erase(pConnection);
+                            // move the connection to the closed connections list
+                            // so it can be freed up when we need spare ones
+                            pConnection->SetState(SConnection::STATE_CLOSED);
+                            if (pConnection->RefCount() == 0)
                             {
-                                // no more references so close it!!
-                                pConnection->Close();
+                                delete pConnection;
                             }
                             else
                             {
-                                // move the connection to the closed connections list
-                                connections.erase(pConnection);
-                                closedConnections.insert(pConnection);
+                                closedConnections.push_back(pConnection);
                             }
                         }
                     }
@@ -508,7 +511,6 @@ void SEvServer::ConnectionComplete(SConnection *pConnection)
     if (connections.end() != connections.find(pConnection))
     {
         connections.erase(pConnection);
-        pConnection->Destroy();
         delete pConnection;
     }
 }
@@ -523,14 +525,19 @@ void SEvServer::ConnectionComplete(SConnection *pConnection)
 **************************************************************************************/
 void SEvServer::CloseMarkedConnections()
 {
-    for (std::list<SConnection *>::iterator iter = closedConnections.begin();
-            iter != closedConnections.end();
-            ++iter)
+    std::list<SConnection *>::iterator iter = closedConnections.begin();
+    while (iter != closedConnections.end())
     {
         SConnection *pConnection = *iter;
-        pConnection->Destroy();
-        delete pConnection;
+        if (pConnection->RefCount() == 0)
+        {
+            iter = closedConnections.erase(iter);
+            delete pConnection;
+        }
+        else
+        {
+            ++iter;
+        }
     }
-    closedConnections.clear();
 }
 

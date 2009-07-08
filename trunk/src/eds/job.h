@@ -58,14 +58,11 @@ public:
 class SJob : public RefCountable
 {
 public:
-    //! Destroys the connection object
+    //! Creates a new job
     SJob();
 
     //! Destroys the connection object
     virtual ~SJob();
-
-    //! Destroys the job.
-    virtual void Destroy();
 
     //! Get the stage specific data for this connection
     void *GetStageData(SStage *pStage);
@@ -73,18 +70,13 @@ public:
     //! Set the stage specific data for this connection
     void *SetStageData(SStage *pStage, void * data);
 
-    //! Tells if the job is alive.
-    bool IsAlive();
-
-    //! Sets the alive status of the job
-    void SetAlive(bool alive);
-
     //! Adds a job listener
     virtual bool AddListener(SJobListener *pListener);
 
     //! Removes a job listener
     virtual bool RemoveListener(SJobListener *pListener);
 
+    /*
     //! Increase reference count
     virtual void IncRef(unsigned delta = 1)
     {
@@ -100,17 +92,11 @@ public:
         SLogger::Get()->Log(0, "DEBUG: DecRefed %x to %d\n", this, Count());
         return result;
     }
-
-public:
-    //! The stage that owns this job - only one stage can be processing a job at a time
-    SStage *                    pOwner;
+    */
 
 private:
     //! Connection specific data that handlers can manipulate to their will.
-    std::vector<void *>   stageData;
-
-    //! Is the connection alive?
-    bool                        isAlive;
+    std::vector<void *>         stageData;
 
     //! Job listeners
     std::list<SJobListener *>   listeners;

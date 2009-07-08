@@ -94,13 +94,21 @@ SHttpMessage::SHttpMessage()
 {
     version         = "HTTP/1.1";
     bpCount         = 0;
-    // SetUIntHeader("Content-Length", 0);
     headers.SetHeader("Content-Type", "text/html");
 }
 
 // Clears a http req object
 SHttpMessage::~SHttpMessage()
 {
+}
+
+//! Resets to start all over again
+void SHttpMessage::Reset()
+{
+    headers.Reset();
+    version         = "HTTP/1.1";
+    bpCount         = 0;
+    headers.SetHeader("Content-Type", "text/html");
 }
 
 // Creates a new body part for this message

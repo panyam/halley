@@ -34,9 +34,6 @@
 
 #include "thread/task.h"
 
-using std::cerr;
-using std::endl;
-
 //*****************************************************************************
 /*!
  *  \brief  Destructor
@@ -72,7 +69,6 @@ int STask::Start()
     }
     catch (...)
     {
-        cerr << "Task " << this << " dead..." << endl;
         result      = -1;
         taskDead    = true;
     }

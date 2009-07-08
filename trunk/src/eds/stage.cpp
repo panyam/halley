@@ -127,14 +127,14 @@ void SStage::Stop()
 void SStage::PreHandleEvent(const SEvent &event)
 {
     event.pSource->IncRef();
-    SLogger::Get()->Log(0, "PRE Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x\n",
+    SLogger::Get()->Log(0, "DEBUG: PRE Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x\n",
                                 Name().c_str(), event.evType, event.pSource, event.pData);
 }
 
 //! Called after an event is handled
 void SStage::PostHandleEvent(const SEvent &event)
 {
-    SLogger::Get()->Log(0, "POST Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x\n",
+    SLogger::Get()->Log(0, "DEBUG: POST Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x\n",
                                 Name().c_str(), event.evType, event.pSource, event.pData);
     event.pSource->DecRef();
 }
@@ -148,7 +148,7 @@ int SEventDispatcher::Run()
         SEvent event = pStage->GetEvent();
 
         pStage->PreHandleEvent(event);
-        SLogger::Get()->Log(0, "Handling Event, Stage: %s, Type: %d, Source: %x, Data: %x\n",
+        SLogger::Get()->Log(0, "DEBUG: Handling Event, Stage: %s, Type: %d, Source: %x, Data: %x\n",
                                     pStage->Name().c_str(), event.evType, event.pSource, event.pData);
         pStage->HandleEvent(event);
         pStage->PostHandleEvent(event);

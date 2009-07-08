@@ -47,6 +47,9 @@ public:
     SHttpRequest();
     virtual         ~SHttpRequest();
 
+    //! Resets to start all over again
+    virtual void Reset();
+
 public:
     //! The scheme
     const SString &Scheme() const;

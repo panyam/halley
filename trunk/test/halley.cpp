@@ -219,6 +219,8 @@ int main(int argc, char *argv[])
 {
     // setup signal handlers
     struct sigaction new_action, old_action;
+    bzero(&new_action, sizeof(new_action));
+    bzero(&old_action, sizeof(old_action));
     /* Set up the structure to specify the new action. */
     new_action.sa_handler = termination_handler;
     sigemptyset (&new_action.sa_mask);

@@ -119,6 +119,9 @@ public:
     SHttpMessage();
     virtual         ~SHttpMessage();
 
+    //! Resets to start all over again
+    virtual void Reset();
+
 public:
     //! Read request from an input stream (usually network)
     virtual bool ReadFromStream(std::istream &input);

@@ -38,9 +38,6 @@
 **************************************************************************************/
 SJob::SJob()
 {
-    pOwner      = NULL;
-    isAlive     = true;
-
     // create space for the first 5 stages
     for (int i = 0;i < 5;i++)
     {
@@ -57,7 +54,13 @@ SJob::SJob()
 **************************************************************************************/
 SJob::~SJob()
 {
-    isAlive = false;
+    for (std::list<SJobListener *>::iterator iter = listeners.begin();
+            iter != listeners.end();
+            ++iter)
+    {
+        (*iter)->JobDestroyed(this);
+    }
+    listeners.clear();
     stageData.clear();
 }
 
@@ -104,25 +107,6 @@ bool SJob::RemoveListener(SJobListener *pListener)
 }
 
 /**************************************************************************************
-*   \brief  Destroys the job without release its memory
-*
-*   \version
-*       - Sri Panyam  20/04/2009
-*         Created
-**************************************************************************************/
-void SJob::Destroy()
-{
-    SetAlive(false);
-    for (std::list<SJobListener *>::iterator iter = listeners.begin();
-            iter != listeners.end();
-            ++iter)
-    {
-        (*iter)->JobDestroyed(this);
-    }
-    listeners.clear();
-}
-
-/**************************************************************************************
 *   \brief  Get stage specific data.
 *
 *   \version
@@ -156,29 +140,4 @@ void *SJob::SetStageData(SStage *pStage, void * data)
     stageData[id] = data;
     return old;
 }
-
-/**************************************************************************************
-*   \brief  Sets the alive status.
-*
-*   \version
-*       - Sri Panyam  20/04/2009
-*         Created
-**************************************************************************************/
-void SJob::SetAlive(bool alive)
-{
-    isAlive = alive;
-}
-
-/**************************************************************************************
-*   \brief  Gets the alive status.
-*
-*   \version
-*       - Sri Panyam  20/04/2009
-*         Created
-**************************************************************************************/
-bool SJob::IsAlive()
-{
-    return isAlive;
-}
-
 

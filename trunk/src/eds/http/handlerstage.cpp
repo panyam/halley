@@ -118,9 +118,8 @@ void SHttpHandlerStage::JobDestroyed(SJob *pJob)
 void SHttpHandlerStage::HandleEvent(const SEvent &event)
 {
     // The connection currently being processed
-    SConnection *pConnection            = (SConnection *)(event.pSource);
-    if (!pConnection->IsAlive()) return;
-    SHttpHandlerData *pHandlerData      = (SHttpHandlerData *)pConnection->GetStageData(this);
+    SConnection *       pConnection     = (SConnection *)(event.pSource);
+    SHttpHandlerData *  pHandlerData    = (SHttpHandlerData *)pConnection->GetStageData(this);
 
     // create the response if none yet - it MUST be an "arrived" event
     if (pHandlerData == NULL)

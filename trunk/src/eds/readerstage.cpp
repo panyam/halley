@@ -155,8 +155,6 @@ void SReaderStage::HandleEvent(const SEvent &event)
 
                 // sends request to be handled by the next stage
                 HandleRequest(pConnection, pRequest);
-
-                SLogger::Get()->Log(0, "DEBUG: HandleRequest Exited\n\n");
             }
         }
     }

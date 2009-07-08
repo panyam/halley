@@ -47,6 +47,9 @@ public:
     SHttpResponse();
     virtual         ~SHttpResponse();
 
+    //! Resets to start all over again
+    virtual void Reset();
+
 public:
     //! Sets the response status
     int StatusCode() const;

@@ -119,15 +119,6 @@ public:
     //! Get the socket associated with the connection
     SEvServer *Server() { return pServer; }
 
-    //! Destroys the connection.
-    virtual void Destroy();
-
-    //! Closes the connection
-    void Close();
-
-    //! Closes only socket but not the entire connection
-    void CloseSocket();
-
     //! Get the output stream associated with the socket
     std::ostream &GetOutputStream() const { return *clientOutput; }
 

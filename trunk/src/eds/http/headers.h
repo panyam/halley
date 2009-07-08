@@ -75,6 +75,9 @@ public:
     //! Destructor
     virtual ~SHeaderTable() { }
 
+    //! Resets to start all over again
+    virtual void Reset();
+
     //! Gets a header
     SString Header(const SString &name) const;
 
