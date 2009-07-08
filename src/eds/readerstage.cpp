@@ -45,8 +45,7 @@ SReaderStage::SReaderStage(const SString &name, int numThreads)
     SStage(name, numThreads),
     pReadBuffer(new char[MAXBUF]),
     pCurrPos(pReadBuffer),
-    pBuffEnd(pReadBuffer),
-    pHandlerStage(NULL)
+    pBuffEnd(pReadBuffer)
 {
 }
 
@@ -142,10 +141,7 @@ void SReaderStage::HandleEvent(const SEvent &event)
                 pConnection->SetState(SConnection::STATE_PROCESSING);
 
                 // sends request to be handled by the next stage
-                // HandleRequest(pRequest);
-
-                // send the request off to the handler stage
-                // pHandlerStage->HandleRequest(pConnection, pRequest);
+                HandleRequest(pConnection, pRequest);
             }
         }
     }

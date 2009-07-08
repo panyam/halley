@@ -54,6 +54,12 @@ public:
     // Destroys the stage
     virtual ~SHttpReaderStage();
 
+    //! Set the handler stage
+    virtual void    SetHandlerStage(SHttpHandlerStage *pHandler) { pHandlerStage = pHandler; }
+
+    //! Get the handler stage
+    virtual SHttpHandlerStage *GetHandlerStage() { return pHandlerStage; }
+
 protected:
     //! Creates the protocol specific reader state object
     virtual void *  CreateReaderState();
@@ -63,6 +69,13 @@ protected:
 
     //! Tries to assemble the request object from a byte buffer
     virtual void *  AssembleRequest(char *&pStart, char *&pLast, void *pState);
+
+    //! Handles the newly assembled request
+    virtual void    HandleRequest(SConnection *pConnection, void *pRequest);
+
+private:
+    //! The request handler stage which handles assembled requests
+    SHttpHandlerStage *pHandlerStage;
 };
 
 #endif
