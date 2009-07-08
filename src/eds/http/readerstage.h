@@ -71,7 +71,7 @@ protected:
     virtual void *  AssembleRequest(char *&pStart, char *&pLast, void *pState);
 
     //! Handles the newly assembled request
-    virtual void    HandleRequest(SConnection *pConnection, void *pRequest);
+    virtual bool    HandleRequest(SConnection *pConnection, void *pRequest);
 
 private:
     //! The request handler stage which handles assembled requests

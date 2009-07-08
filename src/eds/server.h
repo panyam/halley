@@ -89,6 +89,9 @@ public:
     //! Called by a connection when it is done with.
     void        ConnectionComplete(SConnection *pConnection);
 
+    //! Destroyes connections marked as closed
+    void        CloseMarkedConnections();
+
 protected:
     // Called to stop the task.
     virtual int RealStop();
@@ -138,6 +141,9 @@ private:
 
     //! After a flooding, tells when we can start accepting again
     int                             startAcceptingAt;
+
+    //! List of connections that are closed
+    std::list<SConnection *>        closedConnections;
 };
 
 #endif

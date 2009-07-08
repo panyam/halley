@@ -126,6 +126,7 @@ void SStage::Stop()
 //! Called before an event is handled
 void SStage::PreHandleEvent(const SEvent &event)
 {
+    event.pSource->IncRef();
     SLogger::Get()->Log(0, "PRE Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x\n",
                                 Name().c_str(), event.evType, event.pSource, event.pData);
 }
@@ -135,6 +136,7 @@ void SStage::PostHandleEvent(const SEvent &event)
 {
     SLogger::Get()->Log(0, "POST Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x\n",
                                 Name().c_str(), event.evType, event.pSource, event.pData);
+    event.pSource->DecRef();
 }
 
 //! Handles events continuosly

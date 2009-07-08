@@ -136,10 +136,10 @@ void SHttpReaderStage::DestroyStageData(void *pReaderState)
 }
 
 //! Handle the new assembled request
-void SHttpReaderStage::HandleRequest(SConnection *pConnection, void *pRequest)
+bool SHttpReaderStage::HandleRequest(SConnection *pConnection, void *pRequest)
 {
     // send the request off to the handler stage
-    pHandlerStage->SendEvent_HandleRequest(pConnection, (SHttpRequest *)pRequest);
+    return pHandlerStage->SendEvent_HandleRequest(pConnection, (SHttpRequest *)pRequest);
 }
 
 //! Process a bunch of bytes and try to assemble a request if enough bytes found
@@ -158,7 +158,7 @@ void *SHttpReaderStage::AssembleRequest(char *&pStart, char *&pLast, void *pStat
     }
     else
     {
-        // we have an error
+        // we have an error??
     }
     return pOut;
 }

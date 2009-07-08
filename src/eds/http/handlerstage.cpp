@@ -67,13 +67,7 @@ bool SHttpHandlerStage::SendEvent_HandleRequest(SConnection *pConnection, SHttpR
 //! Request to close the connection
 bool SHttpHandlerStage::SendEvent_CloseConnection(SConnection *pConnection)
 {
-    pConnection->SetState(SConnection::STATE_CLOSED);
-
-    // tell the reader we are ready for more
-    // pReaderStage->ReadSocket(pConnection);
-
-    // return QueueEvent(SEvent(EVT_CLOSE_CONNECTION, pConnection));
-    return true;
+    return pReaderStage->SendEvent_CloseConnection(pConnection);
 }
     
 //! Sends input to be processed by a module

@@ -59,7 +59,13 @@ SReaderStage::~SReaderStage()
 // Read bytes
 bool SReaderStage::SendEvent_ReadRequest(SConnection *pConnection)
 {
-    return QueueEvent(SEvent(EVT_BYTES_RECIEVED, pConnection));
+    return QueueEvent(SEvent(EVT_READ_REQUEST, pConnection));
+}
+
+// Close the connection
+bool SReaderStage::SendEvent_CloseConnection(SConnection *pConnection)
+{
+    return QueueEvent(SEvent(EVT_CLOSE_CONNECTION, pConnection));
 }
 
 //! Called when a connection is going to be destroyed so we can do our
@@ -94,10 +100,19 @@ void SReaderStage::HandleEvent(const SEvent &event)
         pConnection->AddListener(this);
     }
 
-    // in the reading state, we can read data till the next complete
-    // "message" has been read...
-    if (pConnection->GetState() == SConnection::STATE_READING)
+    if (event.evType == EVT_CLOSE_CONNECTION)
     {
+        // a connection is to be closed -
+        // the problem is regardless of how many threads we or other stages
+        // have, killing it here will pose sever problems.  So instead of
+        // killing, we flag it as being closed so nothing else uses this
+        // connection
+        pConnection->SetState(SConnection::STATE_CLOSED);
+    }
+    else if (event.evType == EVT_READ_REQUEST)
+    {
+        // in the reading state, we can read data till the next complete
+        // "message" has been read...
         while (pConnection->GetState() == SConnection::STATE_READING)
         {
             // refill read buffer if necessary
@@ -109,7 +124,7 @@ void SReaderStage::HandleEvent(const SEvent &event)
                     if (errno == EAGAIN)
                     {
                         // non blocking io - so quit till more data is available
-                        SLogger::Get()->Log(0, "DEBUG: read EAGAIN %d [%d]: %s\n\n", EAGAIN, errno, strerror(errno));
+                        SLogger::Get()->Log(0, "DEBUG: read EAGAIN = [%d]: %s\n\n", errno, strerror(errno));
                     }
                     else
                     {
@@ -144,12 +159,6 @@ void SReaderStage::HandleEvent(const SEvent &event)
                 SLogger::Get()->Log(0, "DEBUG: HandleRequest Exited\n\n");
             }
         }
-    }
-
-    if (pConnection->GetState() == SConnection::STATE_CLOSED)
-    {
-        // close the connection
-        pConnection->Close();
     }
 }
 
