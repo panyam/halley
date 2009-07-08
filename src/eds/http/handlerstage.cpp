@@ -32,6 +32,7 @@
 #include "eds/stage.h"
 #include "eds/connection.h"
 #include "utils/membuff.h"
+#include "readerstage.h"
 #include "handlerstage.h"
 #include "httpmodule.h"
 
@@ -43,6 +44,7 @@ using std::endl;
 SHttpHandlerStage::SHttpHandlerStage(const SString &name, int numThreads)
 :
     SStage(name, numThreads),
+    pReaderStage(NULL),
     pRootModule(NULL)
 {
 }
@@ -52,7 +54,16 @@ void SHttpHandlerStage::HandleRequest(SConnection *pConnection, SHttpRequest *pR
 {
     if (pConnection->IsAlive())
     {
-        QueueEvent(SEvent(EVT_REQUEST_ARRIVED, pConnection, pRequest));
+        if (pRequest)
+        {
+            QueueEvent(SEvent(EVT_REQUEST_ARRIVED, pConnection, pRequest));
+        }
+        else
+        {
+            pConnection->SetState(SConnection::STATE_READING);
+            // tell the reader we are ready for more
+            pReaderStage->ReadSocket(pConnection);
+        }
     }
 }
     
@@ -139,7 +150,7 @@ void SHttpHandlerStage::HandleEvent(const SEvent &event)
             // new request - so reset all module data for the request
             pHandlerData->ResetModuleData();
             pRequest = event.Data<SHttpRequest *>();
-            if (pRequest) pHandlerData->AddRequest(pRequest);
+            pHandlerData->AddRequest(pRequest);
 
             // let the root module take it
             if (pHandlerData->Request())

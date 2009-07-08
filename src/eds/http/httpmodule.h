@@ -168,7 +168,14 @@ public:
     virtual void SetModuleData(SHttpModule *pModule, SHttpModuleData *pData);
 
     //! Adds a new request to the queue.
-    virtual void AddRequest(SHttpRequest *pReq) { requests.push_back(pReq); }
+    virtual void AddRequest(SHttpRequest *pReq)
+    {
+        requests.push_back(pReq);
+        if (requests.size() > 1)
+        {
+            SLogger::Get()->Log(0, "DEBUG: Http Handler Data has MORE than 1 Request: %d\n", requests.size());
+        }
+    }
 
     //! Destroys the current request
     virtual void DestroyRequest();

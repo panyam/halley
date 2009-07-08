@@ -58,6 +58,12 @@ public:
     // Destroys the stage
     virtual ~SHttpHandlerStage() { }
 
+    //! Set the reader stage
+    virtual void    SetReaderStage(SHttpReaderStage *pReader) { pReaderStage = pReader; }
+
+    //! Get the reader stage
+    virtual SHttpReaderStage *GetReaderStage() { return pReaderStage; }
+
     //! Sets the root processing module.
     virtual void SetRootModule(SHttpModule *pModule) { pRootModule = pModule; }
 
@@ -81,6 +87,9 @@ protected:
     virtual void HandleEvent(const SEvent &event);
 
 protected:
+    //! The stage that reads requests from the connection
+    SHttpReaderStage *      pReaderStage;
+
     //! The starting module for all requests
     SHttpModule *           pRootModule;
 };

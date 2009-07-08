@@ -149,7 +149,7 @@ public:
 public:
     ServerContext(int port = 80)    :
         requestReader("Reader", 0),
-        requestHandler("Handler", 5),
+        requestHandler("Handler", 0),
         contentModule(&writerModule),
         bayeuxModule(&contentModule, "MyTestBoundary"),
         rootFileModule(&contentModule, true),
@@ -162,8 +162,10 @@ public:
         dsUrlMatch("/bayeux/", SContainsUrlMatcher::PREFIX_MATCH, &bayeuxModule),
         pServer(port, &requestReader)
     {
-        testModule.AddDocRoot("/btest/", "/home/sri/sandbox/cpp/halley/trunk/test/");
-        rootFileModule.AddDocRoot("/microscape/", "/home/sri/sandbox/cpp/halley/trunk/test/microscape/");
+        testModule.AddDocRoot("/btest/", "./test/");
+        rootFileModule.AddDocRoot("/microscape/", "./test/microscape/");
+        // testModule.AddDocRoot("/btest/", "/home/sri/sandbox/cpp/halley/trunk/test/");
+        // rootFileModule.AddDocRoot("/microscape/", "/home/sri/sandbox/cpp/halley/trunk/test/microscape/");
         rootFileModule.AddDocRoot("/static/", "/");
 
         urlRouter.AddUrlMatch(&microscapeUrlMatch);
@@ -174,6 +176,7 @@ public:
         requestReader.SetHandlerStage(&requestHandler);
         requestHandler.SetRootModule(&urlRouter);
 
+        requestHandler.SetReaderStage(&requestReader);
 
         pServer.SetStage("RequestReader", &requestReader);
         pServer.SetStage("RequestHandler", &requestHandler);

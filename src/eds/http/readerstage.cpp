@@ -123,13 +123,13 @@ SHttpReaderStage::~SHttpReaderStage()
 }
 
 //! Creates a new reader state object
-void *SHttpReaderStage::CreateReaderState()
+void *SHttpReaderStage::CreateStageData()
 {
     return new SHttpReaderState();
 }
 
 //! Destroys reader state objects
-void SHttpReaderStage::DestroyReaderState(void *pReaderState)
+void SHttpReaderStage::DestroyStageData(void *pReaderState)
 {
     if (pReaderState != NULL)
         delete ((SHttpReaderState *)pReaderState);
@@ -189,6 +189,7 @@ bool SHttpReaderState::ProcessBytes(char *&pStart, char *&pLast)
             else
             {
                 // no more bytes left so leave 
+                pStart = pCurr;
                 return true;
             }
 
@@ -204,8 +205,8 @@ bool SHttpReaderState::ProcessBytes(char *&pStart, char *&pLast)
 
         if (currState == READING_BODY || currState == READING_CHUNK_BODY)
         {
-            if (pLast <= pStart)
-                return false;
+            pStart = pCurr;
+            // if (pLast <= pStart) return false;
 
             // if error in ready body data then quit
             if (!ProcessBodyData(pStart, pLast))
@@ -238,15 +239,17 @@ bool SHttpReaderState::ProcessBodyData(char *&pStart, char *&pLast)
     // how much SHOULD we read?  we only want to read what ever of 
     // the body is left, despite how much is passed to this method
     size_t minLength    = ((pStart + currBodyLeft) < pLast) ? currBodyLeft : (pLast - pStart);
-    if (minLength <= 0)
+    if (minLength < 0)
     {
         // how can this be?
         assert("Why is minLength <= 0???" && false);
     }
-
-    if (pCurrBodyPart == NULL)
-        pCurrBodyPart = pCurrRequest->NewBodyPart();
-    pCurrBodyPart->AppendToBody(pStart, minLength);
+    else if (minLength > 0)
+    {
+        if (pCurrBodyPart == NULL)
+            pCurrBodyPart = pCurrRequest->NewBodyPart();
+        pCurrBodyPart->AppendToBody(pStart, minLength);
+    }
 
     currBodyRead    += minLength;  // increment what has been read
     if (currBodyRead == currBodySize)

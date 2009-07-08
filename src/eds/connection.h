@@ -65,11 +65,10 @@
  *
  *  The following states are required:
  *
- *  STATE_ACCEPTED      -   A new connection was accepted by the server,
- *
- *  STATE_READING       -   Connection is a state where data can be or is being
- *                          read.  At this point the reader stage can read
- *                          protocol specific messages.
+ *  STATE_READING       -   Connection is a state where data can be (if just 
+ *                          accepted) or is being read.  At this point the
+ *                          reader stage can read protocol specific
+ *                          messages.
  *
  *  STATE_PROCESSING    -   At this stage a message that has been read in
  *                          the previous state is being processed by other 
@@ -100,7 +99,6 @@ class SConnection : public SJob
 public:
     enum
     {
-        STATE_ACCEPTED,
         STATE_READING,
         STATE_PROCESSING,
         // STATE_WRITING,

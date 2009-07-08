@@ -71,7 +71,7 @@ void SReaderStage::JobDestroyed(SJob *pJob)
         void *pStageData = pJob->GetStageData(this);
         if (pStageData != NULL)
         {
-            DestroyReaderState(pStageData);
+            DestroyStageData(pStageData);
             pJob->SetStageData(this, NULL);
         }
     }
@@ -89,15 +89,9 @@ void SReaderStage::HandleEvent(const SEvent &event)
     void *pReaderState          = pConnection->GetStageData(this);
     if (pReaderState == NULL)
     {
-        pReaderState = CreateReaderState();
+        pReaderState = CreateStageData();
         pConnection->SetStageData(this, pReaderState);
         pConnection->AddListener(this);
-    }
-
-    if (pConnection->GetState() == SConnection::STATE_ACCEPTED)
-    {
-        // we are in the accepted state - so go to the READING state
-        pConnection->SetState(SConnection::STATE_READING);
     }
 
     // in the reading state, we can read data till the next complete
@@ -128,6 +122,7 @@ void SReaderStage::HandleEvent(const SEvent &event)
                 {
                     // end of file - close connection?
                     SLogger::Get()->Log(0, "WARNING: read EOF reached\n\n");
+                    return ;
                 }
                 pCurrPos = pReadBuffer;
                 pBuffEnd = pReadBuffer + buffLen;
