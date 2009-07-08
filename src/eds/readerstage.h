@@ -52,6 +52,12 @@ public:
     // Destroys the stage
     virtual         ~SReaderStage();
 
+    //! Set the handler stage
+    virtual void    SetHandlerStage(SStage *pHandler) { pHandlerStage = pHandler; }
+
+    //! Get the handler stage
+    virtual SStage *GetHandlerStage() { return pHandlerStage; }
+
     //! Called when data is available to be read.
     virtual void    ReadSocket(SConnection *pConnection);
 
@@ -63,18 +69,22 @@ protected:
     virtual void    HandleEvent(const SEvent &event);
 
     //! Creates the protocol specific reader state object
-    virtual void *  CreateReaderState();
+    virtual void *  CreateReaderState() { return NULL; }
 
     //! Destroys the the protocol specific reader state object
-    virtual void    DestroyReaderState(void *pStateData);
+    virtual void    DestroyReaderState(void *pStateData) { }
 
     //! Tries to assemble the request object from a byte buffer
-    virtual void *  AssembleRequest(char *&pStart, char *&pLast);
+    virtual void *  AssembleRequest(char *&pStart, char *&pLast, void *pState) { return NULL; }
 
     //! Current read buffer - to store "Extra" data that may be remaining
     char *          pReadBuffer;
     char *          pCurrPos;
     char *          pBuffEnd;
+
+private:
+    //! The request handler stage which handles assembled requests
+    SStage *        pHandlerStage;
 };
 
 #endif

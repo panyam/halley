@@ -45,7 +45,8 @@ SReaderStage::SReaderStage(const SString &name, int numThreads)
     SStage(name, numThreads),
     pReadBuffer(new char[MAXBUF]),
     pCurrPos(pReadBuffer),
-    pBuffEnd(pReadBuffer)
+    pBuffEnd(pReadBuffer),
+    pHandlerStage(NULL)
 {
 }
 
@@ -134,22 +135,19 @@ void SReaderStage::HandleEvent(const SEvent &event)
             }
 
             void *pRequest;
-            if ((pRequest = AssembleRequest(pCurrPos, pBuffEnd)) != NULL)
+            if ((pRequest = AssembleRequest(pCurrPos, pBuffEnd, pReaderState)) != NULL)
             {
                 // send it of the next stage, also at this stage we have to
                 // update how much data has been read
                 pConnection->SetState(SConnection::STATE_PROCESSING);
+
+                // sends request to be handled by the next stage
+                // HandleRequest(pRequest);
 
                 // send the request off to the handler stage
                 // pHandlerStage->HandleRequest(pConnection, pRequest);
             }
         }
     }
-}
-
-//! Processes bytes int he current buffer
-void *SReaderStage::AssembleRequest(char *&pStart, char *&pLast)
-{
-    return NULL;
 }
 

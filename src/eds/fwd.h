@@ -67,6 +67,7 @@ class SEventQueue;
 class SEvServer;
 
 class SStage;
+class SReaderStage;
 
 #endif
 
