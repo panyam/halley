@@ -307,7 +307,7 @@ int SEvServer::Run()
                 {
                     SConnection *   pConnection = (SConnection *)(events[n].data.ptr);
                     int connSocket  = pConnection == NULL ? serverSocket : pConnection->Socket();
-                    if (Stopped() || (events[n].events & (EPOLLRDHUP | EPOLLHUP)) != 0)
+                    if (Stopped() || (events[n].events & (EPOLLRDHUP /*| EPOLLHUP*/)) != 0)
                     {
                         // we remove this socket from the epoll list but do
                         // not kill this as it will be done from a
@@ -321,10 +321,16 @@ int SEvServer::Run()
                             {
                                 SLogger::Get()->Log(0, "ERROR: epoll_ctl delete error [%d]: %s\n", errno, strerror(errno));
                             }
+                            else
+                            {
+                                curfds--;
+                            }
+
                             connections.erase(pConnection);
+                            pConnection->CloseSocket();
+
                             // move the connection to the closed connections list
                             // so it can be freed up when we need spare ones
-                            pConnection->SetState(SConnection::STATE_CLOSED);
                             if (pConnection->RefCount() == 0)
                             {
                                 delete pConnection;
@@ -371,7 +377,8 @@ int SEvServer::Run()
                             SConnection *pConn  = new SConnection(this, clientSocket);
                             connections.insert(pConn);
 
-                            ev.events   = EPOLLIN | EPOLLET | EPOLLHUP | EPOLLRDHUP;
+                            // what about EPOLLOUT??
+                            ev.events   = EPOLLIN | EPOLLET | EPOLLRDHUP /*| EPOLLHUP*/;
                             ev.data.ptr         = pConn;
 
                             if (epoll_ctl(serverEpollFD, EPOLL_CTL_ADD, clientSocket, &ev) < 0)
@@ -379,7 +386,10 @@ int SEvServer::Run()
                                 SLogger::Get()->Log(0, "ERROR: epoll_ctl error [%d]: %s\n", errno, strerror(errno));
                                 break ;
                             }
-                            curfds++;
+                            else
+                            {
+                                curfds++;
+                            }
                         }
                     }
                     else

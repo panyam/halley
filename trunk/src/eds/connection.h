@@ -128,6 +128,9 @@ public:
     //! Get the connection state
     void SetState(int newState) { connState = newState; }
 
+    //! Closes the underlying socket
+    void CloseSocket();
+
 private:
     //! The server parenting this connection
     SEvServer *         pServer;

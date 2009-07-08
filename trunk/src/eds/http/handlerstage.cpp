@@ -137,10 +137,10 @@ void SHttpHandlerStage::HandleEvent(const SEvent &event)
             // new request - so reset all module data for the request
             pHandlerData->ResetModuleData();
             pRequest = event.Data<SHttpRequest *>();
-            pHandlerData->AddRequest(pRequest);
+            pHandlerData->SetRequest(pRequest);
 
-            // let the root module take it
-            if (pHandlerData->Request())
+            // let the root module take it if there is a valid request
+            if (pRequest)
                 pRootModule->ProcessInput(pHandlerData, this, NULL);
             break ;
         case EVT_INPUT_BODY_TO_MODULE:   // let the next module handle input

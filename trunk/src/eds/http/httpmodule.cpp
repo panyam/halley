@@ -89,16 +89,14 @@ SBodyPart *SHttpModuleData::PutAndGetBodyPart(SBodyPart *pCurrPart)
 }
 
 //! Create a state object
-SHttpHandlerData::SHttpHandlerData(SConnection *pConn) :   pConnection(pConn)
+SHttpHandlerData::SHttpHandlerData(SConnection *pConn) : 
+    pConnection(pConn), pCurrRequest(NULL)
 {
 }
 
 //! Destroy the state
 SHttpHandlerData::~SHttpHandlerData()
 {
-    // TODO: should we delete requests?
-    // delete pRequest;
-
     // remove all module specific data
     std::list<ModuleData *>::iterator lastModule = moduleData.end();
     for (std::list<ModuleData *>::iterator iter = moduleData.begin();
@@ -123,17 +121,6 @@ void SHttpHandlerData::ResetModuleData()
     {
         ModuleData *pModData = *iter;
         pModData->second->Reset();
-    }
-}
-
-//! Destroys the current request
-void SHttpHandlerData::DestroyRequest()
-{
-    if ( ! requests.empty())
-    {
-        SHttpRequest *pRequest = requests.front();
-        requests.pop_front();
-        delete pRequest;
     }
 }
 
