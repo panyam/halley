@@ -16,8 +16,7 @@
  *
  *  \file   readerstage.cpp
  *
- *  \brief  The stage that asynchronously reads http requests of the
- *  socket.
+ *  \brief  The stage that asynchronously reads http requests of the socket.
  *
  *  \version
  *      - S Panyam      19/02/2009
@@ -37,10 +36,6 @@
 #include <sys/socket.h>
 #include <stdio.h>
 #include <errno.h>
-#include <sstream>
-#include <iostream>
-using std::cerr;
-using std::endl;
 
 // data and state stored by the request reader
 class SHttpReaderState
@@ -56,29 +51,37 @@ public:
     };
 
 public:
-    SHttpReaderState() :
-        currState(READING_FIRST_LINE),
-        pCurrRequest(NULL),
-        pCurrBodyPart(NULL),
-        currBodySize(0),
-        currBodyRead(0)
+    SHttpReaderState()
     {
+        Reset();
         std::cerr << "Creating Stage Data: " << this << std::endl;
     }
 
 
     // Destroys the request data - Request object to be 
     // deleted by later stages
-    ~SHttpReaderState() {
+    ~SHttpReaderState()
+    {
         std::cerr << "Destroying Stage Data: " << this << std::endl;
     }
 
+    void Reset()
+    {
+        // reset reader state
+        currState           = READING_FIRST_LINE;
+        pCurrRequest        = NULL;
+        pCurrBodyPart       = NULL;
+        currBodySize        = 0;
+        currBodyRead        = 0;
+        requestFullyRead    = false;
+    }
+
 public:
-    bool ProcessCurrentLine(std::list<SHttpRequest *> & requests);
+    bool ProcessBytes(char *&pStart, char *&pLast);
 
-    size_t ProcessBodyData(const char *buffer, size_t len, std::list<SHttpRequest *> & requests);
+    bool ProcessCurrentLine();
 
-    bool ProcessBytes(const char *buffer, size_t len, std::list<SHttpRequest *> & requests);
+    bool ProcessBodyData(char *&pStart, char *&pLast);
 
 public:
     //! Current state
@@ -100,113 +103,61 @@ public:
     unsigned            currBodyRead;
 
     //! Current line being accumulated
-    SStringStream   currentLine;
+    SStringStream       currentLine;
+
+    //! Set to true when a request has been read
+    bool                requestFullyRead;
 };
 
 // Creates a new file io helper stage
 SHttpReaderStage::SHttpReaderStage(const SString &name, int numThreads)
 :
-    SStage(name, numThreads),
-    pHandlerStage(NULL)
+    SReaderStage(name, numThreads)
 {
 }
 
-// Open a file handle
-void SHttpReaderStage::SetHandlerStage(SHttpHandlerStage *pHandler)
+//! Default destructor
+SHttpReaderStage::~SHttpReaderStage()
 {
-    pHandlerStage = pHandler;
 }
 
-// Read bytes
-void SHttpReaderStage::ReadSocket(SConnection *pConnection)
+//! Creates a new reader state object
+void *SHttpReaderStage::CreateReaderState()
 {
-    QueueEvent(SEvent(EVT_BYTES_RECIEVED, pConnection));
+    return new SHttpReaderState();
 }
 
-//! Called when a connection is going to be destroyed so we can do our
-// connection specific cleanup.
-void SHttpReaderStage::JobDestroyed(SJob *pJob)
+//! Destroys reader state objects
+void SHttpReaderStage::DestroyReaderState(void *pReaderState)
 {
-    if (pJob != NULL)
+    if (pReaderState != NULL)
+        delete ((SHttpReaderState *)pReaderState);
+}
+
+//! Process a bunch of bytes and try to assemble a request if enough bytes found
+void *SHttpReaderStage::AssembleRequest(char *&pStart, char *&pLast, void *pState)
+{
+    SHttpReaderState *pReaderState = (SHttpReaderState *)pState;
+    SHttpRequest *pOut = NULL;
+
+    if (pReaderState->ProcessBytes(pStart, pLast))
     {
-        SHttpReaderState *pStageData = (SHttpReaderState *)pJob->GetStageData(this);
-        if (pStageData != NULL)
+        if (pReaderState->requestFullyRead)
         {
-            delete pStageData;
-            pJob->SetStageData(this, NULL);
+            pOut = pReaderState->pCurrRequest;
+            pReaderState->Reset();
         }
     }
+    else
+    {
+        // we have an error
+    }
+    return pOut;
 }
 
-//! Handles "read request" events.
-//
-// Will call the RequestHandler stage when a complete request has been read.
-//
-// The previous model was to read requests and queue them in.
-void SHttpReaderStage::HandleEvent(const SEvent &event)
+bool SHttpReaderState::ProcessBytes(char *&pStart, char *&pLast)
 {
-    // The connection currently being processed
-    SConnection *pConnection    = (SConnection *)(event.pSource);
-    void *pStageData            = pConnection->GetStageData(this);
-    if (pStageData == NULL)
-    {
-        pStageData = new SHttpReaderState();
-        pConnection->SetStageData(this, pStageData);
-        pConnection->AddListener(this);
-    }
-    SHttpReaderState *pReaderState = (SHttpReaderState *)pStageData;
-
-    const int MAXBUF = 1024;
-    char buffer[MAXBUF + 1];
-    std::list<SHttpRequest *>   requests;
-    int len = read(pConnection->Socket(), buffer, MAXBUF);
-    int errnum = 0;
-
-    while (len > 0)
-    {
-        buffer[len] = 0;
-        // consume all bytes
-        if (pReaderState->ProcessBytes(buffer, len, requests))
-        {
-            while ( ! requests.empty())
-            {
-                SHttpRequest *pRequest = requests.front();
-                requests.pop_front();
-
-                // send the request off to the handler stage
-                pHandlerStage->HandleRequest(pConnection, pRequest);
-            }
-        }
-        else
-        {
-            errnum = errno;
-            std::cerr << "ERROR: Error in request: [" << errnum << "]: " << strerror(errnum) << std::endl << std::endl;
-            pConnection->Close();
-        }
-        len = read(pConnection->Socket(), buffer, MAXBUF);
-    }
-
-    if (len < 0)
-    {
-        errnum = errno;
-        std::cerr << "WARNING: Socket Reading Complete: [" << errnum << "]: " << strerror(errnum) << std::endl << std::endl;
-        // pConnection->Close();
-    }
-    else if (len == 0)
-    {
-        // peer closed socket
-        std::cerr << "WARNING: Peer Closed Socket........." << std::endl << std::endl;
-        // close(pConnection->Socket());
-        // pConnection->CloseSocket();
-    }
-}
-
-//! Process a bunch of bytes
-bool SHttpReaderState::ProcessBytes(const char *buffer, size_t len, std::list<SHttpRequest *> & requests)
-{
-    const char *pStart  = buffer;
-    const char *pCurr   = buffer;
-    const char *pLast   = buffer + len;
+    char *pCurr   = pStart;
     while (pCurr < pLast)
     {
         while (pCurr < pLast && 
@@ -214,6 +165,7 @@ bool SHttpReaderState::ProcessBytes(const char *buffer, size_t len, std::list<SH
                 currState == READING_HEADERS ||
                 currState == READING_CHUNK_SIZE))
         {
+            // TODO: do all the single-line bits in a single pass instead of two
             // go to the first CRLF or LF
             while ((pCurr < pLast) && (*pCurr != HttpUtils::CR) && (*pCurr != HttpUtils::LF)) pCurr++;
 
@@ -232,7 +184,7 @@ bool SHttpReaderState::ProcessBytes(const char *buffer, size_t len, std::list<SH
                 return true;
             }
 
-            if (!ProcessCurrentLine(requests))
+            if (!ProcessCurrentLine())
             {
                 // error so just quit
                 return false;
@@ -244,21 +196,23 @@ bool SHttpReaderState::ProcessBytes(const char *buffer, size_t len, std::list<SH
 
         if (currState == READING_BODY || currState == READING_CHUNK_BODY)
         {
-            size_t len      = pLast > pStart ? pLast - pStart : 0;
-            size_t numBytes = ProcessBodyData(pStart, len, requests);
-            if (numBytes == len)
-                return true;
+            if (pLast <= pStart)
+                return false;
 
-            // otherwise start again with the next request
-            currState = READING_FIRST_LINE;
+            // if error in ready body data then quit
+            if (!ProcessBodyData(pStart, pLast))
+                return false;
+            else if (requestFullyRead)
+                return true;
         }
     }
     return false;
 }
 
 // Reads body data and returns the number of bytes processed
-size_t SHttpReaderState::ProcessBodyData(const char *buffer, size_t len, std::list<SHttpRequest *> & requests)
+bool SHttpReaderState::ProcessBodyData(char *&pStart, char *&pLast)
 {
+    // length of the content
     size_t contLength = 0;
     if (currState == READING_BODY)
     {
@@ -270,17 +224,23 @@ size_t SHttpReaderState::ProcessBodyData(const char *buffer, size_t len, std::li
         contLength = currBodySize;
     }
 
+    // how much do we need to read?
     size_t currBodyLeft = contLength - currBodyRead;
-    size_t minLength    = currBodyLeft < len ? currBodyLeft : len;
 
-    if (minLength > 0)
+    // how much SHOULD we read?  we only want to read what ever of 
+    // the body is left, despite how much is passed to this method
+    size_t minLength    = ((pStart + currBodyLeft) < pLast) ? currBodyLeft : (pLast - pStart);
+    if (minLength <= 0)
     {
-        if (pCurrBodyPart == NULL)
-            pCurrBodyPart = pCurrRequest->NewBodyPart();
-        pCurrBodyPart->AppendToBody(buffer, minLength);
+        // how can this be?
+        assert("Why is minLength <= 0???" && false);
     }
 
-    currBodyRead += minLength;
+    if (pCurrBodyPart == NULL)
+        pCurrBodyPart = pCurrRequest->NewBodyPart();
+    pCurrBodyPart->AppendToBody(pStart, minLength);
+
+    currBodyRead    += minLength;  // increment what has been read
     if (currBodyRead == currBodySize)
     {
         if (currState == READING_BODY ||
@@ -288,21 +248,20 @@ size_t SHttpReaderState::ProcessBodyData(const char *buffer, size_t len, std::li
         {
             // done add requests to the list of requests
             pCurrRequest->SetContentBody(pCurrBodyPart);
-            requests.push_back(pCurrRequest);
-            pCurrRequest = NULL;
-            pCurrBodyPart = NULL;
-            currState = READING_FIRST_LINE;
+            requestFullyRead = true;
         }
     }
 
-    // return true if more data is available
-    return minLength;
+    // incrementing the curr buff position
+    pStart += minLength;
+
+    return true;
 }
 
 // Processes the current line
 // returns 0 on success, 1 if success and complete
 // -1 if failure
-bool SHttpReaderState::ProcessCurrentLine(std::list<SHttpRequest *> & requests)
+bool SHttpReaderState::ProcessCurrentLine()
 {
     // create a request if none found
     if (pCurrRequest == NULL) pCurrRequest = new SHttpRequest();

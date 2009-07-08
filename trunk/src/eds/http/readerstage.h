@@ -28,7 +28,7 @@
 #ifndef _SHTTP_READER_STAGE_H_
 #define _SHTTP_READER_STAGE_H_
 
-#include "eds/stage.h"
+#include "eds/readerstage.h"
 #include "httpfwd.h"
 
 //*****************************************************************************
@@ -38,7 +38,7 @@
  *  \brief  The stage that reads http requests off the socket.
  *
  *****************************************************************************/
-class SHttpReaderStage : public SStage
+class SHttpReaderStage : public SReaderStage
 {
 public:
     // Allowed events in this stage
@@ -52,27 +52,17 @@ public:
     SHttpReaderStage(const SString &name, int numThreads = DEFAULT_NUM_THREADS);
     
     // Destroys the stage
-    virtual ~SHttpReaderStage() { }
-
-    //! Set the handler stage
-    virtual void    SetHandlerStage(SHttpHandlerStage *pHandler);
-
-    //! Get the handler stage
-    virtual SHttpHandlerStage *GetHandlerStage() { return pHandlerStage; }
-
-    //! Called when bytes are available
-    void    ReadSocket(SConnection *pConnection);
-
-    //! Called when a job is destroyed
-    virtual void JobDestroyed(SJob *pJob);
+    virtual ~SHttpReaderStage();
 
 protected:
-    //! Does the actual event handling.
-    virtual void HandleEvent(const SEvent &event);
+    //! Creates the protocol specific reader state object
+    virtual void *  CreateReaderState();
 
-protected:
-    //! The stage that actually handles a fully read request
-    SHttpHandlerStage *pHandlerStage;
+    //! Destroys the the protocol specific reader state object
+    virtual void    DestroyReaderState(void *pStateData);
+
+    //! Tries to assemble the request object from a byte buffer
+    virtual void *  AssembleRequest(char *&pStart, char *&pLast, void *pState);
 };
 
 #endif
