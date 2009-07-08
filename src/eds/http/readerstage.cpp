@@ -123,6 +123,8 @@ void SHttpReaderStage::ReadSocket(SConnection *pConnection)
     QueueEvent(SEvent(EVT_BYTES_RECIEVED, pConnection));
 }
 
+//! Called when a connection is going to be destroyed so we can do our
+// connection specific cleanup.
 void SHttpReaderStage::JobDestroyed(SJob *pJob)
 {
     if (pJob != NULL)
@@ -138,8 +140,9 @@ void SHttpReaderStage::JobDestroyed(SJob *pJob)
 
 //! Handles "read request" events.
 //
-// Will call the RequestHandler stage when a complete request has been
-// read.
+// Will call the RequestHandler stage when a complete request has been read.
+//
+// The previous model was to read requests and queue them in.
 void SHttpReaderStage::HandleEvent(const SEvent &event)
 {
     // The connection currently being processed
