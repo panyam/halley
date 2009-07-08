@@ -61,7 +61,7 @@ public:
     }
 
     //! Return the reference count
-    virtual unsigned Count() const { return refCount; }
+    virtual unsigned RefCount() const { return refCount; }
 
 private:
     //! ref count of this object

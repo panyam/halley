@@ -198,11 +198,8 @@ void SHttpModule::SendBodyPartToModule(SConnection *        pConnection,
                                        SHttpModuleData *    pModData,
                                        SHttpModule *        pModule)
 {
-    if (pConnection->IsAlive())
-    {
-        if (pBodyPart != NULL)
-            pBodyPart->bpIndex = pModData->nextBPToSend++;
-        pStage->SendEvent_OutputToModule(pConnection, pNextModule, pBodyPart);
-    }
+    if (pBodyPart != NULL)
+        pBodyPart->bpIndex = pModData->nextBPToSend++;
+    pStage->SendEvent_OutputToModule(pConnection, pNextModule, pBodyPart);
 }
 

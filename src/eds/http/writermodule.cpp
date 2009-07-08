@@ -55,7 +55,6 @@ void SWriterModule::ProcessOutput(SHttpHandlerData *    pHandlerData,
             respHeaders.RemoveHeader("Content-Length");
         }
         respHeaders.Lock();
-        std::cerr << "  === WriterModule - " << "Writing Message Headers" << std::endl;
         outStream << pResponse->Version() << " "
                   << pResponse->StatusCode() << " "
                   << pResponse->StatusMessage() << HttpUtils::CRLF;
@@ -105,17 +104,15 @@ bool SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
         if (pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION ||
             pRequest->Headers().CloseConnection())
         {
-            std::cerr << "  === WriterModule - " << "Closing Connection" << std::endl;
             pStage->SendEvent_CloseConnection(pConnection);
             // return false;
         }
         else
         {
-            std::cerr << "  === WriterModule - " << "Destroying Request" << std::endl;
             // remove and destroy the request from the queue
             // Note this destroys pRequest - dont use pRequest 
             // after this
-            pHandlerData->DestroyRequest();
+            // pHandlerData->DestroyRequest();
 
             // Trigger the handling of the next request
             pStage->SendEvent_HandleRequest(pConnection, NULL);
@@ -123,7 +120,6 @@ bool SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
     }
     else // treat as normal message
     {
-        std::cerr << "  === WriterModule - " << "Writing Message Body" << std::endl;
         pBodyPart->WriteMessageBody(outStream);
         pModData->nextBPToSend++;
     }

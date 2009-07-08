@@ -43,6 +43,12 @@ SHttpResponse::~SHttpResponse()
 {
 }
 
+//! Resets to start all over again
+void SHttpResponse::Reset()
+{
+    SHttpMessage::Reset();
+}
+
 // Sets the request status
 int SHttpResponse::StatusCode() const
 {

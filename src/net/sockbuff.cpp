@@ -125,6 +125,7 @@ int SSocketBuff::sync()
                 int currfds = 1;
                 struct epoll_event ev;
                 struct epoll_event events[1];
+                bzero(&ev, sizeof(ev));
                 ev.events   = EPOLLOUT | EPOLLET;
                 ev.data.fd  = sockHandle;
                 if (epoll_ctl(kdpfd, EPOLL_CTL_ADD, sockHandle, &ev) < 0)

@@ -54,7 +54,6 @@ public:
     SHttpReaderState()
     {
         Reset();
-        std::cerr << "Creating Stage Data: " << this << std::endl;
     }
 
 
@@ -62,18 +61,17 @@ public:
     // deleted by later stages
     ~SHttpReaderState()
     {
-        std::cerr << "Destroying Stage Data: " << this << std::endl;
     }
 
     void Reset()
     {
         // reset reader state
         currState           = READING_FIRST_LINE;
-        pCurrRequest        = NULL;
         pCurrBodyPart       = NULL;
         currBodySize        = 0;
         currBodyRead        = 0;
         requestFullyRead    = false;
+        pCurrRequest.Reset();
     }
 
 public:
@@ -88,10 +86,10 @@ public:
     int                 currState;
 
     //! Current header being read
-    SStringStream   currHeaderLine;
+    SStringStream       currHeaderLine;
 
     //! Current request being read
-    SHttpRequest *      pCurrRequest;
+    SHttpRequest        pCurrRequest;
 
     //! Current body part being read
     SBodyPart *         pCurrBodyPart;
@@ -152,7 +150,7 @@ void *SHttpReaderStage::AssembleRequest(char *&pStart, char *&pLast, void *pStat
     {
         if (pReaderState->requestFullyRead)
         {
-            pOut = pReaderState->pCurrRequest;
+            pOut = &(pReaderState->pCurrRequest);
             pReaderState->Reset();
         }
     }
@@ -225,7 +223,7 @@ bool SHttpReaderState::ProcessBodyData(char *&pStart, char *&pLast)
     size_t contLength = 0;
     if (currState == READING_BODY)
     {
-        contLength = pCurrRequest->ContentLength();
+        contLength = pCurrRequest.ContentLength();
         currBodySize = contLength;
     }
     else
@@ -247,7 +245,7 @@ bool SHttpReaderState::ProcessBodyData(char *&pStart, char *&pLast)
     else if (minLength > 0)
     {
         if (pCurrBodyPart == NULL)
-            pCurrBodyPart = pCurrRequest->NewBodyPart();
+            pCurrBodyPart = pCurrRequest.NewBodyPart();
         pCurrBodyPart->AppendToBody(pStart, minLength);
     }
 
@@ -258,7 +256,7 @@ bool SHttpReaderState::ProcessBodyData(char *&pStart, char *&pLast)
             (currState == READING_CHUNK_BODY && currBodySize == 0))
         {
             // done add requests to the list of requests
-            pCurrRequest->SetContentBody(pCurrBodyPart);
+            pCurrRequest.SetContentBody(pCurrBodyPart);
             requestFullyRead = true;
         }
     }
@@ -275,18 +273,18 @@ bool SHttpReaderState::ProcessBodyData(char *&pStart, char *&pLast)
 bool SHttpReaderState::ProcessCurrentLine()
 {
     // create a request if none found
-    if (pCurrRequest == NULL) pCurrRequest = new SHttpRequest();
+    // if (pCurrRequest == NULL) pCurrRequest = new SHttpRequest();
 
     SString currLine(currentLine.str());
 
     if (currState == READING_FIRST_LINE)
     {
-        if (!pCurrRequest->ParseFirstLine(currLine))
+        if (!pCurrRequest.ParseFirstLine(currLine))
             return false;
 
-        std::cout << pCurrRequest->Method() << " "
-                  << pCurrRequest->Resource() << " "
-                  << pCurrRequest->Version() << endl;
+        std::cout << pCurrRequest.Method() << " "
+                  << pCurrRequest.Resource() << " "
+                  << pCurrRequest.Version() << endl;
 
         currHeaderLine.str("");
         currHeaderLine.clear();
@@ -318,7 +316,7 @@ bool SHttpReaderState::ProcessCurrentLine()
             if ( ! lastHeader.empty())
             {
                 SString hdrName, hdrValue;
-                SHeaderTable &pHeaders = pCurrRequest->Headers();
+                SHeaderTable &pHeaders = pCurrRequest.Headers();
                 if (!pHeaders.ParseHeaderLine(lastHeader, hdrName, hdrValue))
                     return false;
                 std::cout << hdrName << ": " << hdrValue << std::endl;
@@ -335,7 +333,7 @@ bool SHttpReaderState::ProcessCurrentLine()
 
                 // see if we are doing chunked encoding or not
                 SString transferEncoding;
-                if (pCurrRequest->Headers().HeaderIfExists("Transfer-Encoding", transferEncoding))
+                if (pCurrRequest.Headers().HeaderIfExists("Transfer-Encoding", transferEncoding))
                 {
                     if (strcasecmp(transferEncoding.c_str(), "chunked") == 0)
                     {

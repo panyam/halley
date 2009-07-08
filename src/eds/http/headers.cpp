@@ -30,6 +30,14 @@
 const SString TRUE_STRING = "true";
 const SString FALSE_STRING = "false";
 
+//! CLears the header table so we can start over again
+void SHeaderTable::Reset()
+{
+    closeConnection = false;
+    locked          = false;
+    headers.clear();
+}
+
 //! Write the headers to the stream
 bool SHeaderTable::WriteHeaders(std::ostream &output)
 {
@@ -63,7 +71,7 @@ bool SHeaderTable::ReadHeaders(std::istream &input)
     // read all header lines
     while (ReadNextHeader(input, headerName, headerValue)) 
     {
-    	std::cerr << "Found Header: " << headerName << ": " << headerValue << std::endl;
+    	// std::cerr << "Found Header: " << headerName << ": " << headerValue << std::endl;
     }
 
     return !input.bad() && !input.eof();
@@ -154,7 +162,6 @@ void SHeaderTable::SetHeader(const SString &name, const SString &value, bool app
     if ((strcasecmp(name.c_str(), "Connection") == 0) &&
         (strcasecmp(value.c_str(), "close") == 0))
     {
-    	std::cerr << "Close connection set!!!" << std::endl;
         closeConnection = true;
     }
 

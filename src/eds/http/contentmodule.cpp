@@ -40,7 +40,7 @@ void SContentModule::ProcessOutput(SHttpHandlerData *   pHandlerData,
     // TODO: not yet thread safe
     if (pModData->IsProcessing())
     {
-        std::cerr << "  === ContentModule:ProcessOutput - " << "Already procesing - Quitting." << pBodyPart << std::endl;
+        assert("Already processing..." && false);
         return ;
     }
 

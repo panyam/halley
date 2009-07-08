@@ -50,17 +50,21 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
 }
 
 /**************************************************************************************
-*   \brief  Destroys the connection without release its memory
+*   \brief  Destroys the connection and associated data.
 *
 *   \version
-*       - Sri Panyam  20/04/2009
+*       - Sri Panyam  04/03/2009
 *         Created
 **************************************************************************************/
-void SConnection::Destroy()
+SConnection::~SConnection()
 {
     SLogger::Get()->Log(0, "Destroying connection ....\n");
-    SJob::Destroy();
-    CloseSocket();
+    if (connSocket > 0)
+    {
+        // shutdown(connSocket, SHUT_RDWR);
+        close(connSocket);
+        connSocket = -1;
+    }
     if (socketBuff != NULL)
     {
         delete socketBuff;
@@ -71,46 +75,5 @@ void SConnection::Destroy()
         delete clientOutput;
         clientOutput = NULL;
     }
-}
-
-/**************************************************************************************
-*   \brief  Closes the sockets so that no furhter data can be read.
-*
-*   \version
-*       - Sri Panyam  07/07/2009
-*         Created
-**************************************************************************************/
-void SConnection::CloseSocket()
-{
-    if (connSocket > 0)
-    {
-        // shutdown(connSocket, SHUT_RDWR);
-        close(connSocket);
-        connSocket = -1;
-    }
-}
-
-/**************************************************************************************
-*   \brief  Destroys the connection and associated data.
-*
-*   \version
-*       - Sri Panyam  04/03/2009
-*         Created
-**************************************************************************************/
-SConnection::~SConnection()
-{
-}
-
-/**************************************************************************************
-*   \brief  Closes the connection.
-*
-*   \version
-*       - Sri Panyam  19/02/2009
-*         Created
-**************************************************************************************/
-void SConnection::Close()
-{
-    SLogger::Get()->Log(0, "Closing connection ....\n");
-    pServer->ConnectionComplete(this);
 }
 

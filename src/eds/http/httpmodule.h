@@ -174,6 +174,7 @@ public:
         if (requests.size() > 1)
         {
             SLogger::Get()->Log(0, "DEBUG: Http Handler Data has MORE than 1 Request: %d\n", requests.size());
+            assert(false);
         }
     }
 
