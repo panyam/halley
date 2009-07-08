@@ -129,7 +129,6 @@ void SReaderStage::HandleEvent(const SEvent &event)
                     else
                     {
                         SLogger::Get()->Log(0, "ERROR: read error [%d]: %s\n\n", errno, strerror(errno));
-                        // close connection? destroy it?
                     }
                     return ;
                 }
@@ -138,8 +137,8 @@ void SReaderStage::HandleEvent(const SEvent &event)
                     // end of file - close connection?
                     SLogger::Get()->Log(0, "WARNING: read EOF reached\n\n");
 
-                    // close the connection
-                    // pConnection->Close();
+                    // close the connection socket but not the entire connection
+                    pConnection->CloseSocket();
                     return ;
                 }
                 pCurrPos = pReadBuffer;

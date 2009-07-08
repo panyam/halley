@@ -168,21 +168,13 @@ public:
     virtual void SetModuleData(SHttpModule *pModule, SHttpModuleData *pData);
 
     //! Adds a new request to the queue.
-    virtual void AddRequest(SHttpRequest *pReq)
-    {
-        requests.push_back(pReq);
-        if (requests.size() > 1)
-        {
-            SLogger::Get()->Log(0, "DEBUG: Http Handler Data has MORE than 1 Request: %d\n", requests.size());
-            assert(false);
-        }
-    }
+    virtual void SetRequest(SHttpRequest *pReq) { pCurrRequest = pReq; }
 
     //! Destroys the current request
-    virtual void DestroyRequest();
+    virtual void DestroyRequest() { pCurrRequest = NULL; }
 
     //! Current request being handled
-    inline SHttpRequest *Request() { return requests.empty() ? NULL : requests.front(); }
+    inline SHttpRequest *Request() { return pCurrRequest; }
 
 public:
     //! The connection object
@@ -191,11 +183,10 @@ public:
 protected:
     typedef std::pair<SHttpModule *, SHttpModuleData *> ModuleData;
 
-    //! Hold module specific data
-    std::list<ModuleData *>   moduleData;
+    SHttpRequest *          pCurrRequest;
 
-    //! List of requests being handled
-    std::list<SHttpRequest *>   requests;
+    //! Hold module specific data
+    std::list<ModuleData *> moduleData;
 };
 
 //!

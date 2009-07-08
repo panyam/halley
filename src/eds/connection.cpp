@@ -46,7 +46,7 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
         createdAt(time(NULL)),
         connState(STATE_READING)
 {
-    SLogger::Get()->Log(0, "Creating connection ....\n");
+    SLogger::Get()->Log(0, "DEBUG: Creating Connection [%x], Socket: %d....\n", this, sock);
 }
 
 /**************************************************************************************
@@ -58,13 +58,8 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
 **************************************************************************************/
 SConnection::~SConnection()
 {
-    SLogger::Get()->Log(0, "Destroying connection ....\n");
-    if (connSocket > 0)
-    {
-        // shutdown(connSocket, SHUT_RDWR);
-        close(connSocket);
-        connSocket = -1;
-    }
+    SLogger::Get()->Log(0, "DEBUG: Destroying connection [%x]....\n", this);
+    CloseSocket();
     if (socketBuff != NULL)
     {
         delete socketBuff;
@@ -74,6 +69,28 @@ SConnection::~SConnection()
     {
         delete clientOutput;
         clientOutput = NULL;
+    }
+}
+
+/**************************************************************************************
+*   \brief  Closes the socket
+*
+*   \version
+*       - Sri Panyam  08/07/2009
+*         Created
+**************************************************************************************/
+void SConnection::CloseSocket()
+{
+    SetState(SConnection::STATE_CLOSED);
+    if (connSocket > 0)
+    {
+        // shutdown(connSocket, SHUT_RDWR);
+        int result = close(connSocket);
+        if (result != NULL)
+        {
+            SLogger::Get()->Log(0, "ERROR: close error [%x]/[%d]: %s\n", this, errno, strerror(errno));
+        }
+        connSocket = -1;
     }
 }
 
