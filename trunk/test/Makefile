@@ -103,12 +103,13 @@ dep:
 
 # DO NOT DELETE
 
-../bld/debug/halley.o: ../src/eds/server.h ../src/thread/thread.h
-../bld/debug/halley.o: ../src/utils/listeners.h ../src/thread/mutex.h
-../bld/debug/halley.o: ../src/thread/task.h ../src/thread/mutex.h
-../bld/debug/halley.o: ../src/eds/fwd.h ../src/eds/http/httpfwd.h
-../bld/debug/halley.o: ../src/eds/fwd.h ../src/eds/connection.h
-../bld/debug/halley.o: ../src/net/sockbuff.h ../src/eds/job.h
+../bld/debug/halley.o: ../src/logger/logger.h ../src/eds/server.h
+../bld/debug/halley.o: ../src/thread/thread.h ../src/utils/listeners.h
+../bld/debug/halley.o: ../src/thread/mutex.h ../src/thread/task.h
+../bld/debug/halley.o: ../src/thread/mutex.h ../src/eds/fwd.h
+../bld/debug/halley.o: ../src/eds/http/httpfwd.h ../src/eds/fwd.h
+../bld/debug/halley.o: ../src/eds/connection.h ../src/net/sockbuff.h
+../bld/debug/halley.o: ../src/eds/job.h ../src/utils/refcount.h
 ../bld/debug/halley.o: ../src/eds/stage.h ../src/eds/event.h
 ../bld/debug/halley.o: ../src/eds/equeue.h ../src/eds/http/request.h
 ../bld/debug/halley.o: ../src/eds/http/message.h ../src/eds/http/headers.h
@@ -121,7 +122,7 @@ dep:
 ../bld/debug/halley.o: ../src/eds/http/filemodule.h
 ../bld/debug/halley.o: ../src/eds/http/bayeux/bayeuxmodule.h
 ../bld/debug/halley.o: ../src/eds/http/httpmodule.h ../src/json/json.h
-../bld/debug/halley.o: ../src/utils/refcount.h ../src/utils/membuff.h
+../bld/debug/halley.o: ../src/utils/membuff.h
 ../bld/debug/halley.o: ../src/eds/http/bayeux/channel.h
 ../bld/debug/halley.o: ../src/eds/http/httpfwd.h ../src/json/json.h
 ../bld/debug/halley.o: ../src/eds/http/contentmodule.h

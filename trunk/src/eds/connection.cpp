@@ -43,8 +43,8 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
         connSocket(sock),
         socketBuff(new SSocketBuff(sock)),
         clientOutput(new std::ostream(socketBuff)),
-        socketClosed(false),
-        createdAt(time(NULL))
+        createdAt(time(NULL)),
+        connState(STATE_ACCEPTED)
 {
 }
 
@@ -85,7 +85,6 @@ void SConnection::CloseSocket()
         // shutdown(connSocket, SHUT_RDWR);
         close(connSocket);
         connSocket = -1;
-        socketClosed = true;
     }
 }
 

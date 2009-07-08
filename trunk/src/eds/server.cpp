@@ -83,7 +83,7 @@ int SEvServer::PrepareClientSocket(int clientSocket)
 {
     if (setnonblocking(clientSocket))
     {
-        std::cerr << "ERROR: Cannot make client socket non blocking: [" << errno << "]: " << strerror(errno) << std::endl << std::endl;
+        SLogger::Get()->Log(0, "ERROR: Cannot make client socket non blocking[%d]: %s\n\n", errno, strerror(errno));
         return -1;
     }
 
@@ -91,16 +91,14 @@ int SEvServer::PrepareClientSocket(int clientSocket)
     int reuse = 1;
     if (setsockopt(clientSocket, SOL_SOCKET, SO_REUSEADDR, (const void *)&reuse, sizeof(reuse)) != 0)
     {
-        std::cerr << "ERROR: setsockopt (SO_REUSEADDR) failed: [" << errno << "]: " 
-             << strerror(errno) << std::endl << std::endl;
+        SLogger::Get()->Log(0, "ERROR: setsockopt SO_REUSEADDR failed: [%d]: %s\n\n", errno, strerror(errno));
         return -errno;
     }
 
     int nodelay = 1;
     if (setsockopt(clientSocket, IPPROTO_TCP, TCP_NODELAY, (const void *)&nodelay, sizeof(nodelay)) != 0)
     {
-        std::cerr << "ERROR: Could not set TCP_NODELAY [" << errno << "]: " 
-             << strerror(errno) << std::endl << std::endl;
+        SLogger::Get()->Log(0, "ERROR: setsockopt TCP_NODELAY failed: [%d]: %s\n\n", errno, strerror(errno));
         return -errno;
     }
 
@@ -111,8 +109,7 @@ int SEvServer::PrepareClientSocket(int clientSocket)
     linger.l_linger = 0;
     if (setsockopt(clientSocket, SOL_SOCKET, SO_LINGER, (const void *)&linger, sizeof(struct linger)) != 0)
     {
-        std::cerr << "ERROR: Could not set SO_LINGER [" << errno << "]: " 
-             << strerror(errno) << std::endl << std::endl;
+        SLogger::Get()->Log(0, "ERROR: setsockopt SO_LINGER failed: [%d]: %s\n\n", errno, strerror(errno));
         return -errno;
     }
 #endif
@@ -138,13 +135,13 @@ int SEvServer::CreateSocket()
     int newSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (newSocket < 0)
     {
-        std::cerr << "ERROR: Cannot create server socket: [" << errno << "]: " << strerror(errno) << std::endl << std::endl;
+        SLogger::Get()->Log(0, "ERROR: Cannot create server socket: [%d]: %s\n\n", errno, strerror(errno));
         return -errno;
     }
 
     if (setnonblocking(newSocket))
     {
-        std::cerr << "ERROR: Cannot make socket non blocking: [" << errno << "]: " << strerror(errno) << std::endl << std::endl;
+        SLogger::Get()->Log(0, "ERROR: setnonblocking failed: [%d]: %s\n\n", errno, strerror(errno));
         return -1;
     }
 
@@ -152,24 +149,21 @@ int SEvServer::CreateSocket()
     int reuse = 1;
     if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEADDR, (const void *)&reuse, sizeof(reuse)) != 0)
     {
-        std::cerr << "ERROR: setsockopt (SO_REUSEADDR) failed: [" << errno << "]: " 
-             << strerror(errno) << std::endl << std::endl;
+        SLogger::Get()->Log(0, "ERROR: setsockopt (SO_REUSEADDR) failed: [%d]: %s\n\n", errno, strerror(errno));
         return -errno;
     }
 
     int nodelay = 1;
     if (setsockopt(newSocket, IPPROTO_TCP, TCP_NODELAY, (const void *)&nodelay, sizeof(nodelay)) != 0)
     {
-        std::cerr << "ERROR: Could not set TCP_NODELAY [" << errno << "]: " 
-             << strerror(errno) << std::endl << std::endl;
+        SLogger::Get()->Log(0, "ERROR: setsockopt (TCP_NODELAY) failed: [%d]: %s\n\n", errno, strerror(errno));
         return -errno;
     }
 
     int timeout = 0;
     if (setsockopt(newSocket, IPPROTO_TCP, TCP_DEFER_ACCEPT, (const void *)&timeout, sizeof(timeout)) != 0)
     {
-        std::cerr << "ERROR: Could not set TCP_DEFER_ACCEPT [" << errno << "]: " 
-             << strerror(errno) << std::endl << std::endl;
+        SLogger::Get()->Log(0, "ERROR: setsockopt (TCP_DEFER_ACCEPT) failed: [%d]: %s\n\n", errno, strerror(errno));
         return -errno;
     }
 
@@ -207,9 +201,7 @@ int SEvServer::BindSocket()
     int retval = bind(serverSocket, (sockaddr*)(&srv_sock_addr), sizeof(sockaddr));
     if (retval != 0)
     {
-        std::cerr << "ERROR: Cannot bind to server on port: [" << errno << "]: " 
-             << strerror(errno) << std::endl;
-        std::cerr << "ERROR: --------------------------------------------------" << std::endl;
+        SLogger::Get()->Log(0, "ERROR: bind failed: [%d]: %s\n\n", errno, strerror(errno));
         return errno;
     }
     return 0;
@@ -230,8 +222,7 @@ int SEvServer::ListenOnSocket()
     int retval = listen(serverSocket, 10);
     if (retval != 0)
     {
-        std::cerr << "ERROR: Cannot listen to connections: [" << errno << "]: " 
-             << strerror(errno) << std::endl;
+        SLogger::Get()->Log(0, "ERROR: listen failed: [%d]: %s\n\n", errno, strerror(errno));
         return errno;
     }
     return 0;
@@ -266,7 +257,7 @@ int SEvServer::Run()
 #ifndef USING_VALGRIND
     if (setrlimit(RLIMIT_NOFILE, &rt) == -1)
     {
-        std::cerr << "ERROR: Cannot set system resource: [" << errno << "]: " << strerror(errno) << std::endl;
+        SLogger::Get()->Log(0, "ERROR: setrlimit failed: [%d]: %s\n\n", errno, strerror(errno));
         return errno;
     }
 #endif
@@ -290,7 +281,7 @@ int SEvServer::Run()
     ev.data.ptr = NULL;
     if (epoll_ctl(serverEpollFD, EPOLL_CTL_ADD, serverSocket, &ev) < 0)
     {
-        std::cerr << "ERROR: epoll_ctl error: [" << errno << "]: " << strerror(errno) << std::endl;
+        SLogger::Get()->Log(0, "ERROR: epoll_ctl failed: [%d]: %s\n\n", errno, strerror(errno));
         close(serverEpollFD);
         serverEpollFD = -1;
         return errno;
@@ -305,7 +296,7 @@ int SEvServer::Run()
         {
             if (nfds < 0 && errno != EINTR)
             {
-                std::cerr << "ERROR: epoll_wait error: [" << errno << "]: " << strerror(errno) << std::endl;
+                SLogger::Get()->Log(0, "ERROR: epoll_wait failed: [%d]: %s\n\n", errno, strerror(errno));
                 break ;
             }
 
@@ -331,7 +322,7 @@ int SEvServer::Run()
 
                         if (clientSocket < 0)
                         {
-                            std::cerr << "ERROR: Could not accept connection [" << errno << "]: " << strerror(errno) << "." << std::endl;
+                            SLogger::Get()->Log(0, "ERROR: accept failed: [%d]: %s\n\n", errno, strerror(errno));
                             break ;
                         }
                         else if (Stopped())
@@ -341,7 +332,7 @@ int SEvServer::Run()
                             int result = close(clientSocket);
                             if (result != 0)
                             {
-                                std::cerr << "ERROR: Close failed: [" << errno << "]: " << strerror(errno) << "." << std::endl;
+                                SLogger::Get()->Log(0, "ERROR: close failed: [%d]: %s\n\n", errno, strerror(errno));
                             }
                         }
                         else
@@ -350,15 +341,16 @@ int SEvServer::Run()
                             // including non-blocking
                             PrepareClientSocket(clientSocket);
 
-                            ev.events   = EPOLLIN | EPOLLET | EPOLLHUP | EPOLLRDHUP;
+                            // should we use 
                             SConnection *pConn  = new SConnection(this, clientSocket);
-                            ev.data.ptr         = pConn;
                             connections.insert(pConn);
+
+                            ev.events   = EPOLLIN | EPOLLET | EPOLLHUP | EPOLLRDHUP;
+                            ev.data.ptr         = pConn;
 
                             if (epoll_ctl(serverEpollFD, EPOLL_CTL_ADD, clientSocket, &ev) < 0)
                             {
-                                std::cerr << "ERROR: epoll_ctl error [" << errno << "]: " 
-                                     << strerror(errno) << "." << std::endl;
+                                SLogger::Get()->Log(0, "ERROR: epoll_ctl error [%d]: %s\n", errno, strerror(errno));
                                 break ;
                             }
                             curfds++;
@@ -492,7 +484,6 @@ void SEvServer::ConnectionComplete(SConnection *pConnection)
 {
     if (connections.end() != connections.find(pConnection))
     {
-        std::cerr << "Closing Connection: " << pConnection << std::endl;
         connections.erase(pConnection);
         pConnection->Destroy();
         delete pConnection;
