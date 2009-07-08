@@ -39,14 +39,7 @@ void SWriterModule::ProcessOutput(SHttpHandlerData *    pHandlerData,
                                   SBodyPart *           pBodyPart)
 {
     SHttpModuleData *pModData   = pHandlerData->GetModuleData(this, true);
-
-    // already being processed quit
-    // TODO: not yet thread safe - use "trylock"ed mutexes for this
-    if (pModData->IsProcessing())
-        return ;
-
     std::ostream &outStream(pHandlerData->pConnection->GetOutputStream());
-    pModData->SetProcessing(true);
 
     // first send the headers regardless of whether there are any 
     // body parts so it is done with
@@ -74,18 +67,20 @@ void SWriterModule::ProcessOutput(SHttpHandlerData *    pHandlerData,
         pBodyPart               = pModData->PutAndGetBodyPart(pBodyPart);
         while (pBodyPart != NULL)
         {
-            HandleBodyPart(pHandlerData, pStage, pModData, pBodyPart, outStream);
-
-            pBodyPart = pModData->NextBodyPart();
+            if (HandleBodyPart(pHandlerData, pStage, pModData, pBodyPart, outStream))
+            {
+                pBodyPart = pModData->NextBodyPart();
+            }
+            else
+            {
+                pBodyPart = NULL;
+            }
         }
     }
-
-    // turn off processing flag so it can be resumed in the future
-    pModData->SetProcessing(false);
 }
 
 
-void SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData, 
+bool SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData, 
                                    SHttpHandlerStage *  pStage,
                                    SHttpModuleData *    pModData,
                                    SBodyPart *          pBodyPart, 
@@ -94,6 +89,7 @@ void SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
     SConnection *pConnection        = pHandlerData->pConnection;
     SHttpRequest *  pRequest        = pHandlerData->Request();
     SHttpResponse * pResponse       = pRequest->Response();
+    // SHeaderTable &reqHeaders        = pRequest->Headers();
     SHeaderTable &respHeaders       = pResponse->Headers();
     SString transferEncoding(respHeaders.Header("Transfer-Encoding"));
 
@@ -107,10 +103,11 @@ void SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
 
         // do nothing - close connection only if close header found
         if (pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION ||
-            strcasecmp(respHeaders.Header("Connection").c_str(), "close") == 0)
+            pRequest->Headers().CloseConnection())
         {
             std::cerr << "  === WriterModule - " << "Closing Connection" << std::endl;
             pStage->CloseConnection(pConnection);
+            return false;
         }
         else
         {
@@ -133,5 +130,6 @@ void SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
 
     // now delete the body part - its no longer needed!
     delete pBodyPart;
+    return true;
 }
 

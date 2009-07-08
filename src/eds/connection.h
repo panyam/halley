@@ -102,7 +102,7 @@ public:
         STATE_READING,
         STATE_PROCESSING,
         // STATE_WRITING,
-        STATE_FINISHED,
+        // STATE_FINISHED,
         STATE_CLOSED,
     };
 

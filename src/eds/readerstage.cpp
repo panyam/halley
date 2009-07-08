@@ -122,6 +122,9 @@ void SReaderStage::HandleEvent(const SEvent &event)
                 {
                     // end of file - close connection?
                     SLogger::Get()->Log(0, "WARNING: read EOF reached\n\n");
+
+                    // close the connection
+                    // pConnection->Close();
                     return ;
                 }
                 pCurrPos = pReadBuffer;
@@ -139,6 +142,11 @@ void SReaderStage::HandleEvent(const SEvent &event)
                 HandleRequest(pConnection, pRequest);
             }
         }
+    }
+    else if (pConnection->GetState() == SConnection::STATE_CLOSED)
+    {
+        // close the connection
+        pConnection->Close();
     }
 }
 

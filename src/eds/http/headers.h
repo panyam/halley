@@ -123,9 +123,15 @@ public:
     //! Tells if the headers are locked
     inline bool Locked() { return locked; }
 
+    //! Tells if the connection is to be closed or not
+    inline bool CloseConnection() const { return closeConnection; }
+
 protected:
     //! headers
-    HeaderMap                           headers;
+    HeaderMap   headers;
+
+    //! Quick access to whether Connection is to be closed or not
+    bool        closeConnection;
 
     //! Tells if the headers are locked - once locked they cant be changed
     bool        locked;

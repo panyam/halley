@@ -44,7 +44,7 @@ public:
                               SBodyPart *           pBodyPart);
 
 protected:
-    void HandleBodyPart(SHttpHandlerData *  pHandlerData, 
+    bool HandleBodyPart(SHttpHandlerData *  pHandlerData, 
                         SHttpHandlerStage * pStage,
                         SHttpModuleData *   pModData,
                         SBodyPart *         pBodyPart, 

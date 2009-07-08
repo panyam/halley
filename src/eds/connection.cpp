@@ -46,6 +46,7 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
         createdAt(time(NULL)),
         connState(STATE_READING)
 {
+    SLogger::Get()->Log(0, "Creating connection ....\n");
 }
 
 /**************************************************************************************
@@ -57,6 +58,7 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
 **************************************************************************************/
 void SConnection::Destroy()
 {
+    SLogger::Get()->Log(0, "Destroying connection ....\n");
     SJob::Destroy();
     CloseSocket();
     if (socketBuff != NULL)
@@ -108,6 +110,7 @@ SConnection::~SConnection()
 **************************************************************************************/
 void SConnection::Close()
 {
+    SLogger::Get()->Log(0, "Closing connection ....\n");
     pServer->ConnectionComplete(this);
 }
 

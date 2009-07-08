@@ -151,6 +151,13 @@ void SHeaderTable::SetHeader(const SString &name, const SString &value, bool app
         headers.insert(HeaderPair(name, value));
     }
 
+    if ((strcasecmp(name.c_str(), "Connection") == 0) &&
+        (strcasecmp(value.c_str(), "close") == 0))
+    {
+    	std::cerr << "Close connection set!!!" << std::endl;
+        closeConnection = true;
+    }
+
     if (strcasecmp(name.c_str(), "content-length") == 0)
     {
         // contentLength = atoi(value.c_str());
