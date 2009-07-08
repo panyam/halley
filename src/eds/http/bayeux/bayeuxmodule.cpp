@@ -196,7 +196,7 @@ void SBayeuxModule::DeliverEvent(const SBayeuxChannel *pChannel, const JsonNodeP
             SHttpResponse *     pResponse   = pRequest->Response();
             SBodyPart *         pBodyPart   = pResponse->NewBodyPart();
             pBodyPart->SetBody(msgbody);
-            pHandlerStage->OutputToModule(pHandlerData->pConnection, pNextModule, pBodyPart);
+            pHandlerStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule, pBodyPart);
         }
     }
 }
@@ -285,8 +285,8 @@ void SBayeuxModule::SendResponse(int                result,
         SBodyPart * part        = pResponse->NewBodyPart();
         part->SetBody(msgbody);
 
-        pStage->OutputToModule(pHandlerData->pConnection, pNextModule, part);
-        pStage->OutputToModule(pHandlerData->pConnection, pNextModule,
+        pStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule, part);
+        pStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule,
                                pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED,
                                                       pNextModule));
     }
@@ -310,12 +310,12 @@ void SBayeuxModule::SendResponse(int                result,
         // open a boundary body part 
         SBodyPart *pBodyPart = pResponse->NewBodyPart(SBodyPart::BP_OPEN_SUB_MESSAGE);
         pBodyPart->SetBody(boundary);
-        pStage->OutputToModule(pHandlerData->pConnection, pNextModule, pBodyPart);
+        pStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule, pBodyPart);
 
         // send the first message!
         pBodyPart = pResponse->NewBodyPart();
         pBodyPart->SetBody(msgstream.str());
-        pStage->OutputToModule(pHandlerData->pConnection, pNextModule, pBodyPart);
+        pStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule, pBodyPart);
     }
 }
 

@@ -155,13 +155,14 @@ int SEventDispatcher::Run()
 }
 
 //! Queue an event to be handled later
-void SStage::QueueEvent(const SEvent &event)
+bool SStage::QueueEvent(const SEvent &event)
 {
     if (handlerThreads.empty())
     {
         PreHandleEvent(event);
         HandleEvent(event);
         PostHandleEvent(event);
+        return true;
     }
     else
     {
@@ -175,6 +176,7 @@ void SStage::QueueEvent(const SEvent &event)
         // signal waiting threads to wakeup
         evtQueueCondition.Signal();
     }
+    return false;
 }
 
 //! Queue an event to be handled later

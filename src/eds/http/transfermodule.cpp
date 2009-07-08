@@ -99,6 +99,6 @@ void STransferModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
         }
     }
 
-    pStage->OutputToModule(pConnection, pNextModule, pBodyPart);
+    pStage->SendEvent_OutputToModule(pConnection, pNextModule, pBodyPart);
 }
 

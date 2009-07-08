@@ -62,7 +62,7 @@ public:
     virtual void Stop();
 
     // Put an event in the queue, to be handled.
-    virtual void QueueEvent(const SEvent &event);
+    virtual bool QueueEvent(const SEvent &event);
 
     //! Pops and gets the next event in the queue
     virtual SEvent GetEvent();

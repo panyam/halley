@@ -202,7 +202,7 @@ void SHttpModule::SendBodyPartToModule(SConnection *        pConnection,
     {
         if (pBodyPart != NULL)
             pBodyPart->bpIndex = pModData->nextBPToSend++;
-        pStage->OutputToModule(pConnection, pNextModule, pBodyPart);
+        pStage->SendEvent_OutputToModule(pConnection, pNextModule, pBodyPart);
     }
 }
 

@@ -368,7 +368,7 @@ int SEvServer::Run()
                         // means we have data to read off this socket, 
                         // dont read it but give it the request reader task
                         // handler!
-                        pRequestReader->ReadSocket(pConnection);
+                        pRequestReader->SendEvent_ReadRequest(pConnection);
                     }
                 }
             }

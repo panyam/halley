@@ -139,7 +139,7 @@ void SHttpReaderStage::DestroyStageData(void *pReaderState)
 void SHttpReaderStage::HandleRequest(SConnection *pConnection, void *pRequest)
 {
     // send the request off to the handler stage
-    pHandlerStage->HandleRequest(pConnection, (SHttpRequest *)pRequest);
+    pHandlerStage->SendEvent_HandleRequest(pConnection, (SHttpRequest *)pRequest);
 }
 
 //! Process a bunch of bytes and try to assemble a request if enough bytes found
