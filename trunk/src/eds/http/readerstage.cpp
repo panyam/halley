@@ -112,7 +112,8 @@ public:
 // Creates a new file io helper stage
 SHttpReaderStage::SHttpReaderStage(const SString &name, int numThreads)
 :
-    SReaderStage(name, numThreads)
+    SReaderStage(name, numThreads),
+    pHandlerStage(NULL)
 {
 }
 
@@ -132,6 +133,13 @@ void SHttpReaderStage::DestroyReaderState(void *pReaderState)
 {
     if (pReaderState != NULL)
         delete ((SHttpReaderState *)pReaderState);
+}
+
+//! Handle the new assembled request
+void SHttpReaderStage::HandleRequest(SConnection *pConnection, void *pRequest)
+{
+    // send the request off to the handler stage
+    pHandlerStage->HandleRequest(pConnection, (SHttpRequest *)pRequest);
 }
 
 //! Process a bunch of bytes and try to assemble a request if enough bytes found
