@@ -42,9 +42,14 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
         pServer(pSrv),
         connSocket(sock),
         socketBuff(new SSocketBuff(sock)),
+        clientInput(new std::istream(socketBuff)),
         clientOutput(new std::ostream(socketBuff)),
         createdAt(time(NULL)),
-        connState(STATE_READING)
+        connState(STATE_READING),
+        pReadBuffer(NULL),
+        bufferLength(0),
+        pCurrPos(NULL),
+        pBuffEnd(NULL)
 {
     SLogger::Get()->Log(0, "DEBUG: Creating Connection [%x], Socket: %d....\n", this, sock);
 }
@@ -70,6 +75,8 @@ SConnection::~SConnection()
         delete clientOutput;
         clientOutput = NULL;
     }
+    if (pReadBuffer != NULL)
+        delete [] pReadBuffer;
 }
 
 /**************************************************************************************
@@ -86,11 +93,49 @@ void SConnection::CloseSocket()
     {
         // shutdown(connSocket, SHUT_RDWR);
         int result = close(connSocket);
-        if (result != NULL)
+        if (result != 0)
         {
             SLogger::Get()->Log(0, "ERROR: close error [%x]/[%d]: %s\n", this, errno, strerror(errno));
         }
         connSocket = -1;
     }
+}
+
+/**************************************************************************************
+*   \brief  Ensures the read buffer is atleast this big in size.
+*
+*   \version
+*       - Sri Panyam  09/07/2009
+*         Created
+**************************************************************************************/
+int SConnection::RefillBuffer(char *&pOutCurrPos, char *&pOutBuffEnd)
+{
+    const int MAXBUF = 2048;
+    if (pReadBuffer == NULL)
+    {
+        bufferLength = MAXBUF;
+        pReadBuffer = new char[bufferLength];
+        pCurrPos = pBuffEnd = pReadBuffer;
+    }
+
+    if (pCurrPos >= pBuffEnd)
+    {
+        int buffLen = read(Socket(), pReadBuffer, MAXBUF);
+        if (buffLen <= 0)
+        {
+            if (buffLen == 0)
+            {
+                CloseSocket();
+            }
+            return buffLen;
+        }
+
+        pCurrPos = pReadBuffer;
+        pBuffEnd = pReadBuffer + buffLen;
+    }
+
+    pOutCurrPos = pCurrPos;
+    pOutBuffEnd = pBuffEnd;
+    return pOutBuffEnd - pOutCurrPos;
 }
 

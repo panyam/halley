@@ -122,6 +122,9 @@ public:
     //! Get the output stream associated with the socket
     std::ostream &GetOutputStream() const { return *clientOutput; }
 
+    //! Get the output stream associated with the socket
+    std::istream &GetInputStream() const { return *clientInput; }
+
     //! Get the connection state
     int GetState() const { return connState; }
 
@@ -130,6 +133,9 @@ public:
 
     //! Closes the underlying socket
     void CloseSocket();
+
+    //! Reads data from the socket
+    int RefillBuffer(char *&pOutCurrPos, char *&pOutBuffEnd);
 
 private:
     //! The server parenting this connection
@@ -141,6 +147,9 @@ private:
     //! The buffer stream for the socket
     SSocketBuff *       socketBuff;
 
+    //! input stream for the socket
+    std::istream *      clientInput;
+
     //! output stream for the socket
     std::ostream *      clientOutput;
 
@@ -149,6 +158,12 @@ private:
 
     //! Connection state
     int                 connState;
+
+    //! Read buffers
+    char *              pReadBuffer;
+    size_t              bufferLength;
+    char *              pCurrPos;
+    char *              pBuffEnd;
 };
 
 
