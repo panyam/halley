@@ -63,15 +63,21 @@ public:
 
 public:
     //! Constructor
-    SEvServer(int port_, SHttpReaderStage*pReqReader_ = NULL);
+    SEvServer(int port_, SReaderStage*pReqReader_ = NULL);
 
     //! Destructor
     ~SEvServer();
 
-    //! Set the request reader
-    void SetRequestReader(SHttpReaderStage* pReqReader_ = NULL)
+    //! Set the reader stage
+    void SetReaderStage(SReaderStage* pReaderStage_ = NULL)
     {
-        pRequestReader = pReqReader_;
+        pReaderStage = pReaderStage_;
+    }
+
+    //! Set the writer stage
+    void SetWriterStage(SWriterStage* pWriterStage_ = NULL)
+    {
+        pWriterStage = pWriterStage_;
     }
 
     //! Return the server's port
@@ -128,7 +134,10 @@ private:
 
 private:
     //! The request reader stage
-    SHttpReaderStage *              pRequestReader;
+    SReaderStage *              pReaderStage;
+
+    //! The writer stage
+    SWriterStage *              pWriterStage;
 
     //! All other stages by name
     std::map<std::string, SStage *> eventStages;
