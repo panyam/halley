@@ -159,13 +159,13 @@ private:
     //! Connection state
     int                 connState;
 
+public:
     //! Read buffers
     char *              pReadBuffer;
     size_t              bufferLength;
     char *              pCurrPos;
     char *              pBuffEnd;
 };
-
 
 #endif
 
