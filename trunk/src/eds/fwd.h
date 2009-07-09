@@ -68,6 +68,7 @@ class SEvServer;
 
 class SStage;
 class SReaderStage;
+class SWriterStage;
 
 #endif
 

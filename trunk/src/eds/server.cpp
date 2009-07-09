@@ -29,7 +29,8 @@
 
 #include "server.h"
 #include "connection.h"
-#include "http/readerstage.h"
+#include "writerstage.h"
+#include "readerstage.h"
 
 #define MAXEPOLLSIZE    10000
 
@@ -46,11 +47,11 @@
  *        Created.
  *
  *****************************************************************************/
-SEvServer::SEvServer(int port_, SHttpReaderStage*pReqReader_) :
+SEvServer::SEvServer(int port_, SReaderStage* pReaderStage_) :
     serverPort(port_),
     serverSocket(-1),
     serverEpollFD(-1),
-    pRequestReader(pReqReader_)
+    pReaderStage(pReaderStage_)
 {
 }
 
@@ -344,7 +345,7 @@ int SEvServer::Run()
                             connections.insert(pConn);
 
                             // what about EPOLLOUT??
-                            ev.events   = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLRDHUP /*| EPOLLHUP*/;
+                            ev.events   = EPOLLIN | EPOLLET | EPOLLRDHUP | EPOLLHUP;
                             ev.data.ptr         = pConn;
 
                             if (epoll_ctl(serverEpollFD, EPOLL_CTL_ADD, clientSocket, &ev) < 0)
@@ -361,15 +362,16 @@ int SEvServer::Run()
                     else if ((events[n].events & EPOLLOUT) != 0)
                     {
                         // we are writing out to a socket
+                        pWriterStage->SendEvent_WriteData(pConnection);
                     }
                     else if ((events[n].events & EPOLLIN) != 0)
                     {
                         // means we have data to read off this socket, 
                         // dont read it but give it the request reader task
                         // handler!
-                        pRequestReader->SendEvent_ReadRequest(pConnection);
+                        pReaderStage->SendEvent_ReadRequest(pConnection);
                     }
-                    else if ((events[n].events & (EPOLLRDHUP /*| EPOLLHUP*/)) != 0)
+                    else if ((events[n].events & (EPOLLRDHUP | EPOLLHUP)) != 0)
                     {
                         // we remove this socket from the epoll list but do
                         // not kill this as it will be done from a
