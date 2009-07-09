@@ -102,15 +102,19 @@ bool SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
         if (pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION ||
             pRequest->Headers().CloseConnection())
         {
+            // remove and destroy the request from the queue
+            // Note this destroys pRequest - 
+            // dont use pRequest or Request() after this
+            pHandlerData->DestroyRequest();
+
             pStage->SendEvent_CloseConnection(pConnection);
-            // return false;
         }
         else
         {
             // remove and destroy the request from the queue
-            // Note this destroys pRequest - dont use pRequest 
-            // after this
-            // pHandlerData->DestroyRequest();
+            // Note this destroys pRequest - 
+            // dont use pRequest or Request() after this
+            pHandlerData->DestroyRequest();
 
             // Trigger the handling of the next request
             pStage->SendEvent_HandleRequest(pConnection, NULL);

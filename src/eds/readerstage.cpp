@@ -26,6 +26,7 @@
  *****************************************************************************/
 
 #include "connection.h"
+#include "server.h"
 #include "readerstage.h"
 
 #include <arpa/inet.h>
@@ -102,35 +103,49 @@ void SReaderStage::HandleEvent(const SEvent &event)
     }
     else if (event.evType == EVT_READ_REQUEST)
     {
-        char *pCurrPos = NULL;
-        char *pBuffEnd = NULL;
+        const int MAXBUF = 2048;
 
         // in the reading state, we can read data till the next complete
         // "message" has been read...
         while (pConnection->GetState() == SConnection::STATE_READING)
         {
-            // refill read buffer if necessary
-            int buffLen = pConnection->RefillBuffer(pCurrPos, pBuffEnd);
-            if (buffLen <= 0)
+            if (pConnection->pReadBuffer == NULL)
             {
-                if (buffLen == 0)
-                {
-                    // end of file
-                    SLogger::Get()->Log(0, "WARNING: read EOF reached\n\n");
-                }
-                else if (errno == EAGAIN)
-                {
-                    // non blocking io - so quit till more data is available
-                    SLogger::Get()->Log(0, "DEBUG: read EAGAIN = [%d]: %s\n\n", errno, strerror(errno));
-                }
-                else
-                {
-                    SLogger::Get()->Log(0, "ERROR: read error [%d]: %s\n\n", errno, strerror(errno));
-                }
-                return ;
+                pConnection->bufferLength   = MAXBUF;
+                pConnection->pReadBuffer    = new char[pConnection->bufferLength];
+                pConnection->pCurrPos       = pConnection->pReadBuffer;
+                pConnection->pBuffEnd       = pConnection->pReadBuffer;
             }
 
-            void *pRequest = AssembleRequest(pCurrPos, pBuffEnd, pReaderState);
+            if (pConnection->pCurrPos >= pConnection->pBuffEnd)
+            {
+                int buffLen = read(pConnection->Socket(), pConnection->pReadBuffer, MAXBUF);
+                if (buffLen <= 0)
+                {
+                    if (buffLen == 0)
+                    {
+                        // end of file
+                        SLogger::Get()->Log(0, "WARNING: read EOF reached\n\n");
+                        pConnection->Server()->MarkConnectionAsClosed(pConnection);
+                        pConnection->CloseSocket();
+                    }
+                    else if (errno == EAGAIN)
+                    {
+                        // non blocking io - so quit till more data is available
+                        SLogger::Get()->Log(0, "DEBUG: read EAGAIN = [%d]: %s\n\n", errno, strerror(errno));
+                    }
+                    else
+                    {
+                        SLogger::Get()->Log(0, "ERROR: read error [%d]: %s\n\n", errno, strerror(errno));
+                    }
+                    return ;
+                }
+
+                pConnection->pCurrPos = pConnection->pReadBuffer;
+                pConnection->pBuffEnd = pConnection->pReadBuffer + buffLen;
+            }
+
+            void *pRequest = AssembleRequest(pConnection->pCurrPos, pConnection->pBuffEnd, pReaderState);
             if (pRequest != NULL)
             {
                 // send it of the next stage, also at this stage we have to

@@ -92,11 +92,14 @@ public:
     //! Sets an event stage for a given name
     SStage *    GetStage(const std::string &name);
 
-    //! Called by a connection when it is done with.
-    void        ConnectionComplete(SConnection *pConnection);
+    //! Creates a new connection
+    SConnection *NewConnection(int clientSocket);
 
     //! Destroyes connections marked as closed
     void        CloseMarkedConnections();
+
+    //! Marks a connection as closed
+    void        MarkConnectionAsClosed(SConnection *pConnection);
 
 protected:
     // Called to stop the task.
@@ -132,6 +135,9 @@ private:
     //! The epoll file descriptor
     int                 serverEpollFD;
 
+    //! Number of fds epoll is handling currently
+    int                 currEpollFDs;
+
 private:
     //! The request reader stage
     SReaderStage *              pReaderStage;
@@ -153,6 +159,9 @@ private:
 
     //! List of connections that are closed
     std::list<SConnection *>        closedConnections;
+
+    //! Mutex on the connection list
+    SMutex                          connListMutex;
 };
 
 #endif
