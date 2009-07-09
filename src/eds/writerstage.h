@@ -14,9 +14,9 @@
  *
  *****************************************************************************
  *
- *  \file   readerstage.h
+ *  \file   writerstage.h
  *
- *  \brief  The stage that asynchronously reads messages of the socket.
+ *  \brief  The stage that asynchronously writes messages on to the socket.
  *
  *  \version
  *      - S Panyam      08/07/2009
@@ -24,53 +24,40 @@
  *
  *****************************************************************************/
 
-#ifndef _SREADER_STAGE_H_
-#define _SREADER_STAGE_H_
+#ifndef _SWRITER_STAGE_H_
+#define _SWRITER_STAGE_H_
 
 #include "eds/stage.h"
 
 //*****************************************************************************
 /*!
- *  \class  SReaderStage
+ *  \class  SWriterStage
  *
- *  \brief  A generic stage that reads messages of a connection.
+ *  \brief  A generic stage that writes messages onto a connection.
  *
  *****************************************************************************/
-class SReaderStage : public SStage
+class SWriterStage : public SStage
 {
 public:
     // Allowed events in this stage
     typedef enum
     {
-        EVT_READ_REQUEST,
-        EVT_CLOSE_CONNECTION
+        EVT_WRITE_DATA,
     } EventType;
 
 public:
-    // Creates a new fileio helper stage
-    SReaderStage(const SString &name, int numThreads = DEFAULT_NUM_THREADS);
+    // Creates a new writer stage
+    SWriterStage(const SString &name, int numThreads = DEFAULT_NUM_THREADS);
     
     // Destroys the stage
-    virtual         ~SReaderStage();
+    virtual         ~SWriterStage();
 
-    //! Called when a job is destroyed
-    virtual void    JobDestroyed(SJob *pJob);
-
-    //! Called when data is available to be read.
-    virtual bool    SendEvent_ReadRequest(SConnection *pConnection);
-
-    //! Called when connection is ready to be closed
-    virtual bool    SendEvent_CloseConnection(SConnection *pConnection);
+    //! Called when data is available to be written.
+    virtual bool    SendEvent_WriteData(SConnection *pConnection);
 
 protected:
     //! Does the actual event handling.
     virtual void    HandleEvent(const SEvent &event);
-
-    //! Tries to assemble the request object from a byte buffer
-    virtual void *  AssembleRequest(char *&pStart, char *&pLast, void *pState) { return NULL; }
-
-    //! Handles the newly assembled request
-    virtual bool    HandleRequest(SConnection *pConnection, void *pRequest) { return true; }
 };
 
 #endif

@@ -37,23 +37,14 @@
 #include <sstream>
 #include <iostream>
 
-const int MAXBUF = 8192;
-
 // Creates a message reader stage.
-SReaderStage::SReaderStage(const SString &name, int numThreads)
-:
-    SStage(name, numThreads),
-    pReadBuffer(new char[MAXBUF]),
-    pCurrPos(pReadBuffer),
-    pBuffEnd(pReadBuffer)
+SReaderStage::SReaderStage(const SString &name, int numThreads) : SStage(name, numThreads)
 {
 }
 
 //! Destroys reader data
 SReaderStage::~SReaderStage()
 {
-    if (pReadBuffer != NULL)
-        delete [] pReadBuffer;
 }
 
 // Read bytes
@@ -111,42 +102,36 @@ void SReaderStage::HandleEvent(const SEvent &event)
     }
     else if (event.evType == EVT_READ_REQUEST)
     {
+        char *pCurrPos = NULL;
+        char *pBuffEnd = NULL;
+
         // in the reading state, we can read data till the next complete
         // "message" has been read...
         while (pConnection->GetState() == SConnection::STATE_READING)
         {
             // refill read buffer if necessary
-            if (pCurrPos >= pBuffEnd)
+            int buffLen = pConnection->RefillBuffer(pCurrPos, pBuffEnd);
+            if (buffLen <= 0)
             {
-                int buffLen = read(pConnection->Socket(), pReadBuffer, MAXBUF);
-                if (buffLen < 0)
+                if (buffLen == 0)
                 {
-                    if (errno == EAGAIN)
-                    {
-                        // non blocking io - so quit till more data is available
-                        SLogger::Get()->Log(0, "DEBUG: read EAGAIN = [%d]: %s\n\n", errno, strerror(errno));
-                    }
-                    else
-                    {
-                        SLogger::Get()->Log(0, "ERROR: read error [%d]: %s\n\n", errno, strerror(errno));
-                    }
-                    return ;
-                }
-                else if (buffLen == 0)
-                {
-                    // end of file - close connection?
+                    // end of file
                     SLogger::Get()->Log(0, "WARNING: read EOF reached\n\n");
-
-                    // close the connection socket but not the entire connection
-                    pConnection->CloseSocket();
-                    return ;
                 }
-                pCurrPos = pReadBuffer;
-                pBuffEnd = pReadBuffer + buffLen;
+                else if (errno == EAGAIN)
+                {
+                    // non blocking io - so quit till more data is available
+                    SLogger::Get()->Log(0, "DEBUG: read EAGAIN = [%d]: %s\n\n", errno, strerror(errno));
+                }
+                else
+                {
+                    SLogger::Get()->Log(0, "ERROR: read error [%d]: %s\n\n", errno, strerror(errno));
+                }
+                return ;
             }
 
-            void *pRequest;
-            if ((pRequest = AssembleRequest(pCurrPos, pBuffEnd, pReaderState)) != NULL)
+            void *pRequest = AssembleRequest(pCurrPos, pBuffEnd, pReaderState);
+            if (pRequest != NULL)
             {
                 // send it of the next stage, also at this stage we have to
                 // update how much data has been read

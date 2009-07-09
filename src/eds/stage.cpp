@@ -126,7 +126,6 @@ void SStage::Stop()
 //! Called before an event is handled
 void SStage::PreHandleEvent(const SEvent &event)
 {
-    event.pSource->IncRef();
     SLogger::Get()->Log(0, "DEBUG: PRE Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x, RefCount: %d\n",
                                 Name().c_str(), event.evType, event.pSource, event.pData, event.pSource->RefCount());
 }
@@ -159,6 +158,9 @@ int SEventDispatcher::Run()
 //! Queue an event to be handled later
 bool SStage::QueueEvent(const SEvent &event)
 {
+    // Increment source reference as soon as queueing is requested 
+    // TODO: Examine locking here
+    event.pSource->IncRef();
     if (handlerThreads.empty())
     {
         PreHandleEvent(event);

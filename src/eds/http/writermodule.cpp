@@ -32,7 +32,6 @@
 #include "response.h"
 
 //! This affects transfer-xxx headers but not content headers
-//
 // Also this only takes place if 
 void SWriterModule::ProcessOutput(SHttpHandlerData *    pHandlerData,
                                   SHttpHandlerStage *   pStage,
@@ -77,7 +76,6 @@ void SWriterModule::ProcessOutput(SHttpHandlerData *    pHandlerData,
         }
     }
 }
-
 
 bool SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData, 
                                    SHttpHandlerStage *  pStage,
