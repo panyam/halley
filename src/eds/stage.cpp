@@ -147,7 +147,7 @@ void SStage::PreHandleEvent(const SEvent &event)
     // create the stage specific data if any
     SJob *pJob          = event.pSource;
     void *pReaderState  = pJob->GetStageData(this);
-    if (pJob == NULL)
+    if (pReaderState == NULL)
     {
         pReaderState = CreateStageData();
         pJob->SetStageData(this, pReaderState);

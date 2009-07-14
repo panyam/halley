@@ -61,7 +61,7 @@ void STransferModule::ProcessOutput(SHttpHandlerData *  pHandlerData,
     {
         // otherwise send it as is to the next module, cant just ignore a
         // request to process output!
-        SendBodyPartToModule(pHandlerData->pConnection, pStage, pBodyPart, pModData, pNextModule);
+        SendBodyPartToModule(pHandlerData->pConnection, pStage, pHandlerData->Request(), pBodyPart, pModData, pNextModule);
     }
 
     // turn off processing flag so it can be resumed in the future
@@ -84,7 +84,7 @@ void STransferModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
     if (pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION ||
              pBodyPart->Type() == SBodyPart::BP_CONTENT_FINISHED)
     {
-        SendBodyPartToModule(pHandlerData->pConnection, pStage, pBodyPart, pModData, pNextModule);
+        SendBodyPartToModule(pHandlerData->pConnection, pStage, pRequest, pBodyPart, pModData, pNextModule);
     }
     else
     {

@@ -59,7 +59,7 @@ void SContentModule::ProcessOutput(SHttpHandlerData *   pHandlerData,
     }
     else
     {
-        SendBodyPartToModule(pHandlerData->pConnection, pStage, pBodyPart, pModData, pNextModule);
+        SendBodyPartToModule(pHandlerData->pConnection, pStage, pHandlerData->Request(), pBodyPart, pModData, pNextModule);
     }
 
     // turn off processing flag so it can be resumed in the future
@@ -105,7 +105,7 @@ void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData,
             pBodyPart->AppendToBody("--", 2);
 
             // send to next module
-            SendBodyPartToModule(pConnection, pStage, pBodyPart, pModData, pNextModule);
+            SendBodyPartToModule(pConnection, pStage, pRequest, pBodyPart, pModData, pNextModule);
         }
         else
         {
@@ -132,11 +132,11 @@ void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData,
                 pCloser->AppendToBody("--", 2);
             }
 
-            SendBodyPartToModule(pConnection, pStage, pCloser, pModData, pNextModule);
+            SendBodyPartToModule(pConnection, pStage, pRequest, pCloser, pModData, pNextModule);
         }
 
         // send to next module so it can close it - nothing to do here
-        SendBodyPartToModule(pConnection, pStage, pBodyPart, pModData, pNextModule);
+        SendBodyPartToModule(pConnection, pStage, pRequest, pBodyPart, pModData, pNextModule);
     }
     else if (pBodyPart)
     {
@@ -165,7 +165,7 @@ void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData,
                 }
             }
 
-            SendBodyPartToModule(pConnection, pStage, pBodyPart, pModData, pNextModule);
+            SendBodyPartToModule(pConnection, pStage, pRequest, pBodyPart, pModData, pNextModule);
         }
         else
         {
@@ -179,7 +179,7 @@ void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData,
 
             pBodyPart->InsertInBody(boundary.str());
 
-            SendBodyPartToModule(pConnection, pStage, pBodyPart, pModData, pNextModule);
+            SendBodyPartToModule(pConnection, pStage, pRequest, pBodyPart, pModData, pNextModule);
         }
     }
 }

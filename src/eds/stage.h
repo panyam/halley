@@ -82,6 +82,9 @@ protected:
     //! Creates the state specific object
     virtual void *  CreateStageData() { return NULL; }
 
+    //! Resets stage data when required
+    virtual void    ResetStageData(void *) { }
+
     //! Destroys the state specific object
     virtual void    DestroyStageData(void *pStateData) { }
 

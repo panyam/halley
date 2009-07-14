@@ -56,6 +56,9 @@ public:
     //! Called when data is available to be read.
     virtual bool    SendEvent_ReadRequest(SConnection *pConnection);
 
+    //! Just deals with read_request event
+    virtual void    HandleReadRequestEvent(const SEvent &event);
+
 protected:
     //! Does the actual event handling.
     virtual void    HandleEvent(const SEvent &event);

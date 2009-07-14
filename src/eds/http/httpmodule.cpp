@@ -182,12 +182,20 @@ SHttpModuleData *SHttpModule::CreateModuleData(SHttpHandlerData *pHandlerData)
 // then it is to be sent to the writer stage
 void SHttpModule::SendBodyPartToModule(SConnection *        pConnection,
                                        SHttpHandlerStage *  pStage,
+                                       SHttpRequest *       pRequest,
                                        SBodyPart *          pBodyPart,
                                        SHttpModuleData *    pModData,
                                        SHttpModule *        pModule)
 {
     if (pBodyPart != NULL)
         pBodyPart->bpIndex = pModData->nextBPToSend++;
-    pStage->SendEvent_OutputToModule(pConnection, pNextModule, pBodyPart);
+    if (pModule == NULL)
+    {
+        pStage->SendEvent_WriteBodyPart(pConnection, pRequest, pBodyPart);
+    }
+    else
+    {
+        pStage->SendEvent_OutputToModule(pConnection, pNextModule, pBodyPart);
+    }
 }
 

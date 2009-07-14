@@ -133,6 +133,12 @@ void SHttpReaderStage::DestroyStageData(void *pReaderState)
         delete ((SHttpReaderState *)pReaderState);
 }
 
+//! Resets stage data when required
+void SHttpReaderStage::ResetStageData(void *pData)
+{
+    ((SHttpReaderState *)pData)->Reset();
+}
+
 //! Handle the new assembled request
 bool SHttpReaderStage::HandleRequest(SConnection *pConnection, void *pRequest)
 {
@@ -151,7 +157,6 @@ void *SHttpReaderStage::AssembleRequest(char *&pStart, char *&pLast, void *pStat
         if (pReaderState->requestFullyRead)
         {
             pOut = &(pReaderState->pCurrRequest);
-            pReaderState->Reset();
         }
     }
     else

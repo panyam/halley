@@ -38,6 +38,8 @@
 #include <sstream>
 #include <iostream>
 
+const int MAXBUF = 2048;
+
 // Creates a message reader stage.
 SReaderStage::SReaderStage(const SString &name, int numThreads) : SStage(name, numThreads)
 {
@@ -61,64 +63,73 @@ bool SReaderStage::SendEvent_ReadRequest(SConnection *pConnection)
 // The previous model was to read requests and queue them in.
 void SReaderStage::HandleEvent(const SEvent &event)
 {
+    if (event.evType == EVT_READ_REQUEST)
+    {
+        HandleReadRequestEvent(event);
+    }
+}
+
+//! Just deals with read_request event
+void SReaderStage::HandleReadRequestEvent(const SEvent &event)
+{
     // The connection currently being processed
     SConnection *pConnection    = (SConnection *)(event.pSource);
     void *pReaderState          = pConnection->GetStageData(this);
 
-    if (event.evType == EVT_READ_REQUEST)
+    if (pConnection->GetState() == SConnection::STATE_PROCESSING)
     {
-        const int MAXBUF = 2048;
+        pConnection->SetState(SConnection::STATE_READING);
+        ResetStageData(pReaderState);
+    }
 
-        // in the reading state, we can read data till the next complete
-        // "message" has been read...
-        while (pConnection->GetState() == SConnection::STATE_READING)
+    // in the reading state, we can read data till the next complete
+    // "message" has been read...
+    while (pConnection->GetState() == SConnection::STATE_READING)
+    {
+        if (pConnection->pReadBuffer == NULL)
         {
-            if (pConnection->pReadBuffer == NULL)
-            {
-                pConnection->bufferLength   = MAXBUF;
-                pConnection->pReadBuffer    = new char[pConnection->bufferLength];
-                pConnection->pCurrPos       = pConnection->pReadBuffer;
-                pConnection->pBuffEnd       = pConnection->pReadBuffer;
-            }
+            pConnection->bufferLength   = MAXBUF;
+            pConnection->pReadBuffer    = new char[pConnection->bufferLength];
+            pConnection->pCurrPos       = pConnection->pReadBuffer;
+            pConnection->pBuffEnd       = pConnection->pReadBuffer;
+        }
 
-            if (pConnection->pCurrPos >= pConnection->pBuffEnd)
+        if (pConnection->pCurrPos >= pConnection->pBuffEnd)
+        {
+            int buffLen = read(pConnection->Socket(), pConnection->pReadBuffer, MAXBUF);
+            if (buffLen <= 0)
             {
-                int buffLen = read(pConnection->Socket(), pConnection->pReadBuffer, MAXBUF);
-                if (buffLen <= 0)
+                if (buffLen == 0)
                 {
-                    if (buffLen == 0)
-                    {
-                        // end of file
-                        SLogger::Get()->Log("WARNING: read EOF reached\n\n");
-                        pConnection->SetState(SConnection::STATE_PEER_CLOSED);
-                    }
-                    else if (errno == EAGAIN)
-                    {
-                        // non blocking io - so quit till more data is available
-                        SLogger::Get()->Log("DEBUG: read EAGAIN = [%d]: %s\n\n", errno, strerror(errno));
-                    }
-                    else
-                    {
-                        SLogger::Get()->Log("ERROR: read error [%d]: %s\n\n", errno, strerror(errno));
-                    }
-                    return ;
+                    // end of file
+                    SLogger::Get()->Log("WARNING: read EOF reached\n\n");
+                    pConnection->SetState(SConnection::STATE_PEER_CLOSED);
                 }
-
-                pConnection->pCurrPos = pConnection->pReadBuffer;
-                pConnection->pBuffEnd = pConnection->pReadBuffer + buffLen;
+                else if (errno == EAGAIN)
+                {
+                    // non blocking io - so quit till more data is available
+                    SLogger::Get()->Log("DEBUG: read EAGAIN = [%d]: %s\n\n", errno, strerror(errno));
+                }
+                else
+                {
+                    SLogger::Get()->Log("ERROR: read error [%d]: %s\n\n", errno, strerror(errno));
+                }
+                return ;
             }
 
-            void *pRequest = AssembleRequest(pConnection->pCurrPos, pConnection->pBuffEnd, pReaderState);
-            if (pRequest != NULL)
-            {
-                // send it of the next stage, also at this stage we have to
-                // update how much data has been read
-                pConnection->SetState(SConnection::STATE_PROCESSING);
+            pConnection->pCurrPos = pConnection->pReadBuffer;
+            pConnection->pBuffEnd = pConnection->pReadBuffer + buffLen;
+        }
 
-                // sends request to be handled by the next stage
-                HandleRequest(pConnection, pRequest);
-            }
+        void *pRequest = AssembleRequest(pConnection->pCurrPos, pConnection->pBuffEnd, pReaderState);
+        if (pRequest != NULL)
+        {
+            // send it of the next stage, also at this stage we have to
+            // update how much data has been read
+            pConnection->SetState(SConnection::STATE_PROCESSING);
+
+            // sends request to be handled by the next stage
+            HandleRequest(pConnection, pRequest);
         }
     }
 }
-

@@ -149,8 +149,8 @@ public:
 public:
     ServerContext(int port = 80)    :
         requestReader("Reader", 0),
-        requestHandler("Handler", 0),
         requestWriter("Writer", 0),
+        requestHandler("Handler", 0),
         contentModule(NULL),
         bayeuxModule(&contentModule, "MyTestBoundary"),
         rootFileModule(&contentModule, true),

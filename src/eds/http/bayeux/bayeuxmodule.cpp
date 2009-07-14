@@ -255,13 +255,14 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
         }
     }
 
-    SendResponse(result, output, pStage, pHandlerData, pResponse);
+    SendResponse(result, output, pStage, pHandlerData, pRequest, pResponse);
 }
 
 void SBayeuxModule::SendResponse(int                result,
                                  const JsonNodePtr &output,
                                  SHttpHandlerStage *pStage,
                                  SHttpHandlerData * pHandlerData,
+                                 SHttpRequest *     pRequest,
                                  SHttpResponse *    pResponse)
 {
     SHeaderTable & respHeaders(pResponse->Headers());

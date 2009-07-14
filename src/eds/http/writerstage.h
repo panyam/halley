@@ -68,6 +68,9 @@ public:
     //! Re orders and sends out http body parts to the socket
     virtual void HandleEvent(const SEvent &event);
 
+    //! Send an event to send out a body part on the wire
+    virtual bool SendEvent_WriteBodyPart(SConnection *pConnection, SBodyPart *pBodyPart);
+
 protected:
     // Handles each body part writing
     bool HandleBodyPart(SConnection *       pConnection,

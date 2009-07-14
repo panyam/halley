@@ -34,10 +34,11 @@
 typedef unsigned BPIndexType;
 
 class SMemBuff;
-class SBodyPart;
 class SHeaderTable;
+class SHttpMessage;
 class SHttpRequest;
 class SHttpResponse;
+class SBodyPart;
 class SHttpModule;
 class SHttpHandlerData;
 class SHttpReaderStage;
