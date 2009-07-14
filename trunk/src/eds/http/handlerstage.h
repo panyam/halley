@@ -67,7 +67,7 @@ public:
     virtual void SetRootModule(SHttpModule *pModule) { pRootModule = pModule; }
 
     //! Handle a new request
-    virtual bool SendEvent_HandleRequest(SConnection *pConnection, SHttpRequest *pRequest);
+    virtual bool SendEvent_HandleNextRequest(SConnection *pConnection, SHttpRequest *pRequest);
     
     //! Sends input to be processed by a module
     virtual bool SendEvent_InputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart = NULL);

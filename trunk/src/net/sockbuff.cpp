@@ -35,6 +35,7 @@
 #include <sys/socket.h>
 
 #include "net/sockbuff.h"
+#include "logger/logger.h"
 
 //*****************************************************************************
 /*!
@@ -107,68 +108,85 @@ int SSocketBuff::sync()
 
     size_t count    = pptr() - pbase();
     size_t offset   = 0;
-    int numWritten  = 0;
 
-    while (count > 0)
+    if (true)
     {
-        numWritten = -1; //send(sockHandle, pbase() + offset, count, MSG_NOSIGNAL);
-        errno = EAGAIN;
+        int numWritten = send(sockHandle, pbase() + offset, count, MSG_NOSIGNAL);
         if (numWritten < 0)
         {
-            // block till written! - not good need to palm this off to
-            // another thread - but how do we handle memory for this
-            // block?
-            if (errno == EAGAIN || errno == EWOULDBLOCK)
+            SLogger::Get()->Log("TRACE: send error: [%d] - [%s]\n", errno, strerror(errno));
+            if (errno != EAGAIN)
             {
-                // create structures to allow async writing
-                int kdpfd   = epoll_create(1);
-                int currfds = 1;
-                struct epoll_event ev;
-                struct epoll_event events[1];
-                bzero(&ev, sizeof(ev));
-                ev.events   = EPOLLOUT | EPOLLET;
-                ev.data.fd  = sockHandle;
-                if (epoll_ctl(kdpfd, EPOLL_CTL_ADD, sockHandle, &ev) < 0)
+                assert("send error" && false);
+            }
+            return -1;
+        }
+    }
+    else
+    {
+        int numWritten  = 0;
+
+        while (count > 0)
+        {
+            numWritten = -1; //send(sockHandle, pbase() + offset, count, MSG_NOSIGNAL);
+            errno = EAGAIN;
+            if (numWritten < 0)
+            {
+                // block till written! - not good need to palm this off to
+                // another thread - but how do we handle memory for this
+                // block?
+                if (errno == EAGAIN || errno == EWOULDBLOCK)
                 {
-                    std::cerr << "WRITE ERROR: epoll_ctl error: [" << errno << "]: " << strerror(errno) << std::endl;
+                    // create structures to allow async writing
+                    int kdpfd   = epoll_create(1);
+                    int currfds = 1;
+                    struct epoll_event ev;
+                    struct epoll_event events[1];
+                    bzero(&ev, sizeof(ev));
+                    ev.events   = EPOLLOUT | EPOLLET;
+                    ev.data.fd  = sockHandle;
+                    if (epoll_ctl(kdpfd, EPOLL_CTL_ADD, sockHandle, &ev) < 0)
+                    {
+                        std::cerr << "WRITE ERROR: epoll_ctl error: [" << errno << "]: " << strerror(errno) << std::endl;
+                        close(kdpfd);
+                        return -1;
+                    }
+
+                    while (count > 0)
+                    {
+                        int nfds = epoll_wait(kdpfd, events, currfds, -1);
+                        if (nfds < 0)
+                        {
+                            std::cerr << "WRITE ERROR: epoll_wait error: [" << errno << "]: " << strerror(errno) << std::endl;
+                            close(kdpfd);
+                            return -1;
+                        }
+
+                        assert("Too many fds found!!!" && nfds == 1);
+
+                        numWritten = send(sockHandle, pbase() + offset, count, MSG_NOSIGNAL);
+                        if (numWritten < 0)
+                        {
+                            std::cerr << "WRITE ERROR: send error: [" << errno << "]: " << strerror(errno) << std::endl;
+                            close(kdpfd);
+                            return -1;
+                        }
+                        count -= numWritten;
+                        offset += numWritten;
+                    }
                     close(kdpfd);
+                }
+                else
+                {
+                    std::cerr << "WRITE ERROR: send error: [" << errno << "]: " << strerror(errno) << std::endl;
                     return -1;
                 }
-
-                while (count > 0)
-                {
-                    int nfds = epoll_wait(kdpfd, events, currfds, -1);
-                    if (nfds < 0)
-                    {
-                        std::cerr << "WRITE ERROR: epoll_wait error: [" << errno << "]: " << strerror(errno) << std::endl;
-                        close(kdpfd);
-                        return -1;
-                    }
-
-                    assert("Too many fds found!!!" && nfds == 1);
-
-                    numWritten = send(sockHandle, pbase() + offset, count, MSG_NOSIGNAL);
-                    if (numWritten < 0)
-                    {
-                        std::cerr << "WRITE ERROR: send error: [" << errno << "]: " << strerror(errno) << std::endl;
-                        close(kdpfd);
-                        return -1;
-                    }
-                    count -= numWritten;
-                    offset += numWritten;
-                }
-                close(kdpfd);
             }
             else
             {
-                std::cerr << "WRITE ERROR: send error: [" << errno << "]: " << strerror(errno) << std::endl;
-                return -1;
+                count -= numWritten;
+                offset += numWritten;
             }
-        }
-        else
-        {
-            count -= numWritten;
-            offset += numWritten;
         }
     }
 
