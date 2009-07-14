@@ -27,79 +27,103 @@
  *
  *****************************************************************************/
 
+#include "eds/server.h"
+#include "eds/connection.h"
 #include "writerstage.h"
 #include "httpmodule.h"
-#include "eds/connection.h"
 #include "request.h"
 #include "response.h"
 
-//! Creates a new reader state object
-void *SHttpReaderStage::CreateStageData()
+class SHttpStageData : public SHttpModuleData
 {
-    return new SHttpModuleData();
+public:
+    //! a new stage data
+    SHttpStageData() : pCurrRequest(NULL) { }
+
+    //! Adds a new request to the queue.
+    virtual void SetRequest(SHttpRequest *pReq) { pCurrRequest = pReq; }
+
+    //! Destroys the current request
+    virtual void DestroyRequest() { pCurrRequest = NULL; }
+
+    //! Current request being handled
+    inline SHttpRequest *Request() { return pCurrRequest; }
+
+protected:
+    //! Current request being processed
+    SHttpRequest *          pCurrRequest;
+};
+
+//! Creates a new reader state object
+void *SHttpWriterStage::CreateStageData()
+{
+    return new SHttpStageData();
 }
 
 //! Destroys reader state objects
-void SHttpReaderStage::DestroyStageData(void *pReaderState)
+void SHttpWriterStage::DestroyStageData(void *pReaderState)
 {
     if (pReaderState != NULL)
-        delete ((SHttpModuleData*)pReaderState);
+        delete ((SHttpStageData*)pReaderState);
 }
 
-//! This affects transfer-xxx headers but not content headers
-// Also this only takes place if 
-void SWriterStage::ProcessOutput(SHttpHandlerData *    pHandlerData,
-                                  SHttpHandlerStage *   pStage,
-                                  SBodyPart *           pBodyPart)
+//! Re orders and sends out http body parts to the socket
+void SHttpWriterStage::HandleEvent(const SEvent &event)
 {
-    SHttpStageData *pModData   = pHandlerData->GetStageData(this, true);
-    std::ostream &outStream(pHandlerData->pConnection->GetOutputStream());
+    SConnection *       pConnection = (SConnection *)(event.pSource);
+    SHttpStageData *    pStageData  = (SHttpStageData *)pConnection->GetStageData(this);
+    SBodyPart *         pBodyPart   = (SBodyPart *)(event.pData);
+    std::ostream &outStream(pConnection->GetOutputStream());
 
-    // first send the headers regardless of whether there are any 
-    // body parts so it is done with
-    if (pModData->nextBPToSend == 0)
+    if (event.evType == EVT_WRITE_DATA)
     {
-        SHttpRequest *  pRequest    = pHandlerData->Request();
-        SHttpResponse * pResponse   = pRequest->Response();
-        SHeaderTable &  respHeaders = pResponse->Headers();
-        // write headers
-        SString transferEncoding(respHeaders.Header("Transfer-Encoding"));
-        if (strcasecmp(transferEncoding.c_str(), "chunked") == 0)
-        {
-            respHeaders.RemoveHeader("Content-Length");
-        }
-        respHeaders.Lock();
-        outStream << pResponse->Version() << " "
-                  << pResponse->StatusCode() << " "
-                  << pResponse->StatusMessage() << HttpUtils::CRLF;
-        respHeaders.WriteHeaders(outStream);
     }
-
-    if (pBodyPart != NULL)
+    else if (event.evType == EVT_WRITE_BODY_PART)
     {
-        pBodyPart               = pModData->PutAndGetBodyPart(pBodyPart);
-        while (pBodyPart != NULL)
+        // first send the headers regardless of whether there are any 
+        // body parts so it is done with
+        if (pStageData->nextBPToSend == 0)
         {
-            if (HandleBodyPart(pHandlerData, pStage, pModData, pBodyPart, outStream))
+            SHttpRequest *  pRequest    = pStageData->Request();
+            SHttpResponse * pResponse   = pRequest->Response();
+            SHeaderTable &  respHeaders = pResponse->Headers();
+            // write headers
+            SString transferEncoding(respHeaders.Header("Transfer-Encoding"));
+            if (strcasecmp(transferEncoding.c_str(), "chunked") == 0)
             {
-                pBodyPart = pModData->NextBodyPart();
+                respHeaders.RemoveHeader("Content-Length");
             }
-            else
+            respHeaders.Lock();
+            outStream << pResponse->Version() << " "
+                      << pResponse->StatusCode() << " "
+                      << pResponse->StatusMessage() << HttpUtils::CRLF;
+            respHeaders.WriteHeaders(outStream);
+        }
+
+        if (pBodyPart != NULL)
+        {
+            pBodyPart               = pStageData->PutAndGetBodyPart(pBodyPart);
+            while (pBodyPart != NULL)
             {
-                pBodyPart = NULL;
+                if (HandleBodyPart(pConnection, pStageData, pBodyPart, outStream))
+                {
+                    pBodyPart = pStageData->NextBodyPart();
+                }
+                else
+                {
+                    pBodyPart = NULL;
+                }
             }
         }
     }
 }
 
-bool SWriterStage::HandleBodyPart(SHttpHandlerData *   pHandlerData, 
-                                   SHttpHandlerStage *  pStage,
-                                   SHttpStageData *    pModData,
-                                   SBodyPart *          pBodyPart, 
-                                   std::ostream &       outStream)
+bool SHttpWriterStage::HandleBodyPart(SConnection *     pConnection,
+                                  SHttpStageData *  pStageData,
+                                  SBodyPart *       pBodyPart,
+                                  std::ostream &    outStream)
 {
-    SConnection *pConnection        = pHandlerData->pConnection;
-    SHttpRequest *  pRequest        = pHandlerData->Request();
+    SHttpRequest *  pRequest        = pStageData->Request();
     SHttpResponse * pResponse       = pRequest->Response();
     // SHeaderTable &reqHeaders        = pRequest->Headers();
     SHeaderTable &respHeaders       = pResponse->Headers();
@@ -110,8 +134,8 @@ bool SWriterStage::HandleBodyPart(SHttpHandlerData *   pHandlerData,
     {
         // reset last BP sent as no more packets will 
         // be sent for this request
-        pModData->nextBP        = 0;
-        pModData->nextBPToSend  = 0;
+        pStageData->nextBP        = 0;
+        pStageData->nextBPToSend  = 0;
 
         // do nothing - close connection only if close header found
         if (pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION ||
@@ -120,25 +144,27 @@ bool SWriterStage::HandleBodyPart(SHttpHandlerData *   pHandlerData,
             // remove and destroy the request from the queue
             // Note this destroys pRequest - 
             // dont use pRequest or Request() after this
-            pHandlerData->DestroyRequest();
+            pStageData->DestroyRequest();
 
-            pStage->SendEvent_CloseConnection(pConnection);
+            // a connection is to be closed -
+            // the problem is regardless of how many threads we or other stages
+            // have, killing it here will pose sever problems.  So instead of
+            // killing, we flag it as being closed so nothing else uses this
+            // connection
+            pConnection->Server()->MarkConnectionAsClosed(pConnection);
         }
         else
         {
             // remove and destroy the request from the queue
             // Note this destroys pRequest - 
             // dont use pRequest or Request() after this
-            pHandlerData->DestroyRequest();
-
-            // Trigger the handling of the next request
-            pStage->SendEvent_HandleRequest(pConnection, NULL);
+            pStageData->DestroyRequest();
         }
     }
     else // treat as normal message
     {
         pBodyPart->WriteMessageBody(outStream);
-        pModData->nextBPToSend++;
+        pStageData->nextBPToSend++;
     }
 
     // now delete the body part - its no longer needed!

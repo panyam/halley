@@ -63,12 +63,6 @@ bool SHttpHandlerStage::SendEvent_HandleRequest(SConnection *pConnection, SHttpR
         return pReaderStage->SendEvent_ReadRequest(pConnection);
     }
 }
-
-//! Request to close the connection
-bool SHttpHandlerStage::SendEvent_CloseConnection(SConnection *pConnection)
-{
-    return pReaderStage->SendEvent_CloseConnection(pConnection);
-}
     
 //! Sends input to be processed by a module
 bool SHttpHandlerStage::SendEvent_InputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart)

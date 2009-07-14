@@ -32,6 +32,9 @@
 
 #include "eds/writerstage.h"
 
+class SBodyPart;
+class SHttpStageData;
+
 // Takes care of transfer encoding - Strips out Content-Length in chunked
 // mode
 class SHttpWriterStage : public SWriterStage
@@ -40,7 +43,7 @@ public:
     // Allowed events in this stage
     typedef enum
     {
-        EVT_WRITE_BODY_PART = 0,
+        EVT_WRITE_BODY_PART = 1,    // from 1 since parent uses 0
     } EventType;
 
 public:
@@ -56,16 +59,14 @@ public:
     //! Destroys the stage specific object
     virtual void    DestroyStageData(void *pStateData);
 
-    //! Called to handle output data from another module
-    virtual void ProcessOutput(SHttpHandlerData *   pHandlerData,
-                              SHttpHandlerStage *   pStage,
-                              SBodyPart *           pBodyPart);
+    //! Re orders and sends out http body parts to the socket
+    virtual void HandleEvent(const SEvent &event);
 
 protected:
-    bool HandleBodyPart(SHttpHandlerData *  pHandlerData, 
-                        SHttpHandlerStage * pStage,
-                        SHttpStageData *    pModData,
-                        SBodyPart *         pBodyPart, 
+    // Handles each body part writing
+    bool HandleBodyPart(SConnection *       pConnection,
+                        SHttpStageData *    pStageData,
+                        SBodyPart *         pBodyPart,
                         std::ostream &      outStream);
 };
 

@@ -38,6 +38,7 @@
  *****************************************************************************/
 class SWriterStage : public SStage
 {
+public:
     enum
     {
         EVT_WRITE_DATA

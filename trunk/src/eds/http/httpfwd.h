@@ -41,6 +41,8 @@ class SHttpResponse;
 class SHttpModule;
 class SHttpHandlerData;
 class SHttpReaderStage;
+class SReaderStage;
+class SWriterStage;
 class SHttpHandlerStage;
 class SBayeuxModule;
 class SBayeuxChannel;

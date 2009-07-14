@@ -54,12 +54,6 @@ bool SReaderStage::SendEvent_ReadRequest(SConnection *pConnection)
     return QueueEvent(SEvent(EVT_READ_REQUEST, pConnection));
 }
 
-// Close the connection
-bool SReaderStage::SendEvent_CloseConnection(SConnection *pConnection)
-{
-    return QueueEvent(SEvent(EVT_CLOSE_CONNECTION, pConnection));
-}
-
 //! Handles "read request" events.
 //
 // Will call the RequestHandler stage when a complete request has been read.
@@ -71,16 +65,7 @@ void SReaderStage::HandleEvent(const SEvent &event)
     SConnection *pConnection    = (SConnection *)(event.pSource);
     void *pReaderState          = pConnection->GetStageData(this);
 
-    if (event.evType == EVT_CLOSE_CONNECTION)
-    {
-        // a connection is to be closed -
-        // the problem is regardless of how many threads we or other stages
-        // have, killing it here will pose sever problems.  So instead of
-        // killing, we flag it as being closed so nothing else uses this
-        // connection
-        pConnection->Server()->MarkConnectionAsClosed(pConnection);
-    }
-    else if (event.evType == EVT_READ_REQUEST)
+    if (event.evType == EVT_READ_REQUEST)
     {
         const int MAXBUF = 2048;
 
