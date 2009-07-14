@@ -125,18 +125,18 @@ void SReaderStage::HandleEvent(const SEvent &event)
                     if (buffLen == 0)
                     {
                         // end of file
-                        SLogger::Get()->Log(0, "WARNING: read EOF reached\n\n");
+                        SLogger::Get()->Log("WARNING: read EOF reached\n\n");
                         pConnection->Server()->MarkConnectionAsClosed(pConnection);
                         pConnection->CloseSocket();
                     }
                     else if (errno == EAGAIN)
                     {
                         // non blocking io - so quit till more data is available
-                        SLogger::Get()->Log(0, "DEBUG: read EAGAIN = [%d]: %s\n\n", errno, strerror(errno));
+                        SLogger::Get()->Log("DEBUG: read EAGAIN = [%d]: %s\n\n", errno, strerror(errno));
                     }
                     else
                     {
-                        SLogger::Get()->Log(0, "ERROR: read error [%d]: %s\n\n", errno, strerror(errno));
+                        SLogger::Get()->Log("ERROR: read error [%d]: %s\n\n", errno, strerror(errno));
                     }
                     return ;
                 }

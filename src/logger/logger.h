@@ -49,7 +49,7 @@ public:
     virtual ~SLogger() { }
 
     //! Does the actual logging
-    virtual int Log(int level, const char *fmt, ...);
+    virtual int Log(const char *fmt, ...);
 
     //! Get a specific logger
     static SLogger *Get(int index = 0);

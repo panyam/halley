@@ -81,7 +81,7 @@ public:
     virtual void IncRef(unsigned delta = 1)
     {
         RefCountable::IncRef(delta);
-        SLogger::Get()->Log(0, "DEBUG: IncRefed %x to %d\n", this, Count());
+        SLogger::Get()->Log("DEBUG: IncRefed %x to %d\n", this, Count());
     }
 
     //! Decrease reference count
@@ -89,7 +89,7 @@ public:
     virtual bool    DecRef(unsigned delta = 1)
     {
         bool result = RefCountable::DecRef(delta);
-        SLogger::Get()->Log(0, "DEBUG: DecRefed %x to %d\n", this, Count());
+        SLogger::Get()->Log("DEBUG: DecRefed %x to %d\n", this, Count());
         return result;
     }
     */
