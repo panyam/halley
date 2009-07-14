@@ -127,6 +127,5 @@ dep:
 ../bld/debug/halley.o: ../src/eds/http/httpfwd.h ../src/json/json.h
 ../bld/debug/halley.o: ../src/eds/http/contentmodule.h
 ../bld/debug/halley.o: ../src/eds/http/transfermodule.h
-../bld/debug/halley.o: ../src/eds/http/writermodule.h
 ../bld/debug/halley.o: ../src/net/connhandler.h ../src/thread/task.h
 ../bld/debug/halley.o: ../src/net/connfactory.h ../src/net/server.h

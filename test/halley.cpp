@@ -9,13 +9,13 @@
 #include "eds/http/response.h"
 #include "eds/http/readerstage.h"
 #include "eds/http/handlerstage.h"
+#include "eds/http/writerstage.h"
 #include "eds/http/urlrouter.h"
 #include "eds/http/filemodule.h"
 #include "eds/http/bayeux/bayeuxmodule.h"
 #include "eds/http/bayeux/channel.h"
 #include "eds/http/contentmodule.h"
 #include "eds/http/transfermodule.h"
-#include "eds/http/writermodule.h"
 #include "net/connhandler.h"
 #include "net/connfactory.h"
 #include "net/server.h"
@@ -130,9 +130,9 @@ protected:
 class ServerContext
 {
 public:
+    SWriterStage        writerStage;
     SHttpReaderStage    requestReader;
     SHttpHandlerStage   requestHandler;
-    SWriterModule       writerModule;
     // STransferModule     transferModule(&writerModule);
     SContentModule      contentModule;
     SBayeuxModule       bayeuxModule;
@@ -150,7 +150,7 @@ public:
     ServerContext(int port = 80)    :
         requestReader("Reader", 0),
         requestHandler("Handler", 0),
-        contentModule(&writerModule),
+        contentModule(),
         bayeuxModule(&contentModule, "MyTestBoundary"),
         rootFileModule(&contentModule, true),
         myModule(&contentModule),
