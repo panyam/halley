@@ -68,7 +68,7 @@ public:
     virtual SEvent GetEvent();
 
     //! Called when a job is destroyed
-    virtual void JobDestroyed(SJob *pJob) { }
+    virtual void JobDestroyed(SJob *pJob);
 
     //! Get the stage ID.
     int ID() { return stageID; }

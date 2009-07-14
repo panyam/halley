@@ -178,7 +178,8 @@ SHttpModuleData *SHttpModule::CreateModuleData(SHttpHandlerData *pHandlerData)
     return new SHttpModuleData();
 }
 
-//! Send a body part to another module.
+//! Send a body part to another module, if no module is specified, 
+// then it is to be sent to the writer stage
 void SHttpModule::SendBodyPartToModule(SConnection *        pConnection,
                                        SHttpHandlerStage *  pStage,
                                        SBodyPart *          pBodyPart,

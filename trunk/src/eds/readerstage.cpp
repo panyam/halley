@@ -60,21 +60,6 @@ bool SReaderStage::SendEvent_CloseConnection(SConnection *pConnection)
     return QueueEvent(SEvent(EVT_CLOSE_CONNECTION, pConnection));
 }
 
-//! Called when a connection is going to be destroyed so we can do our
-// connection specific cleanup.
-void SReaderStage::JobDestroyed(SJob *pJob)
-{
-    if (pJob != NULL)
-    {
-        void *pStageData = pJob->GetStageData(this);
-        if (pStageData != NULL)
-        {
-            DestroyStageData(pStageData);
-            pJob->SetStageData(this, NULL);
-        }
-    }
-}
-
 //! Handles "read request" events.
 //
 // Will call the RequestHandler stage when a complete request has been read.
@@ -85,12 +70,6 @@ void SReaderStage::HandleEvent(const SEvent &event)
     // The connection currently being processed
     SConnection *pConnection    = (SConnection *)(event.pSource);
     void *pReaderState          = pConnection->GetStageData(this);
-    if (pReaderState == NULL)
-    {
-        pReaderState = CreateStageData();
-        pConnection->SetStageData(this, pReaderState);
-        pConnection->AddListener(this);
-    }
 
     if (event.evType == EVT_CLOSE_CONNECTION)
     {
@@ -99,7 +78,7 @@ void SReaderStage::HandleEvent(const SEvent &event)
         // have, killing it here will pose sever problems.  So instead of
         // killing, we flag it as being closed so nothing else uses this
         // connection
-        pConnection->SetState(SConnection::STATE_CLOSED);
+        pConnection->Server()->MarkConnectionAsClosed(pConnection);
     }
     else if (event.evType == EVT_READ_REQUEST)
     {
@@ -126,8 +105,7 @@ void SReaderStage::HandleEvent(const SEvent &event)
                     {
                         // end of file
                         SLogger::Get()->Log("WARNING: read EOF reached\n\n");
-                        pConnection->Server()->MarkConnectionAsClosed(pConnection);
-                        pConnection->CloseSocket();
+                        pConnection->SetState(SConnection::STATE_PEER_CLOSED);
                     }
                     else if (errno == EAGAIN)
                     {

@@ -48,7 +48,7 @@ public:
     } EventType;
 
 public:
-    // Creates a new fileio helper stage
+    // Creates a new http request reader stage
     SHttpReaderStage(const SString &name, int numThreads = DEFAULT_NUM_THREADS);
     
     // Destroys the stage

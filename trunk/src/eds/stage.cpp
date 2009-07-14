@@ -91,6 +91,21 @@ SStage::~SStage()
     }
 }
 
+//! Called when a connection is going to be destroyed so we can do our
+// connection specific cleanup.
+void SStage::JobDestroyed(SJob *pJob)
+{
+    if (pJob != NULL)
+    {
+        void *pStageData = pJob->GetStageData(this);
+        if (pStageData != NULL)
+        {
+            DestroyStageData(pStageData);
+            pJob->SetStageData(this, NULL);
+        }
+    }
+}
+
 //! Starts the stage
 void SStage::Start()
 {
@@ -128,6 +143,16 @@ void SStage::PreHandleEvent(const SEvent &event)
 {
     SLogger::Get()->Log("DEBUG: PRE Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x, RefCount: %d\n",
                                 Name().c_str(), event.evType, event.pSource, event.pData, event.pSource->RefCount());
+
+    // create the stage specific data if any
+    SJob *pJob          = event.pSource;
+    void *pReaderState  = pJob->GetStageData(this);
+    if (pJob == NULL)
+    {
+        pReaderState = CreateStageData();
+        pJob->SetStageData(this, pReaderState);
+        pJob->AddListener(this);
+    }
 }
 
 //! Called after an event is handled

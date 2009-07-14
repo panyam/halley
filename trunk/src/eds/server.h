@@ -101,6 +101,9 @@ public:
     //! Marks a connection as closed
     void        MarkConnectionAsClosed(SConnection *pConnection);
 
+    //! Peer has closed the connection - so remove the POLLIN
+    void        PeerClosedConnection(SConnection *pConnection);
+
 protected:
     // Called to stop the task.
     virtual int RealStop();
@@ -136,7 +139,7 @@ private:
     int                 serverEpollFD;
 
     //! Number of fds epoll is handling currently
-    int                 currEpollFDs;
+    int                 numEpollFDs;
 
 private:
     //! The request reader stage
@@ -151,13 +154,7 @@ private:
     //! List of all connections
     std::set<SConnection *>         connections;
 
-    //! This is true if we have too many sockets in TIME_WAIT stage
-    bool                            serverFlooded;
-
-    //! After a flooding, tells when we can start accepting again
-    int                             startAcceptingAt;
-
-    //! List of connections that are closed
+    //! List of connections that can be garbage collected
     std::list<SConnection *>        closedConnections;
 
     //! Mutex on the connection list

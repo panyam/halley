@@ -33,10 +33,11 @@
 #include "readerstage.h"
 
 #define MAXEPOLLSIZE    10000
+#define MAXEPOLLTIME    1000
 
-#ifndef EPOLLRDHUP
-#define EPOLLRDHUP  0x2000
-#endif
+// #ifndef EPOLLRDHUP
+// #define EPOLLRDHUP  0x2000
+// #endif
 
 //*****************************************************************************
 /*!
@@ -274,13 +275,13 @@ int SEvServer::Run()
     signal(SIGPIPE, SIG_IGN);
 
     serverEpollFD       = epoll_create(MAXEPOLLSIZE);
-    currEpollFDs        = 1;
+    numEpollFDs        = 1;
 
     struct epoll_event ev;
     struct epoll_event events[MAXEPOLLSIZE];
 
     bzero(&ev, sizeof(ev));
-    ev.events   = EPOLLIN | EPOLLET | EPOLLHUP | EPOLLRDHUP;
+    ev.events   = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLHUP;
     ev.data.ptr = NULL;
     if (epoll_ctl(serverEpollFD, EPOLL_CTL_ADD, serverSocket, &ev) < 0)
     {
@@ -293,7 +294,11 @@ int SEvServer::Run()
     // now run the server asynchronously
     while (!Stopped())
     {
-        int nfds = epoll_wait(serverEpollFD, events, currEpollFDs, 1000);
+        int nfds = epoll_wait(serverEpollFD, events, numEpollFDs, MAXEPOLLTIME);
+
+        // go through and remove connections that are
+        // marked as close if their reference counts are 0
+        CloseMarkedConnections();
 
         if (nfds < 0)
         {
@@ -309,14 +314,22 @@ int SEvServer::Run()
             SConnection *   pConnection = (SConnection *)(events[n].data.ptr);
             int             connSocket  = pConnection == NULL ? serverSocket : pConnection->Socket();
 
-            if (connSocket == serverSocket)    // its a connection request
+            if ((events[n].events & (EPOLLHUP)) != 0)
+            {
+                // we remove this socket from the epoll list but do
+                // not kill this as it will be done from a
+                // different point (reader stage) anyway
+
+                if (pConnection != NULL)
+                {
+                    SLogger::Get()->Log("TRACE: Hangup Recieved - Connection: [%x], Socket: [%d]\n", pConnection, pConnection->Socket());
+                    MarkConnectionAsClosed(pConnection);
+                }
+            }
+            else if (connSocket == serverSocket)    // its a connection request
             {
                 sockaddr_in client_sock_addr;
                 socklen_t addlen = sizeof(client_sock_addr);
-
-                // go through and remove connections that are
-                // marked as close if their reference counts are 0
-                CloseMarkedConnections();
 
                 int clientSocket = accept(serverSocket, (struct sockaddr *)&client_sock_addr, &addlen);
 
@@ -356,14 +369,6 @@ int SEvServer::Run()
                 // dont read it but give it the request reader task
                 // handler!
                 pReaderStage->SendEvent_ReadRequest(pConnection);
-            }
-            else if ((events[n].events & (EPOLLRDHUP | EPOLLHUP)) != 0)
-            {
-                // we remove this socket from the epoll list but do
-                // not kill this as it will be done from a
-                // different point (reader stage) anyway
-
-                MarkConnectionAsClosed(pConnection);
             }
         }
     }
@@ -480,6 +485,35 @@ SStage *SEvServer::GetStage(const SString &name)
 
 
 /**************************************************************************************
+*   \brief  Notified by the reader when the peer has closed the connection.
+*
+*   \version
+*       - Sri Panyam  14/07/2009
+*         Created
+**************************************************************************************/
+void SEvServer::PeerClosedConnection(SConnection *pConnection)
+{
+    if (pConnection == NULL) return ;
+
+    SMutexLock locker(connListMutex);
+
+    SLogger::Get()->Log("TRACE: Peer Closed Connection: [%x], Socket: [%d]\n", pConnection, pConnection->Socket());
+
+    struct epoll_event ev;
+    bzero(&ev, sizeof(ev));
+
+    // Remove the read-events since the peer has closed the connection
+    ev.events       = EPOLLOUT | EPOLLET | EPOLLHUP;
+    ev.data.ptr     = pConnection;
+
+    if (epoll_ctl(serverEpollFD, EPOLL_CTL_MOD, pConnection->Socket(), &ev) < 0)
+    {
+        SLogger::Get()->Log("ERROR: epoll_ctl MOD error [%d]: %s\n", errno, strerror(errno));
+        assert("Could not remove POLLIN from socket events" && false);
+    }
+}
+
+/**************************************************************************************
 *   \brief  Marks a connection as closed so when time comes it can be
 *   deleted.
 *
@@ -493,6 +527,7 @@ void SEvServer::MarkConnectionAsClosed(SConnection *pConnection)
 
     SMutexLock locker(connListMutex);
 
+    SLogger::Get()->Log("TRACE: Marking As Close - Connection: [%x], Socket: [%d]\n", pConnection, pConnection->Socket());
     if (connections.find(pConnection) != connections.end())
     {
         struct epoll_event ev;
@@ -506,7 +541,7 @@ void SEvServer::MarkConnectionAsClosed(SConnection *pConnection)
         }
         else
         {
-            currEpollFDs--;
+            numEpollFDs--;
         }
 
         connections.erase(pConnection);
@@ -569,23 +604,22 @@ SConnection *SEvServer::NewConnection(int clientSocket)
     {
         SMutexLock locker(connListMutex);
         connections.insert(pConn);
-    }
 
+        // what about EPOLLOUT??
+        struct epoll_event ev;
+        bzero(&ev, sizeof(ev));
+        ev.events       = EPOLLIN | EPOLLET | EPOLLHUP;
+        ev.data.ptr     = pConn;
 
-    // what about EPOLLOUT??
-    struct epoll_event ev;
-    bzero(&ev, sizeof(ev));
-    ev.events       = EPOLLIN | EPOLLET | EPOLLRDHUP | EPOLLHUP;
-    ev.data.ptr     = pConn;
-
-    if (epoll_ctl(serverEpollFD, EPOLL_CTL_ADD, clientSocket, &ev) < 0)
-    {
-        SLogger::Get()->Log("ERROR: epoll_ctl error [%d]: %s\n", errno, strerror(errno));
-        assert("Could not add connection to epoll list" && false);
-    }
-    else
-    {
-        currEpollFDs++;
+        if (epoll_ctl(serverEpollFD, EPOLL_CTL_ADD, clientSocket, &ev) < 0)
+        {
+            SLogger::Get()->Log("ERROR: epoll_ctl error [%d]: %s\n", errno, strerror(errno));
+            assert("Could not add connection to epoll list" && false);
+        }
+        else
+        {
+            numEpollFDs++;
+        }
     }
 
     return pConn;
