@@ -84,7 +84,7 @@ int SEvServer::PrepareClientSocket(int clientSocket)
 {
     if (setnonblocking(clientSocket))
     {
-        SLogger::Get()->Log(0, "ERROR: Cannot make client socket non blocking[%d]: %s\n\n", errno, strerror(errno));
+        SLogger::Get()->Log("ERROR: Cannot make client socket non blocking[%d]: %s\n\n", errno, strerror(errno));
         return -1;
     }
 
@@ -92,14 +92,14 @@ int SEvServer::PrepareClientSocket(int clientSocket)
     int reuse = 1;
     if (setsockopt(clientSocket, SOL_SOCKET, SO_REUSEADDR, (const void *)&reuse, sizeof(reuse)) != 0)
     {
-        SLogger::Get()->Log(0, "ERROR: setsockopt SO_REUSEADDR failed: [%d]: %s\n\n", errno, strerror(errno));
+        SLogger::Get()->Log("ERROR: setsockopt SO_REUSEADDR failed: [%d]: %s\n\n", errno, strerror(errno));
         return -errno;
     }
 
     int nodelay = 1;
     if (setsockopt(clientSocket, IPPROTO_TCP, TCP_NODELAY, (const void *)&nodelay, sizeof(nodelay)) != 0)
     {
-        SLogger::Get()->Log(0, "ERROR: setsockopt TCP_NODELAY failed: [%d]: %s\n\n", errno, strerror(errno));
+        SLogger::Get()->Log("ERROR: setsockopt TCP_NODELAY failed: [%d]: %s\n\n", errno, strerror(errno));
         return -errno;
     }
 
@@ -110,7 +110,7 @@ int SEvServer::PrepareClientSocket(int clientSocket)
     linger.l_linger = 0;
     if (setsockopt(clientSocket, SOL_SOCKET, SO_LINGER, (const void *)&linger, sizeof(struct linger)) != 0)
     {
-        SLogger::Get()->Log(0, "ERROR: setsockopt SO_LINGER failed: [%d]: %s\n\n", errno, strerror(errno));
+        SLogger::Get()->Log("ERROR: setsockopt SO_LINGER failed: [%d]: %s\n\n", errno, strerror(errno));
         return -errno;
     }
 #endif
@@ -136,13 +136,13 @@ int SEvServer::CreateSocket()
     int newSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (newSocket < 0)
     {
-        SLogger::Get()->Log(0, "ERROR: Cannot create server socket: [%d]: %s\n\n", errno, strerror(errno));
+        SLogger::Get()->Log("ERROR: Cannot create server socket: [%d]: %s\n\n", errno, strerror(errno));
         return -errno;
     }
 
     if (setnonblocking(newSocket))
     {
-        SLogger::Get()->Log(0, "ERROR: setnonblocking failed: [%d]: %s\n\n", errno, strerror(errno));
+        SLogger::Get()->Log("ERROR: setnonblocking failed: [%d]: %s\n\n", errno, strerror(errno));
         return -1;
     }
 
@@ -150,21 +150,21 @@ int SEvServer::CreateSocket()
     int reuse = 1;
     if (setsockopt(newSocket, SOL_SOCKET, SO_REUSEADDR, (const void *)&reuse, sizeof(reuse)) != 0)
     {
-        SLogger::Get()->Log(0, "ERROR: setsockopt (SO_REUSEADDR) failed: [%d]: %s\n\n", errno, strerror(errno));
+        SLogger::Get()->Log("ERROR: setsockopt (SO_REUSEADDR) failed: [%d]: %s\n\n", errno, strerror(errno));
         return -errno;
     }
 
     int nodelay = 1;
     if (setsockopt(newSocket, IPPROTO_TCP, TCP_NODELAY, (const void *)&nodelay, sizeof(nodelay)) != 0)
     {
-        SLogger::Get()->Log(0, "ERROR: setsockopt (TCP_NODELAY) failed: [%d]: %s\n\n", errno, strerror(errno));
+        SLogger::Get()->Log("ERROR: setsockopt (TCP_NODELAY) failed: [%d]: %s\n\n", errno, strerror(errno));
         return -errno;
     }
 
     int timeout = 0;
     if (setsockopt(newSocket, IPPROTO_TCP, TCP_DEFER_ACCEPT, (const void *)&timeout, sizeof(timeout)) != 0)
     {
-        SLogger::Get()->Log(0, "ERROR: setsockopt (TCP_DEFER_ACCEPT) failed: [%d]: %s\n\n", errno, strerror(errno));
+        SLogger::Get()->Log("ERROR: setsockopt (TCP_DEFER_ACCEPT) failed: [%d]: %s\n\n", errno, strerror(errno));
         return -errno;
     }
 
@@ -202,7 +202,7 @@ int SEvServer::BindSocket()
     int retval = bind(serverSocket, (sockaddr*)(&srv_sock_addr), sizeof(sockaddr));
     if (retval != 0)
     {
-        SLogger::Get()->Log(0, "ERROR: bind failed: [%d]: %s\n\n", errno, strerror(errno));
+        SLogger::Get()->Log("ERROR: bind failed: [%d]: %s\n\n", errno, strerror(errno));
         return errno;
     }
     return 0;
@@ -223,7 +223,7 @@ int SEvServer::ListenOnSocket()
     int retval = listen(serverSocket, 10);
     if (retval != 0)
     {
-        SLogger::Get()->Log(0, "ERROR: listen failed: [%d]: %s\n\n", errno, strerror(errno));
+        SLogger::Get()->Log("ERROR: listen failed: [%d]: %s\n\n", errno, strerror(errno));
         return errno;
     }
     return 0;
@@ -258,7 +258,7 @@ int SEvServer::Run()
 #ifndef USING_VALGRIND
     if (setrlimit(RLIMIT_NOFILE, &rt) == -1)
     {
-        SLogger::Get()->Log(0, "ERROR: setrlimit failed: [%d]: %s\n\n", errno, strerror(errno));
+        SLogger::Get()->Log("ERROR: setrlimit failed: [%d]: %s\n\n", errno, strerror(errno));
         return errno;
     }
 #endif
@@ -284,7 +284,7 @@ int SEvServer::Run()
     ev.data.ptr = NULL;
     if (epoll_ctl(serverEpollFD, EPOLL_CTL_ADD, serverSocket, &ev) < 0)
     {
-        SLogger::Get()->Log(0, "ERROR: epoll_ctl failed: [%d]: %s\n\n", errno, strerror(errno));
+        SLogger::Get()->Log("ERROR: epoll_ctl failed: [%d]: %s\n\n", errno, strerror(errno));
         close(serverEpollFD);
         serverEpollFD = -1;
         return errno;
@@ -299,7 +299,7 @@ int SEvServer::Run()
         {
             if (errno != EINTR)
             {
-                SLogger::Get()->Log(0, "ERROR: epoll_wait failed: [%d]: %s\n\n", errno, strerror(errno));
+                SLogger::Get()->Log("ERROR: epoll_wait failed: [%d]: %s\n\n", errno, strerror(errno));
                 break ;
             }
         }
@@ -322,7 +322,7 @@ int SEvServer::Run()
 
                 if (clientSocket < 0)
                 {
-                    SLogger::Get()->Log(0, "ERROR: accept failed: [%d]: %s\n\n", errno, strerror(errno));
+                    SLogger::Get()->Log("ERROR: accept failed: [%d]: %s\n\n", errno, strerror(errno));
                     break ;
                 }
                 else if (Stopped())
@@ -332,7 +332,7 @@ int SEvServer::Run()
                     int result = close(clientSocket);
                     if (result != 0)
                     {
-                        SLogger::Get()->Log(0, "ERROR: close failed: [%d]: %s\n\n", errno, strerror(errno));
+                        SLogger::Get()->Log("ERROR: close failed: [%d]: %s\n\n", errno, strerror(errno));
                     }
                 }
                 else
@@ -502,7 +502,7 @@ void SEvServer::MarkConnectionAsClosed(SConnection *pConnection)
         pConnection->SetState(SConnection::STATE_CLOSED);
         if (epoll_ctl(serverEpollFD, EPOLL_CTL_DEL, pConnection->Socket(), &ev) < 0)
         {
-            SLogger::Get()->Log(0, "ERROR: epoll_ctl delete error [%d]: %s\n", errno, strerror(errno));
+            SLogger::Get()->Log("ERROR: epoll_ctl delete error [%d]: %s\n", errno, strerror(errno));
         }
         else
         {
@@ -574,12 +574,13 @@ SConnection *SEvServer::NewConnection(int clientSocket)
 
     // what about EPOLLOUT??
     struct epoll_event ev;
+    bzero(&ev, sizeof(ev));
     ev.events       = EPOLLIN | EPOLLET | EPOLLRDHUP | EPOLLHUP;
     ev.data.ptr     = pConn;
 
     if (epoll_ctl(serverEpollFD, EPOLL_CTL_ADD, clientSocket, &ev) < 0)
     {
-        SLogger::Get()->Log(0, "ERROR: epoll_ctl error [%d]: %s\n", errno, strerror(errno));
+        SLogger::Get()->Log("ERROR: epoll_ctl error [%d]: %s\n", errno, strerror(errno));
         assert("Could not add connection to epoll list" && false);
     }
     else

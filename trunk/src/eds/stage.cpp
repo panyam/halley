@@ -82,7 +82,7 @@ SStage::~SStage()
     {
         if (handlerThreads[i] != NULL)
         {
-            SLogger::Get()->Log(0, "Stopping stage thread: %d\n", i);
+            SLogger::Get()->Log("Stopping stage thread: %d\n", i);
             handlerThreads[i]->Stop();
             assert("Stage::Stop MUST be called before destruction." && !handlerThreads[i]->IsRunning());
             delete handlerThreads[i];
@@ -126,7 +126,7 @@ void SStage::Stop()
 //! Called before an event is handled
 void SStage::PreHandleEvent(const SEvent &event)
 {
-    SLogger::Get()->Log(0, "DEBUG: PRE Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x, RefCount: %d\n",
+    SLogger::Get()->Log("DEBUG: PRE Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x, RefCount: %d\n",
                                 Name().c_str(), event.evType, event.pSource, event.pData, event.pSource->RefCount());
 }
 
@@ -134,7 +134,7 @@ void SStage::PreHandleEvent(const SEvent &event)
 void SStage::PostHandleEvent(const SEvent &event)
 {
     event.pSource->DecRef();
-    SLogger::Get()->Log(0, "DEBUG: POST Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x, RefCount: %d\n",
+    SLogger::Get()->Log("DEBUG: POST Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x, RefCount: %d\n",
                                 Name().c_str(), event.evType, event.pSource, event.pData, event.pSource->RefCount());
 }
 
@@ -147,7 +147,7 @@ int SEventDispatcher::Run()
         SEvent event = pStage->GetEvent();
 
         pStage->PreHandleEvent(event);
-        SLogger::Get()->Log(0, "DEBUG: Handling Event, Stage: %s, Type: %d, Source: %x, Data: %x\n",
+        SLogger::Get()->Log("DEBUG: Handling Event, Stage: %s, Type: %d, Source: %x, Data: %x\n",
                                     pStage->Name().c_str(), event.evType, event.pSource, event.pData);
         pStage->HandleEvent(event);
         pStage->PostHandleEvent(event);
@@ -172,7 +172,7 @@ bool SStage::QueueEvent(const SEvent &event)
     {
         {
             SMutexLock locker(evtQueueMutex);
-            SLogger::Get()->Log(0, "Queuing Event, Stage: %s, Type: %d, Source: %x, Data: %x\n",
+            SLogger::Get()->Log("Queuing Event, Stage: %s, Type: %d, Source: %x, Data: %x\n",
                                         Name().c_str(), event.evType, event.pSource, event.pData);
             eventQueue.push(event);
         }

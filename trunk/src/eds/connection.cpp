@@ -51,7 +51,7 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
         pCurrPos(NULL),
         pBuffEnd(NULL)
 {
-    SLogger::Get()->Log(0, "DEBUG: Creating Connection [%x], Socket: %d....\n", this, sock);
+    SLogger::Get()->Log("DEBUG: Creating Connection [%x], Socket: %d....\n", this, sock);
 }
 
 /**************************************************************************************
@@ -63,7 +63,7 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
 **************************************************************************************/
 SConnection::~SConnection()
 {
-    SLogger::Get()->Log(0, "DEBUG: Destroying connection [%x]....\n", this);
+    SLogger::Get()->Log("DEBUG: Destroying connection [%x]....\n", this);
     CloseSocket();
     if (socketBuff != NULL)
     {
@@ -95,7 +95,7 @@ void SConnection::CloseSocket()
         int result = close(connSocket);
         if (result != 0)
         {
-            SLogger::Get()->Log(0, "ERROR: close error [%x]/[%d]: %s\n", this, errno, strerror(errno));
+            SLogger::Get()->Log("ERROR: close error [%x]/[%d]: %s\n", this, errno, strerror(errno));
         }
         connSocket = -1;
     }
