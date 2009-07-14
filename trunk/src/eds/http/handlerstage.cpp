@@ -33,6 +33,7 @@
 #include "eds/connection.h"
 #include "utils/membuff.h"
 #include "readerstage.h"
+#include "writerstage.h"
 #include "handlerstage.h"
 #include "httpmodule.h"
 
@@ -45,25 +46,18 @@ SHttpHandlerStage::SHttpHandlerStage(const SString &name, int numThreads)
 :
     SStage(name, numThreads),
     pReaderStage(NULL),
+    pWriterStage(NULL),
     pRootModule(NULL)
 {
 }
 
 //! Handle a new request - will be called by external request reader
-bool SHttpHandlerStage::SendEvent_HandleRequest(SConnection *pConnection, SHttpRequest *pRequest)
+bool SHttpHandlerStage::SendEvent_HandleNextRequest(SConnection *pConnection, SHttpRequest *pRequest)
 {
-    if (pRequest)
-    {
-        return QueueEvent(SEvent(EVT_REQUEST_ARRIVED, pConnection, pRequest));
-    }
-    else
-    {
-        pConnection->SetState(SConnection::STATE_READING);
-        // tell the reader we are ready for more
-        return pReaderStage->SendEvent_ReadRequest(pConnection);
-    }
+    assert("Request CANNOT be NULL" && pRequest != NULL);
+    return QueueEvent(SEvent(EVT_REQUEST_ARRIVED, pConnection, pRequest));
 }
-    
+
 //! Sends input to be processed by a module
 bool SHttpHandlerStage::SendEvent_InputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart)
 {

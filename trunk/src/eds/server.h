@@ -63,7 +63,7 @@ public:
 
 public:
     //! Constructor
-    SEvServer(int port_, SReaderStage*pReqReader_ = NULL);
+    SEvServer(int port_, SReaderStage*pReqReader_ = NULL, SWriterStage*pReqWriter_ = NULL);
 
     //! Destructor
     ~SEvServer();

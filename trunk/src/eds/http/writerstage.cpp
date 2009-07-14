@@ -30,6 +30,7 @@
 #include "eds/server.h"
 #include "eds/connection.h"
 #include "writerstage.h"
+#include "readerstage.h"
 #include "httpmodule.h"
 #include "request.h"
 #include "response.h"
@@ -53,6 +54,14 @@ protected:
     //! Current request being processed
     SHttpRequest *          pCurrRequest;
 };
+
+// Creates a new file io helper stage
+SHttpWriterStage::SHttpWriterStage(const SString &name, int numThreads)
+:
+    SWriterStage(name, numThreads),
+    pReaderStage(NULL)
+{
+}
 
 //! Creates a new reader state object
 void *SHttpWriterStage::CreateStageData()
@@ -134,18 +143,20 @@ bool SHttpWriterStage::HandleBodyPart(SConnection *     pConnection,
     {
         // reset last BP sent as no more packets will 
         // be sent for this request
-        pStageData->nextBP        = 0;
-        pStageData->nextBPToSend  = 0;
+        bool closeConnection        = pRequest->Headers().CloseConnection();
+        pStageData->nextBP          = 0;
+        pStageData->nextBPToSend    = 0;
+
+        // remove and destroy the request from the queue
+        // Note this destroys pRequest - 
+        // dont use pRequest or Request() after this
+        pStageData->DestroyRequest();
 
         // do nothing - close connection only if close header found
-        if (pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION ||
-            pRequest->Headers().CloseConnection())
+        if (closeConnection ||
+            pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION ||
+            pConnection->GetState() == SConnection::STATE_PEER_CLOSED)
         {
-            // remove and destroy the request from the queue
-            // Note this destroys pRequest - 
-            // dont use pRequest or Request() after this
-            pStageData->DestroyRequest();
-
             // a connection is to be closed -
             // the problem is regardless of how many threads we or other stages
             // have, killing it here will pose sever problems.  So instead of
@@ -155,10 +166,9 @@ bool SHttpWriterStage::HandleBodyPart(SConnection *     pConnection,
         }
         else
         {
-            // remove and destroy the request from the queue
-            // Note this destroys pRequest - 
-            // dont use pRequest or Request() after this
-            pStageData->DestroyRequest();
+            // tell the reader we are ready for more
+            pConnection->SetState(SConnection::STATE_READING);
+            pReaderStage->SendEvent_ReadRequest(pConnection);
         }
     }
     else // treat as normal message

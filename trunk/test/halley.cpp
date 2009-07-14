@@ -130,8 +130,8 @@ protected:
 class ServerContext
 {
 public:
-    SWriterStage        writerStage;
     SHttpReaderStage    requestReader;
+    SHttpWriterStage    requestWriter;
     SHttpHandlerStage   requestHandler;
     // STransferModule     transferModule(&writerModule);
     SContentModule      contentModule;
@@ -150,7 +150,8 @@ public:
     ServerContext(int port = 80)    :
         requestReader("Reader", 0),
         requestHandler("Handler", 0),
-        contentModule(),
+        requestWriter("Writer", 0),
+        contentModule(NULL),
         bayeuxModule(&contentModule, "MyTestBoundary"),
         rootFileModule(&contentModule, true),
         myModule(&contentModule),
@@ -160,7 +161,7 @@ public:
         staticUrlMatch("/static/", SContainsUrlMatcher::PREFIX_MATCH, &rootFileModule),
         testUrlMatch("/btest/", SContainsUrlMatcher::PREFIX_MATCH, &testModule),
         dsUrlMatch("/bayeux/", SContainsUrlMatcher::PREFIX_MATCH, &bayeuxModule),
-        pServer(port, &requestReader)
+        pServer(port, &requestReader, &requestWriter)
     {
         testModule.AddDocRoot("/btest/", "./test/");
         rootFileModule.AddDocRoot("/microscape/", "./test/microscape/");
@@ -174,17 +175,22 @@ public:
         urlRouter.AddUrlMatch(&dsUrlMatch);
 
         requestReader.SetHandlerStage(&requestHandler);
-        requestHandler.SetRootModule(&urlRouter);
 
+        requestHandler.SetRootModule(&urlRouter);
         requestHandler.SetReaderStage(&requestReader);
+        requestHandler.SetWriterStage(&requestWriter);
+
+        requestWriter.SetReaderStage(&requestReader);
 
         pServer.SetStage("RequestReader", &requestReader);
         pServer.SetStage("RequestHandler", &requestHandler);
+        pServer.SetStage("RequestWriter", &requestWriter);
 
         // start the stages... note that these must be started before the
         // server is started
         requestReader.Start();
         requestHandler.Start();
+        requestWriter.Start();
 
         /*
         for (int i = 0;i < 5;i++)
