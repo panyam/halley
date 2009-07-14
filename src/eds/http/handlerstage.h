@@ -75,9 +75,6 @@ public:
     //! Sends output to be processed by a module
     virtual bool SendEvent_OutputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart = NULL);
 
-    //! Request to close the connection
-    virtual bool SendEvent_CloseConnection(SConnection *pConnection);
-
     //! Called when a job is destroyed
     virtual void JobDestroyed(SJob *pJob);
 
