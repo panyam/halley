@@ -71,15 +71,18 @@ public:
 
     //! Sets the root processing module.
     virtual void SetRootModule(SHttpModule *pModule) { pRootModule = pModule; }
-
-    //! Handle a new request
-    virtual bool SendEvent_HandleNextRequest(SConnection *pConnection, SHttpRequest *pRequest);
     
     //! Sends input to be processed by a module
     virtual bool SendEvent_InputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart = NULL);
     
     //! Sends output to be processed by a module
     virtual bool SendEvent_OutputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart = NULL);
+
+    //! Handle a new request
+    virtual bool SendEvent_HandleNextRequest(SConnection *pConnection, SHttpRequest *pRequest);
+    
+    //! Sends body part to be written out
+    virtual bool SendEvent_WriteBodyPart(SConnection *pConnection, SHttpRequest *pRequest, SBodyPart *pBodyPart);
 
     //! Called when a job is destroyed
     virtual void JobDestroyed(SJob *pJob);

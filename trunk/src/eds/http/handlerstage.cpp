@@ -51,13 +51,6 @@ SHttpHandlerStage::SHttpHandlerStage(const SString &name, int numThreads)
 {
 }
 
-//! Handle a new request - will be called by external request reader
-bool SHttpHandlerStage::SendEvent_HandleNextRequest(SConnection *pConnection, SHttpRequest *pRequest)
-{
-    assert("Request CANNOT be NULL" && pRequest != NULL);
-    return QueueEvent(SEvent(EVT_REQUEST_ARRIVED, pConnection, pRequest));
-}
-
 //! Sends input to be processed by a module
 bool SHttpHandlerStage::SendEvent_InputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart)
 {
@@ -73,17 +66,38 @@ bool SHttpHandlerStage::SendEvent_InputToModule(SConnection *pConnection, SHttpM
 }
 
 //! Sends output to be processed by a module
-bool SHttpHandlerStage::SendEvent_OutputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart)
+bool SHttpHandlerStage::SendEvent_OutputToModule(SConnection *  pConnection,
+                                                 SHttpModule *  pNextModule,
+                                                 SBodyPart *    pBodyPart)
 {
+    assert("Next module CANNOT be NULL" && pNextModule != NULL);
     if (pBodyPart)
     {
-        pBodyPart->extra_data = pModule;
+        pBodyPart->extra_data = pNextModule;
         return QueueEvent(SEvent(EVT_OUTPUT_BODY_TO_MODULE, pConnection, pBodyPart));
     }
     else
     {
-        return QueueEvent(SEvent(EVT_NEXT_OUTPUT_MODULE, pConnection, pModule));
+        return QueueEvent(SEvent(EVT_NEXT_OUTPUT_MODULE, pConnection, pNextModule));
     }
+}
+
+//! Handle a new request - MUST be called by external request reader
+bool SHttpHandlerStage::SendEvent_HandleNextRequest(SConnection *pConnection, SHttpRequest *pRequest)
+{
+    assert("Request CANNOT be NULL" && pRequest != NULL);
+    return QueueEvent(SEvent(EVT_REQUEST_ARRIVED, pConnection, pRequest));
+}
+
+//! Sends body part to be written out - MUST be called by a module
+bool SHttpHandlerStage::SendEvent_WriteBodyPart(SConnection *   pConnection,
+                                                SHttpRequest *  pRequest,
+                                                SBodyPart *     pBodyPart)
+{
+    // otherwise get the writer stage to send it out
+    assert("Request AND BodyPart must be NON-NULL" && pRequest != NULL && pBodyPart != NULL);
+    pBodyPart->extra_data = pRequest;
+    return pWriterStage->SendEvent_WriteBodyPart(pConnection, pBodyPart);
 }
 
 void SHttpHandlerStage::JobDestroyed(SJob *pJob)

@@ -232,6 +232,7 @@ protected:
     //! Send a body part to another module
     void SendBodyPartToModule(SConnection *         pConn,
                               SHttpHandlerStage *   pStage,
+                              SHttpRequest *        pRequest,
                               SBodyPart *           pBodyPart,
                               SHttpModuleData *     pModData,
                               SHttpModule *         pModule);

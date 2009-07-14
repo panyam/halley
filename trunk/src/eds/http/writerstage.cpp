@@ -76,6 +76,12 @@ void SHttpWriterStage::DestroyStageData(void *pReaderState)
         delete ((SHttpStageData*)pReaderState);
 }
 
+//! write a body part out
+bool SHttpWriterStage::SendEvent_WriteBodyPart(SConnection *pConnection, SBodyPart *pBodyPart)
+{
+    return QueueEvent(SEvent(EVT_WRITE_BODY_PART, pConnection, pBodyPart));
+}
+
 //! Re orders and sends out http body parts to the socket
 void SHttpWriterStage::HandleEvent(const SEvent &event)
 {
@@ -83,6 +89,8 @@ void SHttpWriterStage::HandleEvent(const SEvent &event)
     SHttpStageData *    pStageData  = (SHttpStageData *)pConnection->GetStageData(this);
     SBodyPart *         pBodyPart   = (SBodyPart *)(event.pData);
     std::ostream &outStream(pConnection->GetOutputStream());
+
+    pStageData->SetRequest(pBodyPart->ExtraData<SHttpRequest *>());
 
     if (event.evType == EVT_WRITE_DATA)
     {
@@ -134,7 +142,7 @@ bool SHttpWriterStage::HandleBodyPart(SConnection *     pConnection,
 {
     SHttpRequest *  pRequest        = pStageData->Request();
     SHttpResponse * pResponse       = pRequest->Response();
-    // SHeaderTable &reqHeaders        = pRequest->Headers();
+    SHeaderTable &reqHeaders        = pRequest->Headers();
     SHeaderTable &respHeaders       = pResponse->Headers();
     SString transferEncoding(respHeaders.Header("Transfer-Encoding"));
 
@@ -143,7 +151,7 @@ bool SHttpWriterStage::HandleBodyPart(SConnection *     pConnection,
     {
         // reset last BP sent as no more packets will 
         // be sent for this request
-        bool closeConnection        = pRequest->Headers().CloseConnection();
+        bool closeConnection        = reqHeaders.CloseConnection();
         pStageData->nextBP          = 0;
         pStageData->nextBPToSend    = 0;
 
@@ -155,7 +163,7 @@ bool SHttpWriterStage::HandleBodyPart(SConnection *     pConnection,
         // do nothing - close connection only if close header found
         if (closeConnection ||
             pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION ||
-            pConnection->GetState() == SConnection::STATE_PEER_CLOSED)
+            pConnection->GetState() >= SConnection::STATE_PEER_CLOSED)
         {
             // a connection is to be closed -
             // the problem is regardless of how many threads we or other stages
@@ -167,7 +175,6 @@ bool SHttpWriterStage::HandleBodyPart(SConnection *     pConnection,
         else
         {
             // tell the reader we are ready for more
-            pConnection->SetState(SConnection::STATE_READING);
             pReaderStage->SendEvent_ReadRequest(pConnection);
         }
     }

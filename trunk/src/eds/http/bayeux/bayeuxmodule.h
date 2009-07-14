@@ -66,6 +66,7 @@ protected:
                       const JsonNodePtr &   output,
                       SHttpHandlerStage *   pStage, 
                       SHttpHandlerData *    pHandlerData,
+                      SHttpRequest  *       pRequest,
                       SHttpResponse *       pResponse);
 
     int  ProcessMessage(const JsonNodePtr & node,
