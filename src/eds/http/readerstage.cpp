@@ -143,8 +143,8 @@ bool SHttpReaderStage::HandleRequest(SConnection *pConnection, void *pRequest)
 //! Process a bunch of bytes and try to assemble a request if enough bytes found
 void *SHttpReaderStage::AssembleRequest(char *&pStart, char *&pLast, void *pState)
 {
-    SHttpReaderState *pReaderState = (SHttpReaderState *)pState;
-    SHttpRequest *pOut = NULL;
+    SHttpReaderState *  pReaderState    = (SHttpReaderState *)pState;
+    SHttpRequest *      pOut            = NULL;
 
     if (pReaderState->ProcessBytes(pStart, pLast))
     {

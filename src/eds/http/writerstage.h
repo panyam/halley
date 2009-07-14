@@ -14,29 +14,47 @@
  *
  *****************************************************************************
  *
- *  \file   writermodule.h
+ *  \file   writerstage.h
  *
- *  \brief  A module that writes the request to the network - this MUST be
- *  the last stage in a chain.
+ *  \brief  A stage that writes the request to the socket.  The modules
+ *  dont/shouldnt care about this.  When there is no longer a module to
+ *  send to, the http handler stage will automatically send the data to
+ *  this stage.
  *
  *  \version
- *      - S Panyam      11/03/2009
+ *      - S Panyam      14/07/2009
  *        Created
  *
  *****************************************************************************/
 
-#ifndef _SWRITER_MODULE_H_
-#define _SWRITER_MODULE_H_
+#ifndef _SHTTP_WRITER_STAGE_H_
+#define _SHTTP_WRITER_STAGE_H_
 
-#include "httpmodule.h"
+#include "eds/writerstage.h"
 
 // Takes care of transfer encoding - Strips out Content-Length in chunked
 // mode
-class SWriterModule : public SHttpModule
+class SHttpWriterStage : public SWriterStage
 {
 public:
-    //! Create it
-    SWriterModule() : SHttpModule(NULL) { }
+    // Allowed events in this stage
+    typedef enum
+    {
+        EVT_WRITE_BODY_PART = 0,
+    } EventType;
+
+public:
+    // Creates a http request writer
+    SHttpWriterStage(const SString &name, int numThreads = DEFAULT_NUM_THREADS);
+
+    // Destroys the stage
+    virtual ~SHttpWriterStage();
+
+    //! Creates the stage specific object
+    virtual void *  CreateStageData();
+
+    //! Destroys the stage specific object
+    virtual void    DestroyStageData(void *pStateData);
 
     //! Called to handle output data from another module
     virtual void ProcessOutput(SHttpHandlerData *   pHandlerData,
@@ -46,7 +64,7 @@ public:
 protected:
     bool HandleBodyPart(SHttpHandlerData *  pHandlerData, 
                         SHttpHandlerStage * pStage,
-                        SHttpModuleData *   pModData,
+                        SHttpStageData *    pModData,
                         SBodyPart *         pBodyPart, 
                         std::ostream &      outStream);
 };

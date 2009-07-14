@@ -53,9 +53,6 @@ public:
     // Destroys the stage
     virtual         ~SReaderStage();
 
-    //! Called when a job is destroyed
-    virtual void    JobDestroyed(SJob *pJob);
-
     //! Called when data is available to be read.
     virtual bool    SendEvent_ReadRequest(SConnection *pConnection);
 

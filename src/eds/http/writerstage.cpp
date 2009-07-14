@@ -14,30 +14,45 @@
  *
  *****************************************************************************
  *
- *  \file   writermodule.cpp
+ *  \file   writerstage.cpp
  *
- *  \brief  A module that writes the request to the network - this MUST be
- *  the last stage in a chain.
+ *  \brief  A stage that writes the request to the socket.  The modules
+ *  dont/shouldnt care about this.  When there is no longer a module to
+ *  send to, the http handler stage will automatically send the data to
+ *  this stage.
  *
  *  \version
- *      - S Panyam      11/03/2009
+ *      - S Panyam      14/07/2009
  *        Created
  *
  *****************************************************************************/
 
-#include "writermodule.h"
+#include "writerstage.h"
+#include "httpmodule.h"
 #include "eds/connection.h"
-#include "handlerstage.h"
 #include "request.h"
 #include "response.h"
 
+//! Creates a new reader state object
+void *SHttpReaderStage::CreateStageData()
+{
+    return new SHttpModuleData();
+}
+
+//! Destroys reader state objects
+void SHttpReaderStage::DestroyStageData(void *pReaderState)
+{
+    if (pReaderState != NULL)
+        delete ((SHttpModuleData*)pReaderState);
+}
+
 //! This affects transfer-xxx headers but not content headers
 // Also this only takes place if 
-void SWriterModule::ProcessOutput(SHttpHandlerData *    pHandlerData,
+void SWriterStage::ProcessOutput(SHttpHandlerData *    pHandlerData,
                                   SHttpHandlerStage *   pStage,
                                   SBodyPart *           pBodyPart)
 {
-    SHttpModuleData *pModData   = pHandlerData->GetModuleData(this, true);
+    SHttpStageData *pModData   = pHandlerData->GetStageData(this, true);
     std::ostream &outStream(pHandlerData->pConnection->GetOutputStream());
 
     // first send the headers regardless of whether there are any 
@@ -77,9 +92,9 @@ void SWriterModule::ProcessOutput(SHttpHandlerData *    pHandlerData,
     }
 }
 
-bool SWriterModule::HandleBodyPart(SHttpHandlerData *   pHandlerData, 
+bool SWriterStage::HandleBodyPart(SHttpHandlerData *   pHandlerData, 
                                    SHttpHandlerStage *  pStage,
-                                   SHttpModuleData *    pModData,
+                                   SHttpStageData *    pModData,
                                    SBodyPart *          pBodyPart, 
                                    std::ostream &       outStream)
 {

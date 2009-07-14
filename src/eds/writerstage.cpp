@@ -47,10 +47,11 @@ SWriterStage::~SWriterStage()
 {
 }
 
-// Read bytes
-bool SWriterStage::SendEvent_WriteData(SConnection *pConnection)
+//! Initiates another load of data writing - called by the server instead
+// of other stages
+void SWriterStage::SendEvent_WriteData(SConnection *pConnection)
 {
-    return QueueEvent(SEvent(EVT_WRITE_DATA, pConnection));
+    QueueEvent(SEvent(EVT_WRITE_DATA, pConnection));
 }
 
 //! Handles "read request" events.
@@ -61,6 +62,5 @@ bool SWriterStage::SendEvent_WriteData(SConnection *pConnection)
 void SWriterStage::HandleEvent(const SEvent &event)
 {
     // The connection currently being processed
-    // SConnection *pConnection    = (SConnection *)(event.pSource);
 }
 

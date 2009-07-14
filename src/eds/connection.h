@@ -74,25 +74,14 @@
  *                          the previous state is being processed by other 
  *                          stages/modules.
  *
- *  STATE_WRITING       -   Message that has been processed in the PROCESSING 
- *                          state can have its response written in this state.
- *                          The problem is if the writing of a response
- *                          happens here, then we may have to do things
- *                          like buffering of messages and duplicate
- *                          copying between threads.  To avoid this we
- *                          should perhaps let the stage do its own
- *                          serialization (more than once if necessary) in
- *                          the processing stage.
+ *  STATE_PEER_CLOSED   -   The read end of the connection is closed.  No
+ *                          more reads can happen on the connection - but
+ *                          writes are ok.
  *
- *  STATE_FINISHED      -   Processing of a message has completed.  At this
- *                          stage a connection can be closed or left open.
- *                          If the connection is left open, it goes back to
- *                          the STATE_READING state.
- *
- *  STATE_CLOSED        -   The connection is closed.  It can be freed
- *                          and/or reclaimed by the server.  At or after
- *                          this state a connection should not be used by
- *                          other stages.
+ *  STATE_CLOSED        -   The connection can closed and freed and/or
+ *                          reclaimed by the server at any time it sees fit.  
+ *                          At or after this state a connection should not be 
+ *                          used by other stages.
  *****************************************************************************/
 class SConnection : public SJob
 {
@@ -101,8 +90,7 @@ public:
     {
         STATE_READING,
         STATE_PROCESSING,
-        // STATE_WRITING,
-        // STATE_FINISHED,
+        STATE_PEER_CLOSED,
         STATE_CLOSED,
     };
 
@@ -131,11 +119,12 @@ public:
     //! Get the connection state
     void SetState(int newState) { connState = newState; }
 
-    //! Closes the underlying socket
-    void CloseSocket();
-
     //! Reads data from the socket
     int RefillBuffer(char *&pOutCurrPos, char *&pOutBuffEnd);
+
+protected:
+    //! Closes the underlying socket
+    void CloseSocket();
 
 private:
     //! The server parenting this connection

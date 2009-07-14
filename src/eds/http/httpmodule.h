@@ -66,7 +66,7 @@ public:
     virtual SBodyPart *PutAndGetBodyPart(SBodyPart *pCurrPart);
 
 public:
-    //! last BP processed
+    //! last BP processed by this module
     BPIndexType nextBP;
 
     //! Last BP sent to the next module, this is so that we may consume
@@ -123,7 +123,6 @@ public:
     // NewBodyPart be called only after all the data that goes in the body part
     // is available - or that even if it is called, a new counter be assigned only
     // when it is needed instead of at creation time.
-
     BPIndexType nextBPToSend;
 
 protected:
@@ -181,9 +180,10 @@ public:
     SConnection *   pConnection;
 
 protected:
-    typedef std::pair<SHttpModule *, SHttpModuleData *> ModuleData;
-
+    //! Current request being processed
     SHttpRequest *          pCurrRequest;
+
+    typedef std::pair<SHttpModule *, SHttpModuleData *> ModuleData;
 
     //! Hold module specific data
     std::list<ModuleData *> moduleData;

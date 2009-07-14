@@ -38,12 +38,10 @@
  *****************************************************************************/
 class SWriterStage : public SStage
 {
-public:
-    // Allowed events in this stage
-    typedef enum
+    enum
     {
-        EVT_WRITE_DATA,
-    } EventType;
+        EVT_WRITE_DATA
+    };
 
 public:
     // Creates a new writer stage
@@ -52,8 +50,8 @@ public:
     // Destroys the stage
     virtual         ~SWriterStage();
 
-    //! Called when data is available to be written.
-    virtual bool    SendEvent_WriteData(SConnection *pConnection);
+    // Initiates another load of writing
+    void            SendEvent_WriteData(SConnection *pConnection);
 
 protected:
     //! Does the actual event handling.
