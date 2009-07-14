@@ -69,7 +69,7 @@ int SLogger::Add(SLogger *pLogger)
  *        Created.
  *
  *****************************************************************************/
-int SLogger::Log(int level, const char *fmt, ...)
+int SLogger::Log(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
