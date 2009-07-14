@@ -48,11 +48,12 @@
  *        Created.
  *
  *****************************************************************************/
-SEvServer::SEvServer(int port_, SReaderStage* pReaderStage_) :
+SEvServer::SEvServer(int port_, SReaderStage* pReaderStage_, SWriterStage *pWriterStage_) :
     serverPort(port_),
     serverSocket(-1),
     serverEpollFD(-1),
-    pReaderStage(pReaderStage_)
+    pReaderStage(pReaderStage_),
+    pWriterStage(pWriterStage_)
 {
 }
 

@@ -51,7 +51,13 @@ public:
     SHttpWriterStage(const SString &name, int numThreads = DEFAULT_NUM_THREADS);
 
     // Destroys the stage
-    virtual ~SHttpWriterStage();
+    virtual ~SHttpWriterStage() { }
+
+    //! Set the reader stage
+    virtual void    SetReaderStage(SHttpReaderStage *pReader) { pReaderStage = pReader; }
+
+    //! Get the reader stage
+    virtual SHttpReaderStage *GetReaderStage() { return pReaderStage; }
 
     //! Creates the stage specific object
     virtual void *  CreateStageData();
@@ -68,6 +74,10 @@ protected:
                         SHttpStageData *    pStageData,
                         SBodyPart *         pBodyPart,
                         std::ostream &      outStream);
+
+protected:
+    //! The stage that reads requests from the connection
+    SHttpReaderStage *      pReaderStage;
 };
 
 #endif

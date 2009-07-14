@@ -117,6 +117,7 @@ dep:
 ../bld/debug/halley.o: ../src/eds/http/response.h
 ../bld/debug/halley.o: ../src/eds/http/readerstage.h ../src/eds/readerstage.h
 ../bld/debug/halley.o: ../src/eds/http/handlerstage.h
+../bld/debug/halley.o: ../src/eds/http/writerstage.h ../src/eds/writerstage.h
 ../bld/debug/halley.o: ../src/eds/http/urlrouter.h
 ../bld/debug/halley.o: ../src/eds/http/httpmodule.h
 ../bld/debug/halley.o: ../src/eds/http/filemodule.h

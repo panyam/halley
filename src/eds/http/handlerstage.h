@@ -63,6 +63,12 @@ public:
     //! Get the reader stage
     virtual SHttpReaderStage *GetReaderStage() { return pReaderStage; }
 
+    //! Set the Writer stage
+    virtual void    SetWriterStage(SHttpWriterStage *pWriter) { pWriterStage = pWriter; }
+
+    //! Get the Writer stage
+    virtual SHttpWriterStage *GetWriterStage() { return pWriterStage; }
+
     //! Sets the root processing module.
     virtual void SetRootModule(SHttpModule *pModule) { pRootModule = pModule; }
 
@@ -85,6 +91,9 @@ protected:
 protected:
     //! The stage that reads requests from the connection
     SHttpReaderStage *      pReaderStage;
+
+    //! The stage that writes requests to the connection
+    SHttpWriterStage *      pWriterStage;
 
     //! The starting module for all requests
     SHttpModule *           pRootModule;
