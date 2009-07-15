@@ -76,12 +76,17 @@ void SReaderStage::HandleReadRequestEvent(const SEvent &event)
     SConnection *pConnection    = (SConnection *)(event.pSource);
     void *pReaderState          = pConnection->GetStageData(this);
 
-    pConnection->readable       = true;
     if (pConnection->GetState() == SConnection::STATE_FINISHED)
     {
         pConnection->SetState(SConnection::STATE_READING);
         ResetStageData(pReaderState);
     }
+
+    // Do nothing if we are processing a request - leave the data in the
+    // socket buffer, but flag as readable so when we get to FINISHED
+    // stage, we can use the readable flag to see if there is more data
+    // available for the next request
+    pConnection->readable       = true;
 
     // in the reading state, we can read data till the next complete
     // "message" has been read...
@@ -110,6 +115,8 @@ void SReaderStage::HandleReadRequestEvent(const SEvent &event)
                 {
                     // non blocking io - so quit till more data is available
                     SLogger::Get()->Log("DEBUG: read error EAGAIN = [%d]: %s\n\n", errno, strerror(errno));
+
+                    // clear readable flag since there is no more data available
                     pConnection->readable = false;
                 }
                 else if (errno == ECONNRESET)
