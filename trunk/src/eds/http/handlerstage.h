@@ -57,6 +57,15 @@ public:
     // Destroys the stage
     virtual ~SHttpHandlerStage() { }
 
+    //! Creates the state specific object
+    virtual void *  CreateStageData();
+
+    //! Destroys the state specific object
+    virtual void    DestroyStageData(void *pStateData);
+
+    //! resets stage data when coming for a new request
+    virtual void    ResetStageData(void *pData);
+
     //! Set the reader stage
     virtual void    SetReaderStage(SHttpReaderStage *pReader) { pReaderStage = pReader; }
 

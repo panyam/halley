@@ -30,9 +30,10 @@ public:
     SMyModule(SHttpModule *pNext) : SHttpModule(pNext) { }
 
     //! Called to handle input data from another module
-    virtual void ProcessInput(SHttpHandlerData *    pHandlerData,
-                             SHttpHandlerStage *    pStage, 
-                             SBodyPart *            pBodyPart);
+    virtual void ProcessInput(SConnection *         pConnection,
+                              SHttpHandlerData *    pHandlerData,
+                              SHttpHandlerStage *    pStage,
+                              SBodyPart *            pBodyPart);
 };
 
 //! our bayeux connection handler
@@ -40,7 +41,7 @@ class MyConnHandler : public SConnHandler, public SChannelListener
 {
 public:
     MyConnHandler(SBayeuxChannel *pChannel, SBayeuxModule *pMod)
-        : pTheChannel(pChannel), pModule(pMod), prompt(" Hello World >> ")
+        : pConnection(NULL), pTheChannel(pChannel), pModule(pMod), prompt(" Hello World >> ")
     {
         pTheChannel->SetChannelListener(this);
     }
@@ -67,7 +68,7 @@ protected:
                 break ;
 
             JsonNodePtr value = JsonNodeFactory::StringNode(prompt + buffer);
-            pModule->DeliverEvent(pTheChannel, value);
+            pModule->DeliverEvent(pConnection, pTheChannel, value);
         }
 
         pServer->HandlerFinished(this);
@@ -75,6 +76,9 @@ protected:
     }
 
 protected:
+    //! The connection which parents this channel
+    SConnection *   pConnection;
+
     //! The channel which is controlling it
     SBayeuxChannel * pTheChannel;
 
@@ -108,8 +112,8 @@ class MyBayeuxChannel : public virtual SBayeuxChannel, public virtual SServer
 {
 public:
     //! Constructor
-    MyBayeuxChannel(SBayeuxModule *pMod, const std::string &name, int port) :
-        SBayeuxChannel(name, pMod), SServer(port)
+    MyBayeuxChannel(SConnection *pConn, SBayeuxModule *pMod, const std::string &name, int port) :
+        SBayeuxChannel(name, pMod), SServer(port), pConnection(pConn)
     {
         SetConnectionFactory(new MyConnFactory(this, pModule));
     }
@@ -118,13 +122,17 @@ protected:
     void HandleConnection(int clientSocket)
     {
         JsonNodePtr value = JsonNodeFactory::StringNode(" ===== Handling New Connection on Channel: " + Name());
-        pModule->DeliverEvent(this, value);
+        pModule->DeliverEvent(pConnection, this, value);
 
         SServer::HandleConnection(clientSocket);
 
         value = JsonNodeFactory::StringNode(" ===== Connection Finished on Channel: " + Name());
-        pModule->DeliverEvent(this, value);
+        pModule->DeliverEvent(pConnection, this, value);
     }
+
+protected:
+    //! The connection which parents this channel
+    SConnection *   pConnection;
 };
 
 class ServerContext
@@ -257,7 +265,8 @@ int main(int argc, char *argv[])
 }
 
 //! Called to handle input data from another module
-void SMyModule::ProcessInput(SHttpHandlerData *     pHandlerData,
+void SMyModule::ProcessInput(SConnection *          pConnection,
+                             SHttpHandlerData *     pHandlerData,
                              SHttpHandlerStage *    pStage,
                              SBodyPart *            pBodyPart)
 {
@@ -329,8 +338,8 @@ void SMyModule::ProcessInput(SHttpHandlerData *     pHandlerData,
     part->AppendToBody("</title></head><body bgcolor='" + bgcolor + "'>");
     part->AppendToBody(body);
 
-    pStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule, part);
-    pStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule,
+    pStage->SendEvent_OutputToModule(pConnection, pNextModule, part);
+    pStage->SendEvent_OutputToModule(pConnection, pNextModule,
                            pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED, pNextModule));
 }
 

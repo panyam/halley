@@ -167,7 +167,7 @@ SHttpHandlerData *SBayeuxModule::RemoveClient(const SString &clientId)
 }
 
 //! Delivers an event to all subscribers of a channel
-void SBayeuxModule::DeliverEvent(const SBayeuxChannel *pChannel, const JsonNodePtr &value)
+void SBayeuxModule::DeliverEvent(SConnection *pConnection, const SBayeuxChannel *pChannel, const JsonNodePtr &value)
 {
     // do nothing if no handler stage available
     if (pHandlerStage == NULL || pChannel == NULL) return ;
@@ -196,7 +196,7 @@ void SBayeuxModule::DeliverEvent(const SBayeuxChannel *pChannel, const JsonNodeP
             SHttpResponse *     pResponse   = pRequest->Response();
             SBodyPart *         pBodyPart   = pResponse->NewBodyPart();
             pBodyPart->SetBody(msgbody);
-            pHandlerStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule, pBodyPart);
+            pHandlerStage->SendEvent_OutputToModule(pConnection, pNextModule, pBodyPart);
         }
     }
 }
@@ -215,7 +215,8 @@ bool notAlpha(const char &ch) { return !isalnum(ch); }
 // for halley so will defer writing foreign language bindings till Ive
 // tried out a few scenarious.
 //
-void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
+void SBayeuxModule::ProcessInput(SConnection *          pConnection,
+                                 SHttpHandlerData *     pHandlerData, 
                                  SHttpHandlerStage *    pStage, 
                                  SBodyPart *            pBodyPart)
 {
@@ -255,11 +256,12 @@ void SBayeuxModule::ProcessInput(SHttpHandlerData *     pHandlerData,
         }
     }
 
-    SendResponse(result, output, pStage, pHandlerData, pRequest, pResponse);
+    SendResponse(result, output, pConnection, pStage, pHandlerData, pRequest, pResponse);
 }
 
 void SBayeuxModule::SendResponse(int                result,
                                  const JsonNodePtr &output,
+                                 SConnection *      pConnection,
                                  SHttpHandlerStage *pStage,
                                  SHttpHandlerData * pHandlerData,
                                  SHttpRequest *     pRequest,
@@ -286,8 +288,8 @@ void SBayeuxModule::SendResponse(int                result,
         SBodyPart * part        = pResponse->NewBodyPart();
         part->SetBody(msgbody);
 
-        pStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule, part);
-        pStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule,
+        pStage->SendEvent_OutputToModule(pConnection, pNextModule, part);
+        pStage->SendEvent_OutputToModule(pConnection, pNextModule,
                                pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED,
                                                       pNextModule));
     }
@@ -311,12 +313,12 @@ void SBayeuxModule::SendResponse(int                result,
         // open a boundary body part 
         SBodyPart *pBodyPart = pResponse->NewBodyPart(SBodyPart::BP_OPEN_SUB_MESSAGE);
         pBodyPart->SetBody(boundary);
-        pStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule, pBodyPart);
+        pStage->SendEvent_OutputToModule(pConnection, pNextModule, pBodyPart);
 
         // send the first message!
         pBodyPart = pResponse->NewBodyPart();
         pBodyPart->SetBody(msgstream.str());
-        pStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule, pBodyPart);
+        pStage->SendEvent_OutputToModule(pConnection, pNextModule, pBodyPart);
     }
 }
 

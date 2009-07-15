@@ -53,17 +53,19 @@ public:
     virtual bool UnregisterChannel(const SString &name);
 
     //! Called to handle connections
-    virtual void ProcessInput(SHttpHandlerData *    pHandlerData,
+    virtual void ProcessInput(SConnection *         pConnection,
+                              SHttpHandlerData *    pHandlerData,
                               SHttpHandlerStage *   pStage, 
                               SBodyPart *           pBodyPart);
 
     //! Deliver an event to all connections
-    virtual void DeliverEvent(const SBayeuxChannel *pChannel, const JsonNodePtr &value);
+    virtual void DeliverEvent(SConnection *pConnection, const SBayeuxChannel *pChannel, const JsonNodePtr &value);
 
 protected:
     //! Sends the response for a message
     void SendResponse(int                   result,
                       const JsonNodePtr &   output,
+                      SConnection *         pConnection,
                       SHttpHandlerStage *   pStage, 
                       SHttpHandlerData *    pHandlerData,
                       SHttpRequest  *       pRequest,

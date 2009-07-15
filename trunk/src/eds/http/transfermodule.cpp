@@ -33,7 +33,8 @@
 //! This affects transfer-xxx headers but not content headers
 //
 // Also this only takes place if 
-void STransferModule::ProcessOutput(SHttpHandlerData *  pHandlerData,
+void STransferModule::ProcessOutput(SConnection *       pConnection,
+                                    SHttpHandlerData *  pHandlerData,
                                     SHttpHandlerStage * pStage,
                                     SBodyPart *         pBodyPart)
 {
@@ -52,7 +53,7 @@ void STransferModule::ProcessOutput(SHttpHandlerData *  pHandlerData,
         pBodyPart               = pModData->PutAndGetBodyPart(pBodyPart);
         while (pBodyPart != NULL)
         {
-            HandleBodyPart(pHandlerData, pStage, pModData, pBodyPart);
+            HandleBodyPart(pConnection, pHandlerData, pStage, pModData, pBodyPart);
 
             pBodyPart = pModData->NextBodyPart();
         }
@@ -61,7 +62,7 @@ void STransferModule::ProcessOutput(SHttpHandlerData *  pHandlerData,
     {
         // otherwise send it as is to the next module, cant just ignore a
         // request to process output!
-        SendBodyPartToModule(pHandlerData->pConnection, pStage, pHandlerData->Request(), pBodyPart, pModData, pNextModule);
+        SendBodyPartToModule(pConnection, pStage, pHandlerData->Request(), pBodyPart, pModData, pNextModule);
     }
 
     // turn off processing flag so it can be resumed in the future
@@ -69,12 +70,12 @@ void STransferModule::ProcessOutput(SHttpHandlerData *  pHandlerData,
 }
 
 
-void STransferModule::HandleBodyPart(SHttpHandlerData *   pHandlerData, 
-                                   SHttpHandlerStage *  pStage,
-                                   SHttpModuleData *    pModData,
-                                   SBodyPart *          pBodyPart)
+void STransferModule::HandleBodyPart(SConnection *      pConnection,
+                                     SHttpHandlerData *   pHandlerData,
+                                     SHttpHandlerStage *  pStage,
+                                     SHttpModuleData *    pModData,
+                                     SBodyPart *          pBodyPart)
 {
-    SConnection *pConnection    = pHandlerData->pConnection;
     SHttpRequest *pRequest      = pHandlerData->Request();
     SHttpResponse *pResponse    = pRequest->Response();
     SHeaderTable &respHeaders   = pResponse->Headers();
@@ -84,7 +85,7 @@ void STransferModule::HandleBodyPart(SHttpHandlerData *   pHandlerData,
     if (pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION ||
              pBodyPart->Type() == SBodyPart::BP_CONTENT_FINISHED)
     {
-        SendBodyPartToModule(pHandlerData->pConnection, pStage, pRequest, pBodyPart, pModData, pNextModule);
+        SendBodyPartToModule(pConnection, pStage, pRequest, pBodyPart, pModData, pNextModule);
     }
     else
     {

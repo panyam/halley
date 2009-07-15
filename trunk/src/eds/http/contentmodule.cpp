@@ -30,7 +30,8 @@
 #include "request.h"
 #include "response.h"
 
-void SContentModule::ProcessOutput(SHttpHandlerData *   pHandlerData,
+void SContentModule::ProcessOutput(SConnection *        pConnection,
+                                   SHttpHandlerData *   pHandlerData,
                                    SHttpHandlerStage *  pStage,
                                    SBodyPart *          pBodyPart)
 {
@@ -52,26 +53,26 @@ void SContentModule::ProcessOutput(SHttpHandlerData *   pHandlerData,
 
         while (pBodyPart != NULL)
         {
-            HandleBodyPart(pHandlerData, pStage, pModData, pBodyPart);
+            HandleBodyPart(pConnection, pHandlerData, pStage, pModData, pBodyPart);
 
             pBodyPart = pModData->NextBodyPart();
         }
     }
     else
     {
-        SendBodyPartToModule(pHandlerData->pConnection, pStage, pHandlerData->Request(), pBodyPart, pModData, pNextModule);
+        SendBodyPartToModule(pConnection, pStage, pHandlerData->Request(), pBodyPart, pModData, pNextModule);
     }
 
     // turn off processing flag so it can be resumed in the future
     pModData->SetProcessing(false);
 }
 
-void SContentModule::HandleBodyPart(SHttpHandlerData *  pHandlerData, 
+void SContentModule::HandleBodyPart(SConnection *       pConnection,
+                                    SHttpHandlerData *  pHandlerData, 
                                     SHttpHandlerStage * pStage,
                                     SContentModuleData *pModData,
                                     SBodyPart *         pBodyPart)
 {
-    SConnection *pConnection    = pHandlerData->pConnection;
     SHttpRequest *  pRequest    = pHandlerData->Request();
     SHttpResponse * pResponse   = pRequest->Response();
     int bpType                  = pBodyPart->Type();

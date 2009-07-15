@@ -147,7 +147,7 @@ class SHttpHandlerData
 {
 public:
     //! Create a state object
-    SHttpHandlerData(SConnection *pConn);
+    SHttpHandlerData();
 
     //! Destroy the state
     virtual ~SHttpHandlerData();
@@ -175,9 +175,7 @@ public:
     //! Current request being handled
     inline SHttpRequest *Request() { return pCurrRequest; }
 
-public:
-    //! The connection object
-    SConnection *   pConnection;
+    void Reset() { ResetModuleData(); }
 
 protected:
     //! Current request being processed
@@ -216,12 +214,14 @@ public:
     virtual void RemoveModuleData(SHttpModuleData *pData) { if (pData) delete pData; }
 
     //! Called to handle input data from another module
-    virtual void ProcessInput(SHttpHandlerData *    pHandlerData,
+    virtual void ProcessInput(SConnection *         pConnection,
+                              SHttpHandlerData *    pHandlerData,
                               SHttpHandlerStage *   pStage,
                               SBodyPart *           pBodyPart) { }
 
     //! Called to handle output data from another module
-    virtual void ProcessOutput(SHttpHandlerData *   pHandlerData,
+    virtual void ProcessOutput(SConnection *        pConnection,
+                               SHttpHandlerData *   pHandlerData,
                                SHttpHandlerStage *  pStage,
                                SBodyPart *          pBodyPart) { }
 
@@ -230,7 +230,7 @@ public:
 
 protected:
     //! Send a body part to another module
-    void SendBodyPartToModule(SConnection *         pConn,
+    void SendBodyPartToModule(SConnection *         pConnection,
                               SHttpHandlerStage *   pStage,
                               SHttpRequest *        pRequest,
                               SBodyPart *           pBodyPart,
