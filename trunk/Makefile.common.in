@@ -38,10 +38,17 @@ ifeq ($(BUILD_MODE),)
 endif
 
 # 
-# Disable memory checking by default
+# Whether to enable memory checking (with valgrind) or not
 #
 ifeq ($(ENABLE_MEMCHECK),)
     ENABLE_MEMCHECK     = @enable_memcheck@
+endif
+
+# 
+# Whether to enable/disable openssl
+#
+ifeq ($(ENABLE_OPENSSL),)
+    ENABLE_OPENSSL      = @enable_openssl@
 endif
 
 ###############  DO NOT MODIFY BELOW THIS   ##############
@@ -69,6 +76,10 @@ endif
 
 ifeq ($(ENABLE_MEMCHECK), yes)
      CXXFLAGS += -DUSING_VALGRIND
+endif
+
+ifeq ($(ENABLE_OPENSSL), yes)
+     CXXFLAGS += -DUSING_OPENSSL
 endif
 
 ####    Installation Directories    ####
