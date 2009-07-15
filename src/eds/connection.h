@@ -107,12 +107,6 @@ public:
     //! Get the socket associated with the connection
     SEvServer *Server() { return pServer; }
 
-    //! Get the output stream associated with the socket
-    std::ostream &GetOutputStream() const { return *clientOutput; }
-
-    //! Get the output stream associated with the socket
-    std::istream &GetInputStream() const { return *clientInput; }
-
     //! Get the connection state
     int GetState() const { return connState; }
 
@@ -132,15 +126,6 @@ private:
 
     //! The socket for the connection
     int                 connSocket;
-
-    //! The buffer stream for the socket
-    SSocketBuff *       socketBuff;
-
-    //! input stream for the socket
-    std::istream *      clientInput;
-
-    //! output stream for the socket
-    std::ostream *      clientOutput;
 
     //! Time of connection acceptance
     time_t              createdAt;

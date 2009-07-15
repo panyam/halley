@@ -90,13 +90,13 @@ void SHttpWriterStage::HandleEvent(const SEvent &event)
     SBodyPart *     pBodyPart   = (SBodyPart *)(event.pData);
     int             result      = 0;
 
-    pStageData->SetRequest(pBodyPart->ExtraData<SHttpRequest *>());
-
     if (event.evType == EVT_WRITE_DATA)
     {
     }
     else if (event.evType == EVT_WRITE_BODY_PART)
     {
+        pStageData->SetRequest(pBodyPart->ExtraData<SHttpRequest *>());
+
         // first send the headers regardless of whether there are any 
         // body parts so it is done with
         if (pStageData->nextBPToSend == 0)
