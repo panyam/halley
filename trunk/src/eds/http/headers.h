@@ -118,7 +118,7 @@ public:
     virtual bool ReadNextHeader(std::istream &input, SString &name, SString &value);
 
     //! Writes the headers to the stream
-    virtual bool WriteHeaders(std::ostream &output);
+    virtual int WriteHeaders(std::ostream &output);
 
     //! Lock the header and prevent further changes
     inline void Lock() { locked = true; }

@@ -34,11 +34,11 @@ SBodyPart::SBodyPart(unsigned index, int bType, void *d)
 }
 
 //! Writes body part to a stream
-bool SBodyPart::WriteMessageBody(std::ostream &output)
+int SBodyPart::WriteMessageBody(std::ostream &output)
 {
     copy(data.begin(), data.end(), std::ostreambuf_iterator<char>(output));
     output.flush();
-    return true;
+    return 0;
 }
 
 // Gets the body data.
@@ -159,20 +159,11 @@ void SHttpMessage::SetVersion(const SString &v)
 }
 
 //! Write the message to a stream
-bool SHttpMessage::WriteToStream(std::ostream &output)
+int SHttpMessage::WriteToStream(std::ostream &output)
 {
     headers.WriteHeaders(output);
 
-    /*
-    for (std::list<SBodyPart *>::iterator iter = bodyParts.begin(); iter != bodyParts.end();++iter)
-    {
-        if (!(*iter)->WriteMessageBody(output))
-        {
-            return false;
-        }
-    }
-    */
-    return true;
+    return 0;
 }
 
 

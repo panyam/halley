@@ -114,10 +114,10 @@ int SSocketBuff::sync()
         int numWritten = send(sockHandle, pbase() + offset, count, MSG_NOSIGNAL);
         if (numWritten < 0)
         {
-            SLogger::Get()->Log("TRACE: send error: [%d] - [%s]\n", errno, strerror(errno));
+            SLogger::Get()->Log("TRACE: send error: [%d], EPIPE = [%d] - [%s]\n", errno, EPIPE, strerror(errno));
             if (errno != EAGAIN)
             {
-                assert("send error" && false);
+                // assert("send error" && false);
             }
             return -1;
         }
