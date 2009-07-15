@@ -61,7 +61,7 @@ public:
     void SetStatus(int status, const SString &msg);
 
     //! Write the response to a stream.
-    virtual bool WriteToStream(std::ostream &output);
+    virtual int WriteToStream(std::ostream &output);
 
 protected:
     //! Reads the first status line

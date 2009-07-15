@@ -39,7 +39,7 @@ void SHeaderTable::Reset()
 }
 
 //! Write the headers to the stream
-bool SHeaderTable::WriteHeaders(std::ostream &output)
+int SHeaderTable::WriteHeaders(std::ostream &output)
 {
     // write all headers!
     HeaderMap::const_iterator iter = headers.begin();
@@ -51,7 +51,7 @@ bool SHeaderTable::WriteHeaders(std::ostream &output)
     output << HttpUtils::CRLF;
     output.flush();
 
-    return true;
+    return 0;
 }
 
 // Reads a http header.
