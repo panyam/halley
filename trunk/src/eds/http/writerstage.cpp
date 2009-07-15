@@ -114,7 +114,7 @@ void SHttpWriterStage::HandleEvent(const SEvent &event)
             respHeaders.Lock();
 
             result = pResponse->WriteHeaderLineToFD(pConnection->Socket());
-            if (result < 0)
+            if (result >= 0)
             {
                 result = respHeaders.WriteToFD(pConnection->Socket());
             }
@@ -201,6 +201,8 @@ int SHttpWriterStage::WriteBodyPart(SConnection *     pConnection,
         else
         {
             // tell the reader we are ready for more
+            // should we? or should we let the server take care of this?
+            pConnection->SetState(SConnection::STATE_FINISHED);
             pReaderStage->SendEvent_ReadRequest(pConnection);
         }
     }

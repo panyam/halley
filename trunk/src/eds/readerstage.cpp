@@ -76,7 +76,8 @@ void SReaderStage::HandleReadRequestEvent(const SEvent &event)
     SConnection *pConnection    = (SConnection *)(event.pSource);
     void *pReaderState          = pConnection->GetStageData(this);
 
-    if (pConnection->GetState() == SConnection::STATE_PROCESSING)
+    pConnection->readable       = true;
+    if (pConnection->GetState() == SConnection::STATE_FINISHED)
     {
         pConnection->SetState(SConnection::STATE_READING);
         ResetStageData(pReaderState);
@@ -109,6 +110,7 @@ void SReaderStage::HandleReadRequestEvent(const SEvent &event)
                 {
                     // non blocking io - so quit till more data is available
                     SLogger::Get()->Log("DEBUG: read error EAGAIN = [%d]: %s\n\n", errno, strerror(errno));
+                    pConnection->readable = false;
                 }
                 else if (errno == ECONNRESET)
                 {

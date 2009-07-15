@@ -226,6 +226,9 @@ bool SHttpRequest::ParseFirstLine(const SString &line)
     if (!pStart) return false;
     version = SString(pStart);
 
+    SLogger::Get()->Log("DEBUG: Request: %s %s %s\n",
+                         method.c_str(), resource.c_str(), version.c_str());
+
     return true;
 }
 
