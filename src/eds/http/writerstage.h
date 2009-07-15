@@ -48,7 +48,7 @@ public:
 
 public:
     // Creates a http request writer
-    SHttpWriterStage(const SString &name, int numThreads = DEFAULT_NUM_THREADS);
+    SHttpWriterStage(const SString &name = "HttpWriter", int numThreads = DEFAULT_NUM_THREADS);
 
     // Destroys the stage
     virtual ~SHttpWriterStage() { }

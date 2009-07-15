@@ -48,7 +48,7 @@ public:
 
 public:
     // Creates a new fileio helper stage
-    SReaderStage(const SString &name, int numThreads = DEFAULT_NUM_THREADS);
+    SReaderStage(const SString &name = "Reader", int numThreads = DEFAULT_NUM_THREADS);
     
     // Destroys the stage
     virtual         ~SReaderStage();

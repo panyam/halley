@@ -46,7 +46,7 @@ public:
 
 public:
     // Creates a new writer stage
-    SWriterStage(const SString &name, int numThreads = DEFAULT_NUM_THREADS);
+    SWriterStage(const SString &name = "Writer", int numThreads = DEFAULT_NUM_THREADS);
     
     // Destroys the stage
     virtual         ~SWriterStage();

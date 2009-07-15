@@ -27,6 +27,8 @@
 #ifndef SCONN_FACTORY_H
 #define SCONN_FACTORY_H
 
+class SConnHandler;
+
 //*****************************************************************************
 /*!
  *  \class  SConnFactory

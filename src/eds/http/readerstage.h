@@ -49,7 +49,7 @@ public:
 
 public:
     // Creates a new http request reader stage
-    SHttpReaderStage(const SString &name, int numThreads = DEFAULT_NUM_THREADS);
+    SHttpReaderStage(const SString &name = "HttpReader", int numThreads = DEFAULT_NUM_THREADS);
     
     // Destroys the stage
     virtual ~SHttpReaderStage();
