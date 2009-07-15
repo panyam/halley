@@ -34,11 +34,20 @@ SBodyPart::SBodyPart(unsigned index, int bType, void *d)
 }
 
 //! Writes body part to a stream
-int SBodyPart::WriteMessageBody(std::ostream &output)
+int SBodyPart::WriteBodyToStream(std::ostream &output)
 {
     copy(data.begin(), data.end(), std::ostreambuf_iterator<char>(output));
     output.flush();
     return 0;
+}
+
+//! Writes body part to a FD
+int SBodyPart::WriteBodyToFD(int fd)
+{
+    SStringStream buffer;
+    WriteBodyToStream(buffer);
+    SString outStr(buffer.str());
+    return SEDSUtils::SendFully(fd, outStr.c_str(), outStr.size());
 }
 
 // Gets the body data.
@@ -161,9 +170,15 @@ void SHttpMessage::SetVersion(const SString &v)
 //! Write the message to a stream
 int SHttpMessage::WriteToStream(std::ostream &output)
 {
-    headers.WriteHeaders(output);
-
-    return 0;
+    return headers.WriteToStream(output);
 }
+
+
+//! Write the message to a FD
+int SHttpMessage::WriteToFD(int fd)
+{
+    return headers.WriteToFD(fd);
+}
+
 
 

@@ -111,15 +111,27 @@ int SSocketBuff::sync()
 
     if (true)
     {
-        int numWritten = send(sockHandle, pbase() + offset, count, MSG_NOSIGNAL);
-        if (numWritten < 0)
+        while (count > 0)
         {
-            SLogger::Get()->Log("TRACE: send error: [%d], EPIPE = [%d] - [%s]\n", errno, EPIPE, strerror(errno));
-            if (errno != EAGAIN)
+            int numWritten = send(sockHandle, pbase() + offset, count, MSG_NOSIGNAL);
+            if (numWritten < 0)
             {
-                // assert("send error" && false);
+                SLogger::Get()->Log("TRACE: send error: [%d], EPIPE = [%d] - [%s]\n", errno, EPIPE, strerror(errno));
+                if (errno != EAGAIN)
+                {
+                    // shutdown(sockHandle, SHUT_WR);
+                    // assert("send error" && false);
+                }
+
+                // reset the write buffer as further writes will fail?
+                setp(pWriteBuffer, pWriteBuffer + buffSize - 1);
+                return -1;
             }
-            return -1;
+            else
+            {
+                count -= numWritten;
+                offset += numWritten;
+            }
         }
     }
     else

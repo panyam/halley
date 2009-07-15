@@ -80,6 +80,22 @@ SConnection::~SConnection()
 }
 
 /**************************************************************************************
+*   \brief  Sets the connection state
+*
+*   \version
+*       - Sri Panyam  08/07/2009
+*         Created
+**************************************************************************************/
+void SConnection::SetState(int state)
+{
+    connState = state;
+    if (state == STATE_PEER_CLOSED)
+    {
+        // shutdown(connSocket, SHUT_RD);
+    }
+}
+
+/**************************************************************************************
 *   \brief  Closes the socket
 *
 *   \version

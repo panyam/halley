@@ -141,8 +141,7 @@ void SStage::Stop()
 //! Called before an event is handled
 void SStage::PreHandleEvent(const SEvent &event)
 {
-    SLogger::Get()->Log("DEBUG: PRE Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x, RefCount: %d\n",
-                                Name().c_str(), event.evType, event.pSource, event.pData, event.pSource->RefCount());
+    SLogger::Get()->Log("DEBUG: PRE Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x, RefCount: %d\n", Name().c_str(), event.evType, event.pSource, event.pData, event.pSource->RefCount());
 
     // create the stage specific data if any
     SJob *pJob          = event.pSource;
@@ -159,8 +158,7 @@ void SStage::PreHandleEvent(const SEvent &event)
 void SStage::PostHandleEvent(const SEvent &event)
 {
     event.pSource->DecRef();
-    SLogger::Get()->Log("DEBUG: POST Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x, RefCount: %d\n",
-                                Name().c_str(), event.evType, event.pSource, event.pData, event.pSource->RefCount());
+    SLogger::Get()->Log("DEBUG: POST Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x, RefCount: %d\n", Name().c_str(), event.evType, event.pSource, event.pData, event.pSource->RefCount());
 }
 
 //! Handles events continuosly
@@ -172,8 +170,7 @@ int SEventDispatcher::Run()
         SEvent event = pStage->GetEvent();
 
         pStage->PreHandleEvent(event);
-        SLogger::Get()->Log("DEBUG: Handling Event, Stage: %s, Type: %d, Source: %x, Data: %x\n",
-                                    pStage->Name().c_str(), event.evType, event.pSource, event.pData);
+        // SLogger::Get()->Log("DEBUG: Handling Event, Stage: %s, Type: %d, Source: %x, Data: %x\n", pStage->Name().c_str(), event.evType, event.pSource, event.pData);
         pStage->HandleEvent(event);
         pStage->PostHandleEvent(event);
     }

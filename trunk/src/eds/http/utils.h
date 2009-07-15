@@ -29,6 +29,7 @@
 #define HTTP_UTILS_H
 
 #include "httpfwd.h"
+#include "../utils.h"
 
 //! Generic utilities for HTTP
 class HttpUtils

@@ -108,7 +108,13 @@ void SReaderStage::HandleReadRequestEvent(const SEvent &event)
                 else if (errno == EAGAIN)
                 {
                     // non blocking io - so quit till more data is available
-                    SLogger::Get()->Log("DEBUG: read EAGAIN = [%d]: %s\n\n", errno, strerror(errno));
+                    SLogger::Get()->Log("DEBUG: read error EAGAIN = [%d]: %s\n\n", errno, strerror(errno));
+                }
+                else if (errno == ECONNRESET)
+                {
+                    // non blocking io - so quit till more data is available
+                    SLogger::Get()->Log("DEBUG: read error ECONNRESET = [%d]: %s\n\n", errno, strerror(errno));
+                    pConnection->Server()->MarkConnectionAsClosed(pConnection);
                 }
                 else
                 {

@@ -35,10 +35,6 @@
 #define MAXEPOLLSIZE    10000
 #define MAXEPOLLTIME    1000
 
-// #ifndef EPOLLRDHUP
-// #define EPOLLRDHUP  0x2000
-// #endif
-
 //*****************************************************************************
 /*!
  *  \brief  Creates a new server.
@@ -102,6 +98,13 @@ int SEvServer::PrepareClientSocket(int clientSocket)
     if (setsockopt(clientSocket, IPPROTO_TCP, TCP_NODELAY, (const void *)&nodelay, sizeof(nodelay)) != 0)
     {
         SLogger::Get()->Log("ERROR: setsockopt TCP_NODELAY failed: [%d]: %s\n\n", errno, strerror(errno));
+        return -errno;
+    }
+
+    int keepalive = 1;
+    if (setsockopt(clientSocket, SOL_SOCKET, SO_KEEPALIVE, (const void *)&keepalive, sizeof(keepalive)) != 0)
+    {
+        SLogger::Get()->Log("ERROR: setsockopt SO_KEEPALIVE failed: [%d]: %s\n\n", errno, strerror(errno));
         return -errno;
     }
 
@@ -221,8 +224,7 @@ int SEvServer::BindSocket()
  *****************************************************************************/
 int SEvServer::ListenOnSocket()
 {
-    // Setup a limit of maximum 10 pending connections.
-    int retval = listen(serverSocket, 10);
+    int retval = listen(serverSocket, SOMAXCONN);
     if (retval != 0)
     {
         SLogger::Get()->Log("ERROR: listen failed: [%d]: %s\n\n", errno, strerror(errno));
@@ -282,7 +284,7 @@ int SEvServer::Run()
     struct epoll_event events[MAXEPOLLSIZE];
 
     bzero(&ev, sizeof(ev));
-    ev.events   = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLHUP;
+    ev.events   = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLHUP | EPOLLERR;
     ev.data.ptr = NULL;
     if (epoll_ctl(serverEpollFD, EPOLL_CTL_ADD, serverSocket, &ev) < 0)
     {
@@ -314,62 +316,73 @@ int SEvServer::Run()
         {
             SConnection *   pConnection = (SConnection *)(events[n].data.ptr);
             int             connSocket  = pConnection == NULL ? serverSocket : pConnection->Socket();
+            int             event_flags = events[n].events;
 
-            if ((events[n].events & (EPOLLHUP)) != 0)
+            if ((event_flags & (EPOLLERR | EPOLLHUP)) &&
+                    (event_flags & (EPOLLIN | EPOLLOUT)) == 0)
             {
+                // if error events were available without input or output
+                // events then add these in too
+                SLogger::Get()->Log("ERROR: Found Error event - Setting EPOLLIN and EPOLLOUT: \n\n");
+                event_flags |= (EPOLLIN | EPOLLOUT);
+
                 // we remove this socket from the epoll list but do
                 // not kill this as it will be done from a
                 // different point (reader stage) anyway
-
                 if (pConnection != NULL)
                 {
                     SLogger::Get()->Log("TRACE: Hangup Recieved - Connection: [%x], Socket: [%d]\n", pConnection, pConnection->Socket());
                     MarkConnectionAsClosed(pConnection);
                 }
             }
-            else if (connSocket == serverSocket)    // its a connection request
+
+            if ((event_flags & EPOLLIN) != 0)
             {
-                sockaddr_in client_sock_addr;
-                socklen_t addlen = sizeof(client_sock_addr);
-
-                int clientSocket = accept(serverSocket, (struct sockaddr *)&client_sock_addr, &addlen);
-
-                if (clientSocket < 0)
+                if (connSocket == serverSocket)    // its a connection request
                 {
-                    SLogger::Get()->Log("ERROR: accept failed: [%d]: %s\n\n", errno, strerror(errno));
-                    break ;
-                }
-                else if (Stopped())
-                {
-                    // server being killed and we have a socket, 
-                    // so close the socket as well
-                    int result = close(clientSocket);
-                    if (result != 0)
+                    sockaddr_in client_sock_addr;
+                    socklen_t addlen = sizeof(client_sock_addr);
+
+                    int clientSocket = accept(serverSocket, (struct sockaddr *)&client_sock_addr, &addlen);
+
+                    if (clientSocket < 0)
                     {
-                        SLogger::Get()->Log("ERROR: close failed: [%d]: %s\n\n", errno, strerror(errno));
+                        SLogger::Get()->Log("ERROR: accept failed: [%d]: %s\n\n", errno, strerror(errno));
+                        break ;
+                    }
+                    else if (Stopped())
+                    {
+                        int result = close(clientSocket);
+                        if (result != 0)
+                        {
+                            SLogger::Get()->Log("ERROR: clientSocket close failed: [%d]: %s\n\n", errno, strerror(errno));
+                        }
+                        break ;
+                    }
+                    else
+                    {
+                        // Set additional options on the client socket
+                        // including non-blocking
+                        PrepareClientSocket(clientSocket);
+
+                        // creates a new connection
+                        NewConnection(clientSocket);
                     }
                 }
-                else
+                else    // on a IO by a connection
                 {
-                    // Set additional options on the client socket
-                    // including non-blocking
-                    PrepareClientSocket(clientSocket);
-
-                    // creates a new connection
-                    NewConnection(clientSocket);
+                    // means we have data to read off this socket, 
+                    // dont read it but give it the request reader task
+                    // handler!
+                    pReaderStage->SendEvent_ReadRequest(pConnection);
                 }
             }
-            else if ((events[n].events & EPOLLOUT) != 0)
+
+            if ((event_flags & EPOLLOUT) != 0)
             {
+                SLogger::Get()->Log("TRACE: PollOut For Connection: [%x], Socket: [%d]:\n\n", pConnection, pConnection->Socket());
                 // we are writing out to a socket
                 pWriterStage->SendEvent_WriteData(pConnection);
-            }
-            else if ((events[n].events & EPOLLIN) != 0)
-            {
-                // means we have data to read off this socket, 
-                // dont read it but give it the request reader task
-                // handler!
-                pReaderStage->SendEvent_ReadRequest(pConnection);
             }
         }
     }
@@ -393,13 +406,21 @@ int SEvServer::Run()
     {
         // and finally the server socket
         // shutdown(serverSocket, SHUT_RDWR);
-        close(serverSocket);
+        int result = close(serverSocket);
+        if (result != 0)
+        {
+            SLogger::Get()->Log("ERROR: serverSocket close failed: [%d]: %s\n\n", errno, strerror(errno));
+        }
         serverSocket = -1;
     }
 
     if (serverEpollFD >= 0)
     {
-        close(serverEpollFD);
+        int result = close(serverEpollFD);
+        if (result != 0)
+        {
+            SLogger::Get()->Log("ERROR: serverEpollFD close failed: [%d]: %s\n\n", errno, strerror(errno));
+        }
         serverEpollFD = -1;
     }
     return result;
@@ -504,7 +525,7 @@ void SEvServer::PeerClosedConnection(SConnection *pConnection)
     bzero(&ev, sizeof(ev));
 
     // Remove the read-events since the peer has closed the connection
-    ev.events       = EPOLLOUT | EPOLLET | EPOLLHUP;
+    ev.events       = EPOLLOUT | EPOLLET | EPOLLHUP | EPOLLERR;
     ev.data.ptr     = pConnection;
 
     if (epoll_ctl(serverEpollFD, EPOLL_CTL_MOD, pConnection->Socket(), &ev) < 0)
@@ -609,7 +630,7 @@ SConnection *SEvServer::NewConnection(int clientSocket)
         // what about EPOLLOUT??
         struct epoll_event ev;
         bzero(&ev, sizeof(ev));
-        ev.events       = EPOLLIN | EPOLLET | EPOLLHUP;
+        ev.events       = EPOLLIN | EPOLLET | EPOLLHUP | EPOLLERR;
         ev.data.ptr     = pConn;
 
         if (epoll_ctl(serverEpollFD, EPOLL_CTL_ADD, clientSocket, &ev) < 0)

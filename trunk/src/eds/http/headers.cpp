@@ -39,7 +39,7 @@ void SHeaderTable::Reset()
 }
 
 //! Write the headers to the stream
-int SHeaderTable::WriteHeaders(std::ostream &output)
+int SHeaderTable::WriteToStream(std::ostream &output)
 {
     // write all headers!
     HeaderMap::const_iterator iter = headers.begin();
@@ -52,6 +52,15 @@ int SHeaderTable::WriteHeaders(std::ostream &output)
     output.flush();
 
     return 0;
+}
+
+//! Writes the headers to a file descriptor
+int SHeaderTable::WriteToFD(int fd)
+{
+    SStringStream buffer;
+    WriteToStream(buffer);
+    SString outStr(buffer.str());
+    return SEDSUtils::SendFully(fd, outStr.c_str(), outStr.size());
 }
 
 // Reads a http header.

@@ -287,9 +287,11 @@ bool SHttpReaderState::ProcessCurrentLine()
         if (!pCurrRequest.ParseFirstLine(currLine))
             return false;
 
-        std::cout << pCurrRequest.Method() << " "
+        /*
+        std::cerr << pCurrRequest.Method() << " "
                   << pCurrRequest.Resource() << " "
                   << pCurrRequest.Version() << endl;
+        */
 
         currHeaderLine.str("");
         currHeaderLine.clear();
@@ -324,7 +326,7 @@ bool SHttpReaderState::ProcessCurrentLine()
                 SHeaderTable &pHeaders = pCurrRequest.Headers();
                 if (!pHeaders.ParseHeaderLine(lastHeader, hdrName, hdrValue))
                     return false;
-                std::cout << hdrName << ": " << hdrValue << std::endl;
+                // std::cout << hdrName << ": " << hdrValue << std::endl;
             }
 
             currHeaderLine.str("");

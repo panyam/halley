@@ -63,6 +63,15 @@ public:
     //! Write the response to a stream.
     virtual int WriteToStream(std::ostream &output);
 
+    //! Write the response to a file descriptor
+    virtual int WriteToFD(int fd);
+
+    //! Write the first header line to a stream.
+    virtual int WriteHeaderLineToStream(std::ostream &output);
+
+    //! Write the first header line to a file descriptor
+    virtual int WriteHeaderLineToFD(int fd);
+
 protected:
     //! Reads the first status line
     // virtual bool ReadFirstLine(std::istream &input);

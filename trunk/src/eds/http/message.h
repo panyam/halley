@@ -78,7 +78,10 @@ public:
     const SCharVector &Body() const;
 
     //! Writes the body to stream - override for multipart messages
-    virtual int WriteMessageBody(std::ostream &output);
+    virtual int WriteBodyToStream(std::ostream &output);
+
+    //! Writes the body to an FD - override for multipart messages
+    virtual int WriteBodyToFD(int fd);
 
     //! Get the data size
     inline int Size() { return data.size(); }
@@ -126,8 +129,11 @@ public:
     //! Read request from an input stream (usually network)
     virtual bool ReadFromStream(std::istream &input);
 
-    //! Write the response to a stream
+    //! Write the message to a stream
     virtual int WriteToStream(std::ostream &output);
+
+    //! Write the message to a FD
+    virtual int WriteToFD(int fd);
 
     //! Gets the version
     const SString &Version() const;
