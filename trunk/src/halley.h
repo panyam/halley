@@ -51,7 +51,7 @@
 #include "eds/http/transfermodule.h"
 #include "eds/http/urlrouter.h"
 #include "eds/http/utils.h"
-#include "eds/http/writermodule.h"
+#include "eds/http/writerstage.h"
 #include "json/json.h"
 #include "json/tokenizer.h"
 #include "logger/logger.h"

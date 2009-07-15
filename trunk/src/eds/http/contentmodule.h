@@ -55,7 +55,7 @@ class SContentModule : public SHttpModule
 {
 public:
     //! Constructor
-    SContentModule(SHttpModule *pNext) : SHttpModule(pNext) { }
+    SContentModule(SHttpModule *pNext = NULL) : SHttpModule(pNext) { }
 
     //! Called to handle output data from another module
     virtual void ProcessOutput(SHttpHandlerData *   pHandlerData,
