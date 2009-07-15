@@ -42,6 +42,9 @@ class SEDSUtils
 public:
     //! Sends data over a fd completely
     static int SendFully(int fd, const char *buffer, int length);
+
+    //! Sets/Clears nonblocking mode on a FD
+    static int SetNonBlocking(int fd, bool set = true);
 };
 
 #endif

@@ -46,6 +46,7 @@
 #include <fcntl.h>
 
 #include "thread/thread.h"
+#include "eds/utils.h"
 #include "eds/fwd.h"
 #include "eds/http/httpfwd.h"
 
@@ -58,9 +59,6 @@
  *****************************************************************************/
 class SEvServer : public STask
 {
-public:
-    static int setnonblocking(int fd);
-
 public:
     //! Constructor
     SEvServer(int port_, SReaderStage*pReqReader_ = NULL, SWriterStage*pReqWriter_ = NULL);
