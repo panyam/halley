@@ -117,7 +117,7 @@ public:
     int GetState() const { return connState; }
 
     //! Get the connection state
-    void SetState(int newState) { connState = newState; }
+    void SetState(int newState);
 
     //! Reads data from the socket
     int RefillBuffer(char *&pOutCurrPos, char *&pOutBuffEnd);

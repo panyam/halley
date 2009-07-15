@@ -73,10 +73,9 @@ public:
 
 protected:
     // Handles each body part writing
-    bool HandleBodyPart(SConnection *       pConnection,
-                        SHttpStageData *    pStageData,
-                        SBodyPart *         pBodyPart,
-                        std::ostream &      outStream);
+    int WriteBodyPart(SConnection *       pConnection,
+                      SHttpStageData *    pStageData,
+                      SBodyPart *         pBodyPart);
 
 protected:
     //! The stage that reads requests from the connection

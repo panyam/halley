@@ -85,10 +85,10 @@ bool SHttpWriterStage::SendEvent_WriteBodyPart(SConnection *pConnection, SBodyPa
 //! Re orders and sends out http body parts to the socket
 void SHttpWriterStage::HandleEvent(const SEvent &event)
 {
-    SConnection *       pConnection = (SConnection *)(event.pSource);
-    SHttpStageData *    pStageData  = (SHttpStageData *)pConnection->GetStageData(this);
-    SBodyPart *         pBodyPart   = (SBodyPart *)(event.pData);
-    std::ostream &outStream(pConnection->GetOutputStream());
+    SConnection *   pConnection = (SConnection *)(event.pSource);
+    SHttpStageData *pStageData  = (SHttpStageData *)pConnection->GetStageData(this);
+    SBodyPart *     pBodyPart   = (SBodyPart *)(event.pData);
+    int             result      = 0;
 
     pStageData->SetRequest(pBodyPart->ExtraData<SHttpRequest *>());
 
@@ -110,19 +110,30 @@ void SHttpWriterStage::HandleEvent(const SEvent &event)
             {
                 respHeaders.RemoveHeader("Content-Length");
             }
+
             respHeaders.Lock();
+
+            result = pResponse->WriteHeaderLineToFD(pConnection->Socket());
+            if (result < 0)
+            {
+                result = respHeaders.WriteToFD(pConnection->Socket());
+            }
+
+            /*
             outStream << pResponse->Version() << " "
                       << pResponse->StatusCode() << " "
                       << pResponse->StatusMessage() << HttpUtils::CRLF;
             respHeaders.WriteHeaders(outStream);
+            */
         }
 
-        if (pBodyPart != NULL)
+        if (result >= 0 || pBodyPart != NULL)
         {
             pBodyPart               = pStageData->PutAndGetBodyPart(pBodyPart);
             while (pBodyPart != NULL)
             {
-                if (HandleBodyPart(pConnection, pStageData, pBodyPart, outStream))
+                result = WriteBodyPart(pConnection, pStageData, pBodyPart);
+                if (result >= 0)
                 {
                     pBodyPart = pStageData->NextBodyPart();
                 }
@@ -132,18 +143,33 @@ void SHttpWriterStage::HandleEvent(const SEvent &event)
                 }
             }
         }
+
+        if (result < 0)
+        {
+            SLogger::Get()->Log("TRACE: send error: [%d], EPIPE/ECONNRESET = [%d]/[%d] - [%s]\n", errno, EPIPE, ECONNRESET, strerror(errno));
+            if (errno == EPIPE || errno == ECONNRESET)
+            {
+                pConnection->Server()->MarkConnectionAsClosed(pConnection);
+                // shutdown(sockHandle, SHUT_WR);
+                // assert("send error" && false);
+            }
+            else
+            {
+                assert("Some other error" && false);
+            }
+        }
     }
 }
 
-bool SHttpWriterStage::HandleBodyPart(SConnection *     pConnection,
-                                  SHttpStageData *  pStageData,
-                                  SBodyPart *       pBodyPart,
-                                  std::ostream &    outStream)
+int SHttpWriterStage::WriteBodyPart(SConnection *     pConnection,
+                                     SHttpStageData *  pStageData,
+                                     SBodyPart *       pBodyPart)
 {
-    SHttpRequest *  pRequest        = pStageData->Request();
-    SHttpResponse * pResponse       = pRequest->Response();
-    SHeaderTable &reqHeaders        = pRequest->Headers();
-    SHeaderTable &respHeaders       = pResponse->Headers();
+    int             result      = 0;
+    SHttpRequest *  pRequest    = pStageData->Request();
+    SHttpResponse * pResponse   = pRequest->Response();
+    SHeaderTable &reqHeaders    = pRequest->Headers();
+    SHeaderTable &respHeaders   = pResponse->Headers();
     SString transferEncoding(respHeaders.Header("Transfer-Encoding"));
 
     if (pBodyPart->Type() == SBodyPart::BP_CONTENT_FINISHED ||
@@ -180,12 +206,12 @@ bool SHttpWriterStage::HandleBodyPart(SConnection *     pConnection,
     }
     else // treat as normal message
     {
-        pBodyPart->WriteMessageBody(outStream);
+        result = pBodyPart->WriteBodyToFD(pConnection->Socket());
         pStageData->nextBPToSend++;
     }
 
     // now delete the body part - its no longer needed!
     delete pBodyPart;
-    return true;
+    return result;
 }
 
