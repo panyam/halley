@@ -80,7 +80,7 @@ SEvServer::RealStop()
  *****************************************************************************/
 int SEvServer::PrepareClientSocket(int clientSocket)
 {
-    if (setnonblocking(clientSocket))
+    if (SEDSUtils::SetNonBlocking(clientSocket))
     {
         SLogger::Get()->Log("ERROR: Cannot make client socket non blocking[%d]: %s\n\n", errno, strerror(errno));
         return -1;
@@ -147,7 +147,7 @@ int SEvServer::CreateSocket()
         return -errno;
     }
 
-    if (setnonblocking(newSocket))
+    if (SEDSUtils::SetNonBlocking(newSocket))
     {
         SLogger::Get()->Log("ERROR: setnonblocking failed: [%d]: %s\n\n", errno, strerror(errno));
         return -1;
@@ -458,20 +458,6 @@ SEvServer::~SEvServer()
         close(serverEpollFD);
         serverEpollFD = -1;
     }
-}
-
-/**************************************************************************************
-*   \brief  Sets a socket as non blocking.
-*
-*   \version
-*       - Sri Panyam  18/02/2009
-*         Created
-**************************************************************************************/
-int SEvServer::setnonblocking(int fd)
-{
-    if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFD, 0) | O_NONBLOCK) == -1)
-        return -1;
-    return 0;
 }
 
 /**************************************************************************************

@@ -26,6 +26,8 @@
 
 #include "utils.h"
 #include <sys/socket.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 //! Sends data over a fd completely
 int SEDSUtils::SendFully(int fd, const char *buffer, int length)
@@ -46,3 +48,18 @@ int SEDSUtils::SendFully(int fd, const char *buffer, int length)
     return length;
 }
 
+
+//! Sets/Clears nonblocking mode on a FD
+int SEDSUtils::SetNonBlocking(int fd, bool set)
+{
+    if (set)
+    {
+        if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFD, 0) | O_NONBLOCK) == -1)
+            return -1;
+    }
+    else
+    {
+        assert("Clearing nonblocking not yet implemented." && false);
+    }
+    return 0;
+}
