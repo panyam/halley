@@ -33,7 +33,7 @@
 #include "readerstage.h"
 
 #define MAXEPOLLSIZE    10000
-#define MAXEPOLLTIME    1000
+#define MAXEPOLLTIME    50
 
 //*****************************************************************************
 /*!
@@ -101,12 +101,14 @@ int SEvServer::PrepareClientSocket(int clientSocket)
         return -errno;
     }
 
+    /*
     int keepalive = 1;
     if (setsockopt(clientSocket, SOL_SOCKET, SO_KEEPALIVE, (const void *)&keepalive, sizeof(keepalive)) != 0)
     {
         SLogger::Get()->Log("ERROR: setsockopt SO_KEEPALIVE failed: [%d]: %s\n\n", errno, strerror(errno));
         return -errno;
     }
+    */
 
 
 #ifndef DISABLE_SO_LINGER
@@ -278,7 +280,6 @@ int SEvServer::Run()
     signal(SIGPIPE, SIG_IGN);
 
     serverEpollFD       = epoll_create(MAXEPOLLSIZE);
-    numEpollFDs        = 1;
 
     struct epoll_event ev;
     struct epoll_event events[MAXEPOLLSIZE];
@@ -297,11 +298,7 @@ int SEvServer::Run()
     // now run the server asynchronously
     while (!Stopped())
     {
-        int nfds = epoll_wait(serverEpollFD, events, numEpollFDs, MAXEPOLLTIME);
-
-        // go through and remove connections that are
-        // marked as close if their reference counts are 0
-        CloseMarkedConnections();
+        int nfds = epoll_wait(serverEpollFD, events, MAXEPOLLSIZE, MAXEPOLLTIME);
 
         if (nfds < 0)
         {
@@ -310,6 +307,12 @@ int SEvServer::Run()
                 SLogger::Get()->Log("ERROR: epoll_wait failed: [%d]: %s\n\n", errno, strerror(errno));
                 break ;
             }
+        }
+        else
+        {
+            // go through and remove connections that are
+            // marked as close if their reference counts are 0
+            CloseMarkedConnections();
         }
 
         for (int n = 0;!Stopped() && n < nfds;n++)
@@ -343,30 +346,34 @@ int SEvServer::Run()
                     sockaddr_in client_sock_addr;
                     socklen_t addlen = sizeof(client_sock_addr);
 
-                    int clientSocket = accept(serverSocket, (struct sockaddr *)&client_sock_addr, &addlen);
-
-                    if (clientSocket < 0)
+                    int clientSocket = 0;
+                    
+                    while (!Stopped() && clientSocket >= 0)
                     {
-                        SLogger::Get()->Log("ERROR: accept failed: [%d]: %s\n\n", errno, strerror(errno));
-                        break ;
-                    }
-                    else if (Stopped())
-                    {
-                        int result = close(clientSocket);
-                        if (result != 0)
+                        clientSocket = accept(serverSocket, (struct sockaddr *)&client_sock_addr, &addlen);
+                        if (clientSocket < 0)
                         {
-                            SLogger::Get()->Log("ERROR: clientSocket close failed: [%d]: %s\n\n", errno, strerror(errno));
+                            SLogger::Get()->Log("ERROR: accept failed: [%d]: %s\n\n", errno, strerror(errno));
+                            break ;
                         }
-                        break ;
-                    }
-                    else
-                    {
-                        // Set additional options on the client socket
-                        // including non-blocking
-                        PrepareClientSocket(clientSocket);
+                        else if (Stopped())
+                        {
+                            int result = close(clientSocket);
+                            if (result != 0)
+                            {
+                                SLogger::Get()->Log("ERROR: clientSocket close failed: [%d]: %s\n\n", errno, strerror(errno));
+                            }
+                            break ;
+                        }
+                        else
+                        {
+                            // Set additional options on the client socket
+                            // including non-blocking
+                            PrepareClientSocket(clientSocket);
 
-                        // creates a new connection
-                        NewConnection(clientSocket);
+                            // creates a new connection
+                            NewConnection(clientSocket);
+                        }
                     }
                 }
                 else    // on a IO by a connection
@@ -380,7 +387,7 @@ int SEvServer::Run()
 
             if ((event_flags & EPOLLOUT) != 0)
             {
-                SLogger::Get()->Log("TRACE: PollOut For Connection: [%x], Socket: [%d]:\n\n", pConnection, pConnection->Socket());
+                SLogger::Get()->Log("TRACE: PollOut For Connection: [%x], Socket: [%d], State: [%d]:\n", pConnection, pConnection->Socket(), pConnection->GetState());
                 // we are writing out to a socket
                 pWriterStage->SendEvent_WriteData(pConnection);
             }
@@ -555,19 +562,14 @@ void SEvServer::MarkConnectionAsClosed(SConnection *pConnection)
         struct epoll_event ev;
         bzero(&ev, sizeof(ev));
 
-        // move the connection to the closed connection list
-        pConnection->SetState(SConnection::STATE_CLOSED);
         if (epoll_ctl(serverEpollFD, EPOLL_CTL_DEL, pConnection->Socket(), &ev) < 0)
         {
             SLogger::Get()->Log("ERROR: epoll_ctl delete error [%d]: %s\n", errno, strerror(errno));
         }
-        else
-        {
-            numEpollFDs--;
-        }
 
-        connections.erase(pConnection);
+        // move the connection to the closed connection list
         pConnection->SetState(SConnection::STATE_CLOSED);
+        connections.erase(pConnection);
 
         // move the connection to the closed connections list
         // so it can be freed up when we need spare ones
@@ -630,17 +632,13 @@ SConnection *SEvServer::NewConnection(int clientSocket)
         // what about EPOLLOUT??
         struct epoll_event ev;
         bzero(&ev, sizeof(ev));
-        ev.events       = EPOLLIN | EPOLLET | EPOLLHUP | EPOLLERR;
+        ev.events       = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLHUP | EPOLLERR;
         ev.data.ptr     = pConn;
 
         if (epoll_ctl(serverEpollFD, EPOLL_CTL_ADD, clientSocket, &ev) < 0)
         {
             SLogger::Get()->Log("ERROR: epoll_ctl error [%d]: %s\n", errno, strerror(errno));
             assert("Could not add connection to epoll list" && false);
-        }
-        else
-        {
-            numEpollFDs++;
         }
     }
 

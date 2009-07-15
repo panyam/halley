@@ -138,9 +138,6 @@ private:
     //! The epoll file descriptor
     int                 serverEpollFD;
 
-    //! Number of fds epoll is handling currently
-    int                 numEpollFDs;
-
 private:
     //! The request reader stage
     SReaderStage *              pReaderStage;

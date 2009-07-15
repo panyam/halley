@@ -41,9 +41,6 @@
 SConnection::SConnection(SEvServer *pSrv, int sock) : 
         pServer(pSrv),
         connSocket(sock),
-        socketBuff(new SSocketBuff(sock)),
-        clientInput(new std::istream(socketBuff)),
-        clientOutput(new std::ostream(socketBuff)),
         createdAt(time(NULL)),
         connState(STATE_READING),
         pReadBuffer(NULL),
@@ -51,7 +48,7 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
         pCurrPos(NULL),
         pBuffEnd(NULL)
 {
-    SLogger::Get()->Log("TRACE: Creating Connection [%x], Socket: %d....\n", this, sock);
+    SLogger::Get()->Log("\nTRACE: Creating Connection [%x], Socket: %d....\n", this, sock);
 }
 
 /**************************************************************************************
@@ -63,18 +60,8 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
 **************************************************************************************/
 SConnection::~SConnection()
 {
-    SLogger::Get()->Log("TRACE: Destroying Connection [%x], Socket: %d....\n", this, connSocket);
+    SLogger::Get()->Log("TRACE: Destroying Connection [%x], Socket: %d....\n\n", this, connSocket);
     CloseSocket();
-    if (socketBuff != NULL)
-    {
-        delete socketBuff;
-        socketBuff = NULL;
-    }
-    if (clientOutput != NULL)
-    {
-        delete clientOutput;
-        clientOutput = NULL;
-    }
     if (pReadBuffer != NULL)
         delete [] pReadBuffer;
 }
