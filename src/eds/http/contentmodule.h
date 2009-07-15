@@ -58,9 +58,10 @@ public:
     SContentModule(SHttpModule *pNext = NULL) : SHttpModule(pNext) { }
 
     //! Called to handle output data from another module
-    virtual void ProcessOutput(SHttpHandlerData *   pHandlerData,
-                              SHttpHandlerStage *   pStage, 
-                              SBodyPart *           pBodyPart);
+    virtual void ProcessOutput(SConnection *        pConnection,
+                               SHttpHandlerData *   pHandlerData,
+                               SHttpHandlerStage *  pStage, 
+                               SBodyPart *          pBodyPart);
 
     //! Creates new module data if necessary
     virtual SHttpModuleData *CreateModuleData(SHttpHandlerData *pHandlerData)
@@ -69,7 +70,8 @@ public:
     }
 
 protected:
-    void HandleBodyPart(SHttpHandlerData *  pHandlerData, 
+    void HandleBodyPart(SConnection *       pConnection,
+                        SHttpHandlerData *  pHandlerData, 
                         SHttpHandlerStage * pStage,
                         SContentModuleData *pModData,
                         SBodyPart *         pBodyPart);

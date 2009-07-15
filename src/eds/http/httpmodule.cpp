@@ -89,8 +89,7 @@ SBodyPart *SHttpModuleData::PutAndGetBodyPart(SBodyPart *pCurrPart)
 }
 
 //! Create a state object
-SHttpHandlerData::SHttpHandlerData(SConnection *pConn) : 
-    pConnection(pConn), pCurrRequest(NULL)
+SHttpHandlerData::SHttpHandlerData() : pCurrRequest(NULL)
 {
 }
 

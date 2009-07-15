@@ -34,7 +34,8 @@
 //! Called to handle input data from another module
 // This module simply writes out a given file and calls "ProcessOutput of
 // the next module.
-void SFileModule::ProcessInput(SHttpHandlerData *   pHandlerData,
+void SFileModule::ProcessInput(SConnection *        pConnection,
+                               SHttpHandlerData *   pHandlerData,
                                SHttpHandlerStage *  pStage,
                                SBodyPart *          pBodyPart)
 {
@@ -128,8 +129,8 @@ void SFileModule::ProcessInput(SHttpHandlerData *   pHandlerData,
         }
     }
 
-    pStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule, part);
-    pStage->SendEvent_OutputToModule(pHandlerData->pConnection, pNextModule,
+    pStage->SendEvent_OutputToModule(pConnection, pNextModule, part);
+    pStage->SendEvent_OutputToModule(pConnection, pNextModule,
                            pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED, pNextModule));
 }
 

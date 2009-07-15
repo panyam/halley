@@ -51,6 +51,26 @@ SHttpHandlerStage::SHttpHandlerStage(const SString &name, int numThreads)
 {
 }
 
+
+//! Creates a new Handler state object
+void *SHttpHandlerStage::CreateStageData()
+{
+    return new SHttpHandlerData();
+}
+
+//! Destroys Handler state objects
+void SHttpHandlerStage::DestroyStageData(void *pHandlerState)
+{
+    if (pHandlerState != NULL)
+        delete ((SHttpHandlerData *)pHandlerState);
+}
+
+//! Resets stage data when required
+void SHttpHandlerStage::ResetStageData(void *pData)
+{
+    ((SHttpHandlerData *)pData)->Reset();
+}
+
 //! Sends input to be processed by a module
 bool SHttpHandlerStage::SendEvent_InputToModule(SConnection *pConnection, SHttpModule *pModule, SBodyPart *pBodyPart)
 {
@@ -122,43 +142,44 @@ void SHttpHandlerStage::HandleEvent(const SEvent &event)
     // The connection currently being processed
     SConnection *       pConnection     = (SConnection *)(event.pSource);
     SHttpHandlerData *  pHandlerData    = (SHttpHandlerData *)pConnection->GetStageData(this);
+    SBodyPart *         pBodyPart       = NULL;
+    SHttpRequest *      pRequest        = NULL;
+    SHttpModule *       pNextModule     = NULL;
 
-    // create the response if none yet - it MUST be an "arrived" event
-    if (pHandlerData == NULL)
+    if (event.evType == EVT_REQUEST_ARRIVED)
     {
-        pHandlerData = new SHttpHandlerData(pConnection);
-        pConnection->SetStageData(this, pHandlerData);
-        pConnection->AddListener(this);
+        // new request - so reset all module data for the request
+        pHandlerData->ResetModuleData();
+        pRequest = event.Data<SHttpRequest *>();
+        pHandlerData->SetRequest(pRequest);
+
+        // let the root module take it if there is a valid request
+        if (pRequest)
+            pRootModule->ProcessInput(pConnection, pHandlerData, this, NULL);
     }
-
-    SBodyPart *pBodyPart    = NULL;
-    SHttpRequest *pRequest  = NULL;
-    switch (event.evType)
+    else
     {
-        case EVT_REQUEST_ARRIVED:
-            // new request - so reset all module data for the request
-            pHandlerData->ResetModuleData();
-            pRequest = event.Data<SHttpRequest *>();
-            pHandlerData->SetRequest(pRequest);
-
-            // let the root module take it if there is a valid request
-            if (pRequest)
-                pRootModule->ProcessInput(pHandlerData, this, NULL);
-            break ;
-        case EVT_INPUT_BODY_TO_MODULE:   // let the next module handle input
-            pBodyPart = event.Data<SBodyPart *>();
-            pBodyPart->ExtraData<SHttpModule *>()->ProcessInput(pHandlerData, this, pBodyPart);
-            break ;
-        case EVT_NEXT_INPUT_MODULE:
-            event.Data<SHttpModule *>()->ProcessInput(pHandlerData, this, NULL);
-            break ;
-        case EVT_OUTPUT_BODY_TO_MODULE:   // let the next module handle input
-            pBodyPart = event.Data<SBodyPart*>();
-            pBodyPart->ExtraData<SHttpModule *>()->ProcessOutput(pHandlerData, this, pBodyPart);
-            break ;
-        case EVT_NEXT_OUTPUT_MODULE:
-            event.Data<SHttpModule *>()->ProcessOutput(pHandlerData, this, NULL);
-            break ;
+        switch (event.evType)
+        {
+            case EVT_INPUT_BODY_TO_MODULE:   // let the next module handle input
+                pBodyPart   = event.Data<SBodyPart *>();
+                pNextModule = pBodyPart->ExtraData<SHttpModule *>();
+                pNextModule->ProcessInput(pConnection, pHandlerData, this, pBodyPart);
+                break ;
+            case EVT_NEXT_INPUT_MODULE:
+                pNextModule = event.Data<SHttpModule *>();
+                pNextModule->ProcessInput(pConnection, pHandlerData, this, NULL);
+                break ;
+            case EVT_OUTPUT_BODY_TO_MODULE:   // let the next module handle input
+                pBodyPart = event.Data<SBodyPart*>();
+                pNextModule = pBodyPart->ExtraData<SHttpModule *>();
+                pNextModule->ProcessOutput(pConnection, pHandlerData, this, pBodyPart);
+                break ;
+            case EVT_NEXT_OUTPUT_MODULE:
+                pNextModule = event.Data<SHttpModule *>();
+                pNextModule->ProcessOutput(pConnection, pHandlerData, this, NULL);
+                break ;
+        }
     }
 }
 

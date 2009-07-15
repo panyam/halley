@@ -55,7 +55,8 @@ bool SContainsUrlMatcher::Matches(const std::string &resource) const
 }
 
 //! Called to handle input data from another module
-void SUrlRouter::ProcessInput(SHttpHandlerData *    pHandlerData,
+void SUrlRouter::ProcessInput(SConnection *         pConnection,
+                              SHttpHandlerData *    pHandlerData,
                               SHttpHandlerStage *   pStage,
                               SBodyPart *           pBodyPart)
 {
@@ -65,7 +66,7 @@ void SUrlRouter::ProcessInput(SHttpHandlerData *    pHandlerData,
     {
         if ((*iter)->Matches(pRequest->Resource()))
         {
-            pStage->SendEvent_InputToModule(pHandlerData->pConnection, (*iter)->Module());
+            pStage->SendEvent_InputToModule(pConnection, (*iter)->Module());
             return ;
         }
     }
@@ -73,7 +74,7 @@ void SUrlRouter::ProcessInput(SHttpHandlerData *    pHandlerData,
     // see if there is a default module to send to
     if (pNextModule != NULL)
     {
-        pStage->SendEvent_InputToModule(pHandlerData->pConnection, pNextModule);
+        pStage->SendEvent_InputToModule(pConnection, pNextModule);
     }
     else
     {

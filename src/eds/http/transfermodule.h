@@ -38,12 +38,14 @@ public:
     STransferModule(SHttpModule *pNext) : SHttpModule(pNext) { }
 
     //! Called to handle output data from another module
-    virtual void ProcessOutput(SHttpHandlerData *   pHandlerData,
-                              SHttpHandlerStage *   pStage,
-                              SBodyPart *           pBodyPart);
+    virtual void ProcessOutput(SConnection *        pConnection,
+                               SHttpHandlerData *   pHandlerData,
+                               SHttpHandlerStage *  pStage,
+                               SBodyPart *          pBodyPart);
 
 protected:
-    void HandleBodyPart(SHttpHandlerData *  pHandlerData, 
+    void HandleBodyPart(SConnection *       pConnection,
+                        SHttpHandlerData *  pHandlerData, 
                         SHttpHandlerStage * pStage,
                         SHttpModuleData *   pModData,
                         SBodyPart *         pBodyPart);

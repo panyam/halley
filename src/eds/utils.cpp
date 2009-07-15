@@ -32,9 +32,10 @@
 //! Sends data over a fd completely
 int SEDSUtils::SendFully(int fd, const char *buffer, int length)
 {
-    while (length > 0)
+    int left = length;
+    while (left > 0)
     {
-        int numWritten = send(fd, buffer, length, MSG_NOSIGNAL);
+        int numWritten = send(fd, buffer, left, MSG_NOSIGNAL);
         if (numWritten < 0)
         {
             return -1;
@@ -42,7 +43,7 @@ int SEDSUtils::SendFully(int fd, const char *buffer, int length)
         else
         {
             buffer += numWritten;
-            length -= numWritten;
+            left -= numWritten;
         }
     }
     return length;

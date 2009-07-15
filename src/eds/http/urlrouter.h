@@ -132,7 +132,8 @@ public:
     UrlMatcherList      urlMatchers;
 
     //! Called to handle input data from another module
-    virtual void ProcessInput(SHttpHandlerData *    pHandlerData,
+    virtual void ProcessInput(SConnection *         pConnection,
+                              SHttpHandlerData *    pHandlerData,
                               SHttpHandlerStage *   pStage,
                               SBodyPart *           pBodyPart);
 };
