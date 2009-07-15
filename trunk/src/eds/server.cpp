@@ -53,6 +53,20 @@ SEvServer::SEvServer(int port_, SReaderStage* pReaderStage_, SWriterStage *pWrit
 {
 }
 
+/**************************************************************************************
+*   \brief  Destructor
+*
+*   \version
+*       - Sri Panyam  10/02/2009
+*         Created
+**************************************************************************************/
+SEvServer::~SEvServer()
+{
+    Stop();
+
+    CloseServerSockets();
+}
+
 //*****************************************************************************
 /*!
  *  \brief  Called to stop the server.
@@ -276,10 +290,9 @@ int SEvServer::Run()
     // thrown by out of band data
     signal(SIGPIPE, SIG_IGN);
 
-    serverEpollFD       = epoll_create(MAXEPOLLSIZE);
-
     struct epoll_event ev;
     struct epoll_event events[MAXEPOLLSIZE];
+    serverEpollFD       = epoll_create(MAXEPOLLSIZE);
 
     bzero(&ev, sizeof(ev));
     ev.events   = EPOLLIN | EPOLLOUT | EPOLLET | EPOLLHUP | EPOLLERR;
@@ -307,7 +320,7 @@ int SEvServer::Run()
         else
         {
             // go through and remove connections that are
-            // marked as close if their reference counts are 0
+            // marked as close if their ref counts are 0
             CloseMarkedConnections();
         }
 
@@ -454,20 +467,6 @@ void SEvServer::CloseServerSockets()
         }
         serverEpollFD = -1;
     }
-}
-
-/**************************************************************************************
-*   \brief  Destructor
-*
-*   \version
-*       - Sri Panyam  10/02/2009
-*         Created
-**************************************************************************************/
-SEvServer::~SEvServer()
-{
-    Stop();
-
-    CloseServerSockets();
 }
 
 /**************************************************************************************
