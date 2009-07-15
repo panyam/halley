@@ -96,6 +96,9 @@ public:
     //! Destroyes connections marked as closed
     void        CloseMarkedConnections();
 
+    //! Closes all connections (marked or not).
+    void        CloseAllConnections();
+
     //! Marks a connection as closed
     void        MarkConnectionAsClosed(SConnection *pConnection);
 
