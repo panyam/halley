@@ -39,6 +39,7 @@ SRC_FOLDERS =   net             \
                 thread          \
                 logger          \
                 json            \
+                logger          \
                 eds             \
                 eds/http        \
                 eds/http/bayeux
