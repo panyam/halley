@@ -287,11 +287,9 @@ bool SHttpReaderState::ProcessCurrentLine()
         if (!pCurrRequest.ParseFirstLine(currLine))
             return false;
 
-        /*
-        std::cerr << pCurrRequest.Method() << " "
-                  << pCurrRequest.Resource() << " "
-                  << pCurrRequest.Version() << endl;
-        */
+        SLogger::Get()->Log("DEBUG: %s %s %s\n", pCurrRequest.Method().c_str(),
+                                                 pCurrRequest.Resource().c_str(),
+                                                 pCurrRequest.Version().c_str());
 
         currHeaderLine.str("");
         currHeaderLine.clear();
@@ -326,7 +324,7 @@ bool SHttpReaderState::ProcessCurrentLine()
                 SHeaderTable &pHeaders = pCurrRequest.Headers();
                 if (!pHeaders.ParseHeaderLine(lastHeader, hdrName, hdrValue))
                     return false;
-                // std::cout << hdrName << ": " << hdrValue << std::endl;
+                SLogger::Get()->Log("DEBUG: %s: %s\n", hdrName.c_str(), hdrValue.c_str());
             }
 
             currHeaderLine.str("");

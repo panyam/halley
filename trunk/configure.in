@@ -29,8 +29,6 @@ AC_PROG_MAKE_SET
 dnl Check for openssl libraries
 openssl_fine=no
 
-dnl Check for required libraries
-
 dnl Check for header files
 AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h stdlib.h string.h sys/time.h unistd.h])

@@ -99,6 +99,9 @@ public:
     //! Closes all connections (marked or not).
     void        CloseAllConnections();
 
+    //! Closes the server socket and epoll FD.
+    void        CloseServerSockets();
+
     //! Marks a connection as closed
     void        MarkConnectionAsClosed(SConnection *pConnection);
 
