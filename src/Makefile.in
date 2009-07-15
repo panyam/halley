@@ -37,7 +37,6 @@ STATIC_LIB_OUTPUT       =   "$(OUTPUT_DIR)/$(STATIC_LIB_NAME)"
 SRC_FOLDERS =   net             \
                 utils           \
                 thread          \
-                logger          \
                 json            \
                 logger          \
                 eds             \
