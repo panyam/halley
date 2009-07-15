@@ -74,6 +74,10 @@
  *                          the previous state is being processed by other 
  *                          stages/modules.
  *
+ *  STATE_FINISHED      -   This stage is arrived at when processing of a
+ *                          request is complete and when the reader is
+ *                          ready to read the next request.
+ *
  *  STATE_PEER_CLOSED   -   The read end of the connection is closed.  No
  *                          more reads can happen on the connection - but
  *                          writes are ok.
@@ -90,6 +94,7 @@ public:
     {
         STATE_READING,
         STATE_PROCESSING,
+        STATE_FINISHED,
         STATE_PEER_CLOSED,
         STATE_CLOSED,
     };
@@ -139,6 +144,9 @@ public:
     size_t              bufferLength;
     char *              pCurrPos;
     char *              pBuffEnd;
+
+    //! True if unread data is available
+    bool                readable;
 };
 
 #endif

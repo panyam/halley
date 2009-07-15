@@ -45,7 +45,8 @@ int SHeaderTable::WriteToStream(std::ostream &output)
     HeaderMap::const_iterator iter = headers.begin();
     for (;iter != headers.end();++iter)
     {
-       output << iter->first << ": " << iter->second << HttpUtils::CRLF;
+        output << iter->first << ": " << iter->second << HttpUtils::CRLF;
+        SLogger::Get()->Log("DEBUG: Header --------- %s: %s\n", iter->first.c_str(), iter->second.c_str());
     }
     // and an extra HttpUtils::CRLF
     output << HttpUtils::CRLF;

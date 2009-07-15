@@ -287,10 +287,6 @@ bool SHttpReaderState::ProcessCurrentLine()
         if (!pCurrRequest.ParseFirstLine(currLine))
             return false;
 
-        SLogger::Get()->Log("DEBUG: %s %s %s\n", pCurrRequest.Method().c_str(),
-                                                 pCurrRequest.Resource().c_str(),
-                                                 pCurrRequest.Version().c_str());
-
         currHeaderLine.str("");
         currHeaderLine.clear();
         currState = READING_HEADERS;

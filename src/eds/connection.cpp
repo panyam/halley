@@ -46,7 +46,8 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
         pReadBuffer(NULL),
         bufferLength(0),
         pCurrPos(NULL),
-        pBuffEnd(NULL)
+        pBuffEnd(NULL),
+        readable(false)
 {
     SLogger::Get()->Log("\nTRACE: Creating Connection [%x], Socket: %d....\n", this, sock);
 }
