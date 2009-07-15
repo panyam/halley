@@ -46,7 +46,7 @@ int SHeaderTable::WriteToStream(std::ostream &output)
     for (;iter != headers.end();++iter)
     {
         output << iter->first << ": " << iter->second << HttpUtils::CRLF;
-        SLogger::Get()->Log("DEBUG: Header --------- %s: %s\n", iter->first.c_str(), iter->second.c_str());
+        SLogger::Get()->Log("DEBUG: Header      %s: %s\n", iter->first.c_str(), iter->second.c_str());
     }
     // and an extra HttpUtils::CRLF
     output << HttpUtils::CRLF;
@@ -109,6 +109,7 @@ bool SHeaderTable::ParseHeaderLine(const SString &line, SString &name, SString &
 
     name  = SString(pStart, pHeaderEnd - pStart);
     value = SString(pCurr);
+    SLogger::Get()->Log("DEBUG: Header      %s: %s\n", name.c_str(), value.c_str());
     SetHeader(name, value);
     
     return true;

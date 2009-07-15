@@ -117,14 +117,8 @@ void SHttpWriterStage::HandleEvent(const SEvent &event)
             if (result >= 0)
             {
                 result = respHeaders.WriteToFD(pConnection->Socket());
+                SLogger::Get()->Log("DEBUG: ===============================\n\n");
             }
-
-            /*
-            outStream << pResponse->Version() << " "
-                      << pResponse->StatusCode() << " "
-                      << pResponse->StatusMessage() << HttpUtils::CRLF;
-            respHeaders.WriteHeaders(outStream);
-            */
         }
 
         if (result >= 0 || pBodyPart != NULL)

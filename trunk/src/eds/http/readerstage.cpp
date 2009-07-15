@@ -320,7 +320,6 @@ bool SHttpReaderState::ProcessCurrentLine()
                 SHeaderTable &pHeaders = pCurrRequest.Headers();
                 if (!pHeaders.ParseHeaderLine(lastHeader, hdrName, hdrValue))
                     return false;
-                SLogger::Get()->Log("DEBUG: %s: %s\n", hdrName.c_str(), hdrValue.c_str());
             }
 
             currHeaderLine.str("");

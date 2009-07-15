@@ -72,6 +72,10 @@ void SHttpResponse::SetStatus(int status, const SString &msg)
 int SHttpResponse::WriteHeaderLineToStream(std::ostream &output)
 {
     output << version << " " << statusCode << " " << statusMessage << HttpUtils::CRLF;
+
+    SLogger::Get()->Log("\nDEBUG: ===============================\n");
+    SLogger::Get()->Log("DEBUG: Response: %s %d %s %s\n",
+                         version.c_str(), statusCode, statusMessage.c_str());
     return 0;
 }
 
@@ -87,13 +91,7 @@ int SHttpResponse::WriteHeaderLineToFD(int fd)
 //! Writes the response to a stream
 int SHttpResponse::WriteToStream(std::ostream &output)
 {
-    output << version << " " << statusCode << " " << statusMessage << HttpUtils::CRLF;
-
-    SLogger::Get()->Log("DEBUG: Response: %s %d %s %s\n",
-                         version.c_str(), statusCode, statusMessage.c_str());
-
-    // set the content length
-    // SetUIntHeader("Content-Length", body.size());
+    WriteHeaderLineToStream(output);
 
     return SHttpMessage::WriteToStream(output);
 }
