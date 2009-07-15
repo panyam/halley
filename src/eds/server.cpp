@@ -397,20 +397,7 @@ int SEvServer::Run()
         }
     }
 
-    // close connections marked as close
-    CloseMarkedConnections();
-
-    // Close all client sockets.  Note we could do all this in
-    // RealStop, but the problem is that RealStop is (usually) called from 
-    // a different thread which means while we are closing these sockets 
-    // there could be action on the main server thread which we dont want.
-    while ( ! connections.empty())
-    {
-        std::set<SConnection *>::iterator   iter        = connections.begin();
-        SConnection *                       pConnection = *iter;
-        connections.erase(pConnection);
-        delete pConnection;
-    }
+    CloseAllConnections();
 
     if (serverSocket >= 0)
     {
@@ -434,6 +421,31 @@ int SEvServer::Run()
         serverEpollFD = -1;
     }
     return result;
+}
+
+/**************************************************************************************
+*   \brief  Closes all connections - marked or not.
+*
+*   \version
+*       - Sri Panyam  15/07/2009
+*         Created
+**************************************************************************************/
+void SEvServer::CloseAllConnections()
+{
+    // close connections marked as close
+    CloseMarkedConnections();
+
+    // Close all client sockets.  Note we could do all this in
+    // RealStop, but the problem is that RealStop is (usually) called from 
+    // a different thread which means while we are closing these sockets 
+    // there could be action on the main server thread which we dont want.
+    while ( ! connections.empty())
+    {
+        std::set<SConnection *>::iterator   iter        = connections.begin();
+        SConnection *                       pConnection = *iter;
+        connections.erase(pConnection);
+        delete pConnection;
+    }
 }
 
 /**************************************************************************************
