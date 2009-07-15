@@ -138,6 +138,9 @@ int SEvServer::PrepareClientSocket(int clientSocket)
  *****************************************************************************/
 int SEvServer::CreateSocket()
 {
+    // close sockets first
+    CloseServerSockets();
+
     // Create an internet socket using streaming (tcp/ip)
     // and save the handle for the server socket
     int newSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -269,12 +272,6 @@ int SEvServer::Run()
     }
 #endif
 
-    if (serverEpollFD >= 0)
-    {
-        close(serverEpollFD);
-        serverEpollFD = -1;
-    }
-
     // Ignore SIGPIPE' so we can ignore error's 
     // thrown by out of band data
     signal(SIGPIPE, SIG_IGN);
@@ -290,8 +287,7 @@ int SEvServer::Run()
     if (epoll_ctl(serverEpollFD, EPOLL_CTL_ADD, serverSocket, &ev) < 0)
     {
         SLogger::Get()->Log("ERROR: epoll_ctl failed: [%d]: %s\n\n", errno, strerror(errno));
-        close(serverEpollFD);
-        serverEpollFD = -1;
+        CloseServerSockets();
         return errno;
     }
 
@@ -399,27 +395,7 @@ int SEvServer::Run()
 
     CloseAllConnections();
 
-    if (serverSocket >= 0)
-    {
-        // and finally the server socket
-        // shutdown(serverSocket, SHUT_RDWR);
-        int result = close(serverSocket);
-        if (result != 0)
-        {
-            SLogger::Get()->Log("ERROR: serverSocket close failed: [%d]: %s\n\n", errno, strerror(errno));
-        }
-        serverSocket = -1;
-    }
-
-    if (serverEpollFD >= 0)
-    {
-        int result = close(serverEpollFD);
-        if (result != 0)
-        {
-            SLogger::Get()->Log("ERROR: serverEpollFD close failed: [%d]: %s\n\n", errno, strerror(errno));
-        }
-        serverEpollFD = -1;
-    }
+    CloseServerSockets();
     return result;
 }
 
@@ -449,6 +425,38 @@ void SEvServer::CloseAllConnections()
 }
 
 /**************************************************************************************
+*   \brief  Closes the server socket and the epoll FD.
+*
+*   \version
+*       - Sri Panyam  15/07/2009
+*         Created
+**************************************************************************************/
+void SEvServer::CloseServerSockets()
+{
+    if (serverSocket >= 0)
+    {
+        // and finally the server socket
+        // shutdown(serverSocket, SHUT_RDWR);
+        int result = close(serverSocket);
+        if (result != 0)
+        {
+            SLogger::Get()->Log("ERROR: serverSocket close failed: [%d]: %s\n\n", errno, strerror(errno));
+        }
+        serverSocket = -1;
+    }
+
+    if (serverEpollFD >= 0)
+    {
+        int result = close(serverEpollFD);
+        if (result != 0)
+        {
+            SLogger::Get()->Log("ERROR: serverEpollFD close failed: [%d]: %s\n\n", errno, strerror(errno));
+        }
+        serverEpollFD = -1;
+    }
+}
+
+/**************************************************************************************
 *   \brief  Destructor
 *
 *   \version
@@ -459,17 +467,7 @@ SEvServer::~SEvServer()
 {
     Stop();
 
-    if (serverSocket >= 0)
-    {
-        close(serverSocket);
-        serverSocket = -1;
-    }
-
-    if (serverEpollFD >= 0)
-    {
-        close(serverEpollFD);
-        serverEpollFD = -1;
-    }
+    CloseServerSockets();
 }
 
 /**************************************************************************************

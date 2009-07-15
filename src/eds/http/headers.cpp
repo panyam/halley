@@ -78,10 +78,7 @@ bool SHeaderTable::ReadHeaders(std::istream &input)
     SString headerValue;
 
     // read all header lines
-    while (ReadNextHeader(input, headerName, headerValue)) 
-    {
-    	// std::cerr << "Found Header: " << headerName << ": " << headerValue << std::endl;
-    }
+    while (ReadNextHeader(input, headerName, headerValue)) { }
 
     return !input.bad() && !input.eof();
 }
