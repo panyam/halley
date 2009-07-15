@@ -353,8 +353,11 @@ int SEvServer::Run()
                         clientSocket = accept(serverSocket, (struct sockaddr *)&client_sock_addr, &addlen);
                         if (clientSocket < 0)
                         {
-                            SLogger::Get()->Log("ERROR: accept failed: [%d]: %s\n\n", errno, strerror(errno));
-                            break ;
+                            if (errno != EAGAIN)
+                            {
+                                SLogger::Get()->Log("ERROR: accept failed: [%d]: %s\n\n", errno, strerror(errno));
+                                assert("Accept Failed" && false);
+                            }
                         }
                         else if (Stopped())
                         {
