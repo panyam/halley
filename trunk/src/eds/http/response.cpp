@@ -74,7 +74,7 @@ int SHttpResponse::WriteHeaderLineToStream(std::ostream &output)
     output << version << " " << statusCode << " " << statusMessage << HttpUtils::CRLF;
 
     SLogger::Get()->Log("\nDEBUG: ===============================\n");
-    SLogger::Get()->Log("DEBUG: Response: %s %d %s %s\n",
+    SLogger::Get()->Log("DEBUG: Response: %s %d %s\n",
                          version.c_str(), statusCode, statusMessage.c_str());
     return 0;
 }

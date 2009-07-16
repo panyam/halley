@@ -56,10 +56,7 @@ protected:
 };
 
 // Creates a new file io helper stage
-SHttpWriterStage::SHttpWriterStage(const SString &name, int numThreads)
-:
-    SWriterStage(name, numThreads),
-    pReaderStage(NULL)
+SHttpWriterStage::SHttpWriterStage(const SString &name, int numThreads) : SWriterStage(name, numThreads)
 {
 }
 
@@ -143,9 +140,7 @@ void SHttpWriterStage::HandleEvent(const SEvent &event)
             SLogger::Get()->Log("TRACE: send error: [%d], EPIPE/ECONNRESET = [%d]/[%d] - [%s]\n", errno, EPIPE, ECONNRESET, strerror(errno));
             if (errno == EPIPE || errno == ECONNRESET)
             {
-                pConnection->Server()->MarkConnectionAsClosed(pConnection);
-                // shutdown(sockHandle, SHUT_WR);
-                // assert("send error" && false);
+                pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_CLOSED);
             }
             else
             {
@@ -190,14 +185,13 @@ int SHttpWriterStage::WriteBodyPart(SConnection *     pConnection,
             // have, killing it here will pose sever problems.  So instead of
             // killing, we flag it as being closed so nothing else uses this
             // connection
-            pConnection->Server()->MarkConnectionAsClosed(pConnection);
+            pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_CLOSED);
         }
         else
         {
             // tell the reader we are ready for more
             // should we? or should we let the server take care of this?
-            pConnection->SetState(SConnection::STATE_FINISHED);
-            pReaderStage->SendEvent_ReadRequest(pConnection);
+            pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_FINISHED);
         }
     }
     else // treat as normal message

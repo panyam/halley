@@ -44,6 +44,8 @@ public:
 
     SString GetMimeType(const SString &filename);
 
+    void SetMimeType(const SString &ext, const SString &mtype);
+
     //! Get singleton instance.
     static SMimeTypes *GetInstance();
 

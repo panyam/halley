@@ -51,14 +51,6 @@ class SJob;
 class SJobListener;
 class SConnection;
 
-typedef std::string                     SString;
-typedef std::stringstream               SStringStream;
-typedef std::vector<char>               SCharVector;
-typedef std::list<SConnection *>        SConnectionList;
-typedef std::list<SString>              SStringList;
-typedef std::vector<SString>            SStringVector;
-typedef std::pair<SString, SString>     SStringPair;
-
 class SEvent;
 class SEventDispatcher;
 class SEventHandler;
@@ -69,6 +61,18 @@ class SEvServer;
 class SStage;
 class SReaderStage;
 class SWriterStage;
+
+typedef std::string                     SString;
+typedef std::stringstream               SStringStream;
+typedef std::vector<char>               SCharVector;
+typedef std::list<SConnection *>        SConnectionList;
+typedef std::list<SString>              SStringList;
+typedef std::vector<SString>            SStringVector;
+typedef std::pair<SString, SString>     SStringPair;
+
+// shortcut for a connection list and set
+typedef std::list<SConnection *>        TConnectionList;
+typedef std::set<SConnection *>         TConnectionSet;
 
 #endif
 

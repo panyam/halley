@@ -57,7 +57,7 @@ VERSION                 = $(MAJOR_VERSION).$(MINOR_VERSION).$(BUILD_VERSION)
 
 OUTPUT_DIR              := $(OUTPUT_DIR)/$(BUILD_MODE)
 
-DEBUG_CXXFLAGS          =   -g -fno-inline
+DEBUG_CXXFLAGS          =   -g -fno-inline -pg
 RELEASE_CXXFLAGS        =   -O3
 CORE_CXXFLAGS           =   -Wall                   \
                             -I../src

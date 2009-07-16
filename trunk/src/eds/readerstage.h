@@ -43,7 +43,6 @@ public:
     typedef enum
     {
         EVT_READ_REQUEST,
-        EVT_CLOSE_CONNECTION
     } EventType;
 
 public:
@@ -53,10 +52,10 @@ public:
     // Destroys the stage
     virtual         ~SReaderStage();
 
-    //! Called when data is available to be read.
+    //! Called when a new request has arrived
     virtual bool    SendEvent_ReadRequest(SConnection *pConnection);
 
-    //! Just deals with read_request event
+    //! Just deals with new_request event
     virtual void    HandleReadRequestEvent(const SEvent &event);
 
 protected:

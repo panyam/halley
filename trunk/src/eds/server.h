@@ -49,6 +49,7 @@
 #include "eds/utils.h"
 #include "eds/fwd.h"
 #include "eds/http/httpfwd.h"
+#include "eds/connection.h"
 
 //*****************************************************************************
 /*!
@@ -93,20 +94,20 @@ public:
     //! Creates a new connection
     SConnection *NewConnection(int clientSocket);
 
-    //! Destroyes connections marked as closed
-    void        CloseMarkedConnections();
+    //! Moves finished connections to the idle state
+    void        CheckFinishedConnections();
 
     //! Closes all connections (marked or not).
     void        CloseAllConnections();
 
+    //! Closes selected connections
+    void        CloseConnections(int which = -1);
+
     //! Closes the server socket and epoll FD.
     void        CloseServerSockets();
 
-    //! Marks a connection as closed
-    void        MarkConnectionAsClosed(SConnection *pConnection);
-
-    //! Peer has closed the connection - so remove the POLLIN
-    void        PeerClosedConnection(SConnection *pConnection);
+    //! Set the new state of a connection
+    void        SetConnectionState(SConnection *pConnection, int newState);
 
 protected:
     // Called to stop the task.
@@ -152,14 +153,12 @@ private:
     //! All other stages by name
     std::map<std::string, SStage *> eventStages;
 
-    //! List of all connections
-    std::set<SConnection *>         connections;
-
-    //! List of connections that can be garbage collected
-    std::list<SConnection *>        closedConnections;
+    //! A list of connections sets - 
+    //  one for each state a connection can be in
+    TConnectionSet              connections[SConnection::STATE_COUNT];
 
     //! Mutex on the connection list
-    SMutex                          connListMutex;
+    SMutex                      connListMutex;
 };
 
 #endif

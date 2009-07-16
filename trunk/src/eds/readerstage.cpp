@@ -76,17 +76,17 @@ void SReaderStage::HandleReadRequestEvent(const SEvent &event)
     SConnection *pConnection    = (SConnection *)(event.pSource);
     void *pReaderState          = pConnection->GetStageData(this);
 
-    if (pConnection->GetState() == SConnection::STATE_FINISHED)
+    if (pConnection->GetState() == SConnection::STATE_IDLE)
     {
-        pConnection->SetState(SConnection::STATE_READING);
+        pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_READING);
         ResetStageData(pReaderState);
     }
 
     // Do nothing if we are processing a request - leave the data in the
-    // socket buffer, but flag as readable so when we get to FINISHED
+    // socket buffer, but flag as readable so when we get to IDLE
     // stage, we can use the readable flag to see if there is more data
     // available for the next request
-    pConnection->readable       = true;
+    pConnection->dataConsumed  = false;
 
     // in the reading state, we can read data till the next complete
     // "message" has been read...
@@ -109,7 +109,7 @@ void SReaderStage::HandleReadRequestEvent(const SEvent &event)
                 {
                     // end of file
                     SLogger::Get()->Log("WARNING: read EOF reached\n\n");
-                    pConnection->SetState(SConnection::STATE_PEER_CLOSED);
+                    pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_PEER_CLOSED);
                 }
                 else if (errno == EAGAIN)
                 {
@@ -117,13 +117,13 @@ void SReaderStage::HandleReadRequestEvent(const SEvent &event)
                     SLogger::Get()->Log("DEBUG: read error EAGAIN = [%d]: %s\n\n", errno, strerror(errno));
 
                     // clear readable flag since there is no more data available
-                    pConnection->readable = false;
+                    pConnection->dataConsumed = true;
                 }
                 else if (errno == ECONNRESET)
                 {
                     // non blocking io - so quit till more data is available
                     SLogger::Get()->Log("DEBUG: read error ECONNRESET = [%d]: %s\n\n", errno, strerror(errno));
-                    pConnection->Server()->MarkConnectionAsClosed(pConnection);
+                    pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_CLOSED);
                 }
                 else
                 {
@@ -139,9 +139,17 @@ void SReaderStage::HandleReadRequestEvent(const SEvent &event)
         void *pRequest = AssembleRequest(pConnection->pCurrPos, pConnection->pBuffEnd, pReaderState);
         if (pRequest != NULL)
         {
+            // set data consumed to false to indicate that there may be
+            // data on the socket that we may have not dealt with yet so
+            // that once a connection goes into the FINISHED state (eg as a
+            // result of data being written out), the server can send a
+            // ReadRequest if this is false after moving a connection to
+            // the IDLE state.
+            pConnection->dataConsumed = false;
+
             // send it of the next stage, also at this stage we have to
             // update how much data has been read
-            pConnection->SetState(SConnection::STATE_PROCESSING);
+            pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_PROCESSING);
 
             // sends request to be handled by the next stage
             HandleRequest(pConnection, pRequest);
