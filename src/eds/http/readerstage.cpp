@@ -142,6 +142,8 @@ void SHttpReaderStage::ResetStageData(void *pData)
 //! Handle the new assembled request
 bool SHttpReaderStage::HandleRequest(SConnection *pConnection, void *pRequest)
 {
+    ((SHttpRequest *)pRequest)->SetConnection(pConnection);
+
     // send the request off to the handler stage
     return pHandlerStage->SendEvent_HandleNextRequest(pConnection, (SHttpRequest *)pRequest);
 }

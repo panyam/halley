@@ -59,7 +59,7 @@ public:
                               SBodyPart *           pBodyPart);
 
     //! Deliver an event to all connections
-    virtual void DeliverEvent(SConnection *pConnection, const SBayeuxChannel *pChannel, const JsonNodePtr &value);
+    virtual void DeliverEvent(const SBayeuxChannel *pChannel, const JsonNodePtr &value);
 
 protected:
     //! Sends the response for a message

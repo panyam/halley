@@ -44,11 +44,11 @@
 class SHttpRequest : public SHttpMessage
 {
 public:
-    SHttpRequest();
+    SHttpRequest(SConnection *pConn = NULL);
     virtual         ~SHttpRequest();
 
     //! Resets to start all over again
-    virtual void Reset();
+    virtual void Reset(SConnection *pConn = NULL);
 
 public:
     //! The scheme
@@ -62,6 +62,9 @@ public:
 
     //! Gets the method
     const SString &Method() const;
+
+    //! Sets the connection
+    void SetConnection(SConnection *pConn = NULL) { pConnection = pConn; }
 
     //! Sets the method
     void SetMethod(const SString &method);
@@ -83,6 +86,9 @@ public:
 
     //! Return the response for the request
     virtual SHttpResponse *Response() const { return pResponse; }
+
+    //! Return the connection holding the request
+    virtual SConnection *Connection() const { return pConnection; }
 
     //! Gets the content body
     SBodyPart *ContentBody() const { return pContentBody; }
@@ -124,6 +130,9 @@ protected:
 
     //! The actually data that is sent as the content - Usually POSTs
     SBodyPart *     pContentBody;
+
+    //! The connection that created this request
+    SConnection *   pConnection;
 
     //! The response for this request
     SHttpResponse * pResponse;

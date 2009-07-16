@@ -68,7 +68,7 @@ protected:
                 break ;
 
             JsonNodePtr value = JsonNodeFactory::StringNode(prompt + buffer);
-            pModule->DeliverEvent(pConnection, pTheChannel, value);
+            pModule->DeliverEvent(pTheChannel, value);
         }
 
         pServer->HandlerFinished(this);
@@ -112,8 +112,8 @@ class MyBayeuxChannel : public virtual SBayeuxChannel, public virtual SServer
 {
 public:
     //! Constructor
-    MyBayeuxChannel(SConnection *pConn, SBayeuxModule *pMod, const std::string &name, int port) :
-        SBayeuxChannel(name, pMod), SServer(port), pConnection(pConn)
+    MyBayeuxChannel(SBayeuxModule *pMod, const std::string &name, int port) :
+        SBayeuxChannel(name, pMod), SServer(port)
     {
         SetConnectionFactory(new MyConnFactory(this, pModule));
     }
@@ -122,17 +122,13 @@ protected:
     void HandleConnection(int clientSocket)
     {
         JsonNodePtr value = JsonNodeFactory::StringNode(" ===== Handling New Connection on Channel: " + Name());
-        pModule->DeliverEvent(pConnection, this, value);
+        pModule->DeliverEvent(this, value);
 
         SServer::HandleConnection(clientSocket);
 
         value = JsonNodeFactory::StringNode(" ===== Connection Finished on Channel: " + Name());
-        pModule->DeliverEvent(pConnection, this, value);
+        pModule->DeliverEvent(this, value);
     }
-
-protected:
-    //! The connection which parents this channel
-    SConnection *   pConnection;
 };
 
 class ServerContext
