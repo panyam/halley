@@ -167,7 +167,7 @@ SHttpHandlerData *SBayeuxModule::RemoveClient(const SString &clientId)
 }
 
 //! Delivers an event to all subscribers of a channel
-void SBayeuxModule::DeliverEvent(SConnection *pConnection, const SBayeuxChannel *pChannel, const JsonNodePtr &value)
+void SBayeuxModule::DeliverEvent(const SBayeuxChannel *pChannel, const JsonNodePtr &value)
 {
     // do nothing if no handler stage available
     if (pHandlerStage == NULL || pChannel == NULL) return ;
@@ -196,7 +196,7 @@ void SBayeuxModule::DeliverEvent(SConnection *pConnection, const SBayeuxChannel 
             SHttpResponse *     pResponse   = pRequest->Response();
             SBodyPart *         pBodyPart   = pResponse->NewBodyPart();
             pBodyPart->SetBody(msgbody);
-            pHandlerStage->SendEvent_OutputToModule(pConnection, pNextModule, pBodyPart);
+            pHandlerStage->SendEvent_OutputToModule(pRequest->Connection(), pNextModule, pBodyPart);
         }
     }
 }

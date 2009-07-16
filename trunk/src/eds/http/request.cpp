@@ -32,19 +32,20 @@
 #include <string.h>
 
 // Creates a new http request object
-SHttpRequest::SHttpRequest() :
+SHttpRequest::SHttpRequest(SConnection *pConn) :
     scheme("http"),
     host(""),
     port(80),
     method("GET"),
     resource("/"),
     pContentBody(NULL),
+    pConnection(pConn),
     pResponse(new SHttpResponse())
 {
 }
 
 //! Resets to start all over again
-void SHttpRequest::Reset()
+void SHttpRequest::Reset(SConnection *pConn)
 {
     SHttpMessage::Reset();
     if (pContentBody)
@@ -52,6 +53,8 @@ void SHttpRequest::Reset()
 
     if (pResponse)
         pResponse->Reset();
+
+    pConnection = pConn;
 }
 
 // Clears a http req object
