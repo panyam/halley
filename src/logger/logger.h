@@ -43,10 +43,10 @@ class SLogger
 {
 public:
     // Constructor
-    SLogger() { }
+    SLogger();
 
     //! virtual destructor
-    virtual ~SLogger() { }
+    virtual ~SLogger();
 
     //! Does the actual logging
     virtual int Log(const char *fmt, ...);
