@@ -188,8 +188,6 @@ public:
         requestHandler.SetReaderStage(&requestReader);
         requestHandler.SetWriterStage(&requestWriter);
 
-        requestWriter.SetReaderStage(&requestReader);
-
         pServer.SetStage("RequestReader", &requestReader);
         pServer.SetStage("RequestHandler", &requestHandler);
         pServer.SetStage("RequestWriter", &requestWriter);
@@ -337,6 +335,7 @@ void SMyModule::ProcessInput(SConnection *          pConnection,
     part->AppendToBody(title);
     part->AppendToBody("</title></head><body bgcolor='" + bgcolor + "'>");
     part->AppendToBody(body);
+    part->AppendToBody("</body></html>");
 
     pStage->SendEvent_OutputToModule(pConnection, pNextModule, part);
     pStage->SendEvent_OutputToModule(pConnection, pNextModule,

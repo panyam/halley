@@ -65,6 +65,10 @@
  *
  *  The following states are required:
  *
+ *  STATE_IDLE          -   This means the connection is at the "Start"
+ *                          stage and a new request can be read - however
+ *                          no data is available yet
+ *
  *  STATE_READING       -   Connection is a state where data can be (if just 
  *                          accepted) or is being read.  At this point the
  *                          reader stage can read protocol specific
@@ -74,9 +78,9 @@
  *                          the previous state is being processed by other 
  *                          stages/modules.
  *
- *  STATE_FINISHED      -   This stage is arrived at when processing of a
- *                          request is complete and when the reader is
- *                          ready to read the next request.
+ *  STATE_FINISHED      -   Here, a request has completed being handled,
+ *                          and if data is available it will go ot the
+ *                          reading stage, otherwise to the idle stage.
  *
  *  STATE_PEER_CLOSED   -   The read end of the connection is closed.  No
  *                          more reads can happen on the connection - but
@@ -92,11 +96,14 @@ class SConnection : public SJob
 public:
     enum
     {
+        STATE_IDLE,
         STATE_READING,
         STATE_PROCESSING,
         STATE_FINISHED,
         STATE_PEER_CLOSED,
         STATE_CLOSED,
+
+        STATE_COUNT // Number of available states
     };
 
 public:
@@ -145,8 +152,8 @@ public:
     char *              pCurrPos;
     char *              pBuffEnd;
 
-    //! True if unread data is available
-    bool                readable;
+    //! If data has been read then this is false
+    bool                dataConsumed;
 };
 
 #endif

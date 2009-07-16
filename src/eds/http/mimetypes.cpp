@@ -68,6 +68,21 @@ SMimeTypes::~SMimeTypes()
 
 //*****************************************************************************
 /*!
+ *  \brief  Sets the mime type for an extension, replacing one if it
+ *  already exists.
+ *
+ *  \version
+ *      - Sri Panyam      16/07/2009
+ *        Created.
+ *
+ *****************************************************************************/
+void SMimeTypes::SetMimeType(const SString &ext, const SString &mtype)
+{
+    mimeTypes[ext] = mtype;
+}
+
+//*****************************************************************************
+/*!
  *  \brief  Return's a file's mime type.
  *
  *  \version

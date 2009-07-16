@@ -53,12 +53,6 @@ public:
     // Destroys the stage
     virtual ~SHttpWriterStage() { }
 
-    //! Set the reader stage
-    virtual void    SetReaderStage(SHttpReaderStage *pReader) { pReaderStage = pReader; }
-
-    //! Get the reader stage
-    virtual SHttpReaderStage *GetReaderStage() { return pReaderStage; }
-
     //! Creates the stage specific object
     virtual void *  CreateStageData();
 
@@ -76,10 +70,6 @@ protected:
     int WriteBodyPart(SConnection *       pConnection,
                       SHttpStageData *    pStageData,
                       SBodyPart *         pBodyPart);
-
-protected:
-    //! The stage that reads requests from the connection
-    SHttpReaderStage *      pReaderStage;
 };
 
 #endif

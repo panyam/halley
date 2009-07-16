@@ -42,12 +42,12 @@ SConnection::SConnection(SEvServer *pSrv, int sock) :
         pServer(pSrv),
         connSocket(sock),
         createdAt(time(NULL)),
-        connState(STATE_READING),
+        connState(STATE_IDLE),
         pReadBuffer(NULL),
         bufferLength(0),
         pCurrPos(NULL),
         pBuffEnd(NULL),
-        readable(false)
+        dataConsumed(false)
 {
     SLogger::Get()->Log("\nTRACE: Creating Connection [%x], Socket: %d....\n", this, sock);
 }

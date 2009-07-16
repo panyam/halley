@@ -49,7 +49,7 @@ SEvServer::SEvServer(int port_, SReaderStage* pReaderStage_, SWriterStage *pWrit
     serverSocket(-1),
     serverEpollFD(-1),
     pReaderStage(pReaderStage_),
-    pWriterStage(pWriterStage_)
+    pWriterStage(pWriterStage_)// , connListMutex(PTHREAD_MUTEX_RECURSIVE)
 {
 }
 
@@ -234,7 +234,7 @@ int SEvServer::BindSocket()
 
 //*****************************************************************************
 /*!
- *  \brief  Starts listening on the socket for connections.
+ *  \brief  Starts listening on the socket for activeConnections.
  *
  *  \version
  *      - Sri Panyam      16/02/2009
@@ -319,10 +319,11 @@ int SEvServer::Run()
         }
         else
         {
-            // go through and remove connections that are
-            // marked as close if their ref counts are 0
-            CloseMarkedConnections();
+            // go through and remove connections in the STATE_CLOSED state
+            CloseConnections(SConnection::STATE_CLOSED);
         }
+
+        CheckFinishedConnections();
 
         for (int n = 0;!Stopped() && n < nfds;n++)
         {
@@ -344,7 +345,7 @@ int SEvServer::Run()
                 if (pConnection != NULL)
                 {
                     SLogger::Get()->Log("TRACE: Hangup Recieved - Connection: [%x], Socket: [%d]\n", pConnection, pConnection->Socket());
-                    MarkConnectionAsClosed(pConnection);
+                    SetConnectionState(pConnection, SConnection::STATE_CLOSED);
                 }
             }
 
@@ -409,7 +410,63 @@ int SEvServer::Run()
     CloseAllConnections();
 
     CloseServerSockets();
+
     return result;
+}
+
+/**************************************************************************************
+*   \brief  Goes through all finished connections and sets them to idle
+*
+*   \version
+*       - Sri Panyam  16/07/2009
+*         Created
+**************************************************************************************/
+void SEvServer::CheckFinishedConnections()
+{
+    connListMutex.Lock();
+
+    while ( ! connections[SConnection::STATE_FINISHED].empty())
+    {
+        TConnectionSet::iterator iter = connections[SConnection::STATE_FINISHED].begin();
+        SConnection *pConnection = *iter;
+        connections[SConnection::STATE_FINISHED].erase(iter);
+        pConnection->SetState(SConnection::STATE_IDLE);
+        connections[SConnection::STATE_IDLE].insert(pConnection);
+        connListMutex.Unlock();
+        if (!pConnection->dataConsumed)
+        {
+            pReaderStage->SendEvent_ReadRequest(pConnection);
+        }
+        connListMutex.Lock();
+    }
+    connListMutex.Unlock();
+}
+
+/**************************************************************************************
+*   \brief  Closes all connections or selected connections.
+*
+*   \version
+*       - Sri Panyam  16/07/2009
+*         Created
+**************************************************************************************/
+void SEvServer::CloseConnections(int which)
+{
+    if (which >= 0 && which < SConnection::STATE_COUNT)
+    {
+        SMutexLock locker(connListMutex);
+
+        // Close all client sockets.  Note we could do all this in
+        // RealStop, but the problem is that RealStop is (usually) called from 
+        // a different thread which means while we are closing these sockets 
+        // there could be action on the main server thread which we dont want.
+        while ( ! connections[which].empty())
+        {
+            TConnectionSet::iterator iter = connections[which].begin();
+            SConnection *pConnection = *iter;
+            connections[which].erase(iter);
+            delete pConnection;
+        }
+    }
 }
 
 /**************************************************************************************
@@ -421,19 +478,9 @@ int SEvServer::Run()
 **************************************************************************************/
 void SEvServer::CloseAllConnections()
 {
-    // close connections marked as close
-    CloseMarkedConnections();
-
-    // Close all client sockets.  Note we could do all this in
-    // RealStop, but the problem is that RealStop is (usually) called from 
-    // a different thread which means while we are closing these sockets 
-    // there could be action on the main server thread which we dont want.
-    while ( ! connections.empty())
+    for (int i = 0;i < SConnection::STATE_COUNT;i++)
     {
-        std::set<SConnection *>::iterator   iter        = connections.begin();
-        SConnection *                       pConnection = *iter;
-        connections.erase(pConnection);
-        delete pConnection;
+        CloseConnections(i);
     }
 }
 
@@ -510,52 +557,37 @@ SStage *SEvServer::GetStage(const SString &name)
     }
 }
 
-
 /**************************************************************************************
-*   \brief  Notified by the reader when the peer has closed the connection.
+*   \brief  Sets the state of a connection and performs state specific
+*   actions.
 *
 *   \version
-*       - Sri Panyam  14/07/2009
+*       - Sri Panyam  16/07/2009
 *         Created
 **************************************************************************************/
-void SEvServer::PeerClosedConnection(SConnection *pConnection)
+void SEvServer::SetConnectionState(SConnection *pConnection, int newState)
 {
     if (pConnection == NULL) return ;
-
     SMutexLock locker(connListMutex);
 
-    SLogger::Get()->Log("TRACE: Peer Closed Connection: [%x], Socket: [%d]\n", pConnection, pConnection->Socket());
-
-    struct epoll_event ev;
-    bzero(&ev, sizeof(ev));
-
-    // Remove the read-events since the peer has closed the connection
-    ev.events       = EPOLLOUT | EPOLLET | EPOLLHUP | EPOLLERR;
-    ev.data.ptr     = pConnection;
-
-    if (epoll_ctl(serverEpollFD, EPOLL_CTL_MOD, pConnection->Socket(), &ev) < 0)
+    int oldState                    = pConnection->GetState();
+    TConnectionSet::iterator iter   = connections[oldState].find(pConnection);
+    if (iter == connections[oldState].end())
     {
-        SLogger::Get()->Log("ERROR: epoll_ctl MOD error [%d]: %s\n", errno, strerror(errno));
-        assert("Could not remove POLLIN from socket events" && false);
+        assert("Connection not handled by this server" && false);
+        return ;
     }
-}
+    connections[oldState].erase(iter);
 
-/**************************************************************************************
-*   \brief  Marks a connection as closed so when time comes it can be
-*   deleted.
-*
-*   \version
-*       - Sri Panyam  09/07/2009
-*         Created
-**************************************************************************************/
-void SEvServer::MarkConnectionAsClosed(SConnection *pConnection)
-{
-    if (pConnection == NULL) return ;
+    pConnection->SetState(newState);
+    // add it to the new set now
+    if (connections[newState].find(pConnection) != connections[newState].end())
+    {
+        assert("Connection already in requested state" && false);
+        return ;
+    }
 
-    SMutexLock locker(connListMutex);
-
-    SLogger::Get()->Log("TRACE: Marking As Close - Connection: [%x], Socket: [%d]\n", pConnection, pConnection->Socket());
-    if (connections.find(pConnection) != connections.end())
+    if (newState == SConnection::STATE_CLOSED)
     {
         struct epoll_event ev;
         bzero(&ev, sizeof(ev));
@@ -565,48 +597,32 @@ void SEvServer::MarkConnectionAsClosed(SConnection *pConnection)
             SLogger::Get()->Log("ERROR: epoll_ctl delete error [%d]: %s\n", errno, strerror(errno));
         }
 
-        // move the connection to the closed connection list
-        pConnection->SetState(SConnection::STATE_CLOSED);
-        connections.erase(pConnection);
-
-        // move the connection to the closed connections list
-        // so it can be freed up when we need spare ones
+        // free if possible
         if (pConnection->RefCount() == 0)
         {
             delete pConnection;
-        }
-        else
-        {
-            closedConnections.push_back(pConnection);
+            return ;
         }
     }
-}
-
-/**************************************************************************************
-*   \brief  Destroys connections marked as closed if their refcounts have
-*   reached 0.
-*
-*   \version
-*       - Sri Panyam  08/07/2009
-*         Created
-**************************************************************************************/
-void SEvServer::CloseMarkedConnections()
-{
-    SMutexLock locker(connListMutex);
-    std::list<SConnection *>::iterator iter = closedConnections.begin();
-    while (iter != closedConnections.end())
+    else if (newState == SConnection::STATE_PEER_CLOSED)
     {
-        SConnection *pConnection = *iter;
-        if (pConnection->RefCount() == 0)
+        /*
+        struct epoll_event ev;
+        bzero(&ev, sizeof(ev));
+
+        // Remove the read-events since the peer has closed the connection
+        ev.events       = EPOLLOUT | EPOLLET | EPOLLHUP | EPOLLERR;
+        ev.data.ptr     = pConnection;
+
+        if (epoll_ctl(serverEpollFD, EPOLL_CTL_MOD, pConnection->Socket(), &ev) < 0)
         {
-            iter = closedConnections.erase(iter);
-            delete pConnection;
+            SLogger::Get()->Log("ERROR: epoll_ctl MOD error [%d]: %s\n", errno, strerror(errno));
+            assert("Could not remove POLLIN from socket events" && false);
         }
-        else
-        {
-            ++iter;
-        }
+        */
     }
+
+    connections[newState].insert(pConnection);
 }
 
 /**************************************************************************************
@@ -625,7 +641,7 @@ SConnection *SEvServer::NewConnection(int clientSocket)
     if (pConn != NULL)
     {
         SMutexLock locker(connListMutex);
-        connections.insert(pConn);
+        connections[pConn->GetState()].insert(pConn);
 
         // what about EPOLLOUT??
         struct epoll_event ev;
