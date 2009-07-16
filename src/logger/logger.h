@@ -24,8 +24,8 @@
  *
  *****************************************************************************/
 
-#ifndef _SLOGGER_H_
-#define _SLOGGER_H_
+#ifndef _SEDS_LOGGER_H_
+#define _SEDS_LOGGER_H_
 
 #include <vector>
 #include <stdio.h>
