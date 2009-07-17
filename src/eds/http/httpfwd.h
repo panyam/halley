@@ -38,7 +38,6 @@ class SHeaderTable;
 class SHttpMessage;
 class SHttpRequest;
 class SHttpResponse;
-class SBodyPart;
 class SHttpModule;
 class SHttpHandlerData;
 class SHttpReaderStage;
@@ -47,6 +46,7 @@ class SHttpHandlerStage;
 class SBayeuxModule;
 class SBayeuxChannel;
 class SChannelListener;
+class SBodyPart;
 
 #endif
 

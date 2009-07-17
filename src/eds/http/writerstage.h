@@ -33,7 +33,7 @@
 #include "eds/writerstage.h"
 
 class SBodyPart;
-class SHttpStageData;
+class SHttpWriterState;
 
 // Takes care of transfer encoding - Strips out Content-Length in chunked
 // mode
@@ -67,9 +67,9 @@ public:
 
 protected:
     // Handles each body part writing
-    int WriteBodyPart(SConnection *       pConnection,
-                      SHttpStageData *    pStageData,
-                      SBodyPart *         pBodyPart);
+    int WriteBodyPart(SConnection *         pConnection,
+                      SHttpWriterState *    pStageData,
+                      SBodyPart *           pBodyPart);
 };
 
 #endif

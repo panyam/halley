@@ -47,11 +47,10 @@ SWriterStage::~SWriterStage()
 {
 }
 
-//! Initiates another load of data writing - called by the server instead
-// of other stages
-void SWriterStage::SendEvent_WriteData(SConnection *pConnection)
+//! Event to resume writing of left over data.
+void SWriterStage::SendEvent_ResumeWrite(SConnection *pConnection)
 {
-    QueueEvent(SEvent(EVT_WRITE_DATA, pConnection));
+    QueueEvent(SEvent(EVT_RESUME_WRITE, pConnection));
 }
 
 //! Handles "read request" events.

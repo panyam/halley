@@ -44,10 +44,12 @@ int SBodyPart::WriteBodyToStream(std::ostream &output)
 //! Writes body part to a FD
 int SBodyPart::WriteBodyToFD(int fd)
 {
-    SStringStream buffer;
+    /*SStringStream buffer;
     WriteBodyToStream(buffer);
     SString outStr(buffer.str());
     return SEDSUtils::SendFully(fd, outStr.c_str(), outStr.size());
+    */
+    return SEDSUtils::SendFully(fd, &data[0], data.size());
 }
 
 // Gets the body data.
@@ -96,6 +98,12 @@ void SBodyPart::AppendToBody(const SString &data)
 void SBodyPart::AppendToBody(const char *buffer, unsigned size)
 {
     data.insert(data.end(), buffer, buffer + size);
+}
+
+//! Compares 2 body parts based on their indices
+bool SBodyPart::SBodyPartComparer::operator()(const SBodyPart *a, const SBodyPart *b) const
+{
+    return b->bpIndex < a->bpIndex;
 }
 
 // Creates a new http message object

@@ -36,6 +36,7 @@ int SEDSUtils::SendFully(int fd, const char *buffer, int length)
     while (left > 0)
     {
         int numWritten = send(fd, buffer, left, MSG_NOSIGNAL);
+        std::cout << "NumWritten/Length = " << numWritten << " / " << length << std::endl;
         if (numWritten < 0)
         {
             return -1;

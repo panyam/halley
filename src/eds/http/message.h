@@ -44,6 +44,14 @@ public:
         BP_NUM_TYPES            // define new types after this
     };
 
+    // A comparison functor for comparing two body parts based on the order
+    // of transmission.
+    class SBodyPartComparer
+    {
+    public:
+        bool operator()(const SBodyPart *a, const SBodyPart *b) const;
+    };
+
 public:
     // Creates the body part
     SBodyPart(unsigned index = 0, int btype = BP_NORMAL, void *data = NULL);
@@ -108,6 +116,9 @@ public:
     //! The handler data
     void *      extra_data;
 };
+
+// A priority queue of body parts
+typedef std::priority_queue<SBodyPart *, std::vector<SBodyPart *>, SBodyPart::SBodyPartComparer>    SBodyPartQueue;
 
 //*****************************************************************************
 /*!
