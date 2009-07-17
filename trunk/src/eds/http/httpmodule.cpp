@@ -37,12 +37,6 @@
 using std::cerr;
 using std::endl;
 
-//! Compares 2 body parts based on their indices
-bool SHttpModuleData::SBPComparer::operator()(const SBodyPart *a, const SBodyPart *b) const
-{
-    return b->bpIndex < a->bpIndex;
-}
-
 //! Destroys module data
 SHttpModuleData::~SHttpModuleData()
 {

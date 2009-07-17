@@ -27,10 +27,10 @@
 #ifndef _SHTTP_HANDLER_MODULE_H_
 #define _SHTTP_HANDLER_MODULE_H_
 
-#include <queue>
 #include <functional>
 #include "eds/stage.h"
 #include "httpfwd.h"
+#include "message.h"
 
 //! Maintains request specific module data.
 class SHttpModuleData
@@ -130,16 +130,8 @@ protected:
     bool        processing;
 
 private:
-    //! Comparator for the body parts
-    class SBPComparer
-    {
-    public:
-        bool operator()(const SBodyPart *a, const SBodyPart *b) const;
-    };
-
-private:
     //! A priority of BPs that havent yet been processed.
-    std::priority_queue<SBodyPart *, std::vector<SBodyPart *>, SBPComparer>    bodyParts;
+    SBodyPartQueue      bodyParts;
 };
 
 // Stores the handler state data

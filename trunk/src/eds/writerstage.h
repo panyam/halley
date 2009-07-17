@@ -41,7 +41,7 @@ class SWriterStage : public SStage
 public:
     enum
     {
-        EVT_WRITE_DATA
+        EVT_RESUME_WRITE
     };
 
 public:
@@ -52,7 +52,7 @@ public:
     virtual         ~SWriterStage();
 
     // Initiates another load of writing
-    void            SendEvent_WriteData(SConnection *pConnection);
+    void            SendEvent_ResumeWrite(SConnection *pConnection);
 
 protected:
     //! Does the actual event handling.

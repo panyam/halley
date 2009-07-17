@@ -1,5 +1,5 @@
 
-AC_INIT(halley, 0.3.3, sri.panyam@gmail.com)
+AC_INIT(halley, 0.3.4, sri.panyam@gmail.com)
 
 ##########  Default Values  ##############
 
@@ -9,8 +9,8 @@ AC_INIT(halley, 0.3.3, sri.panyam@gmail.com)
 #
 MAJOR_VERSION=0
 MINOR_VERSION=3
-BUILD_VERSION=3
-RELEASE_DATE="17 July 2009"
+BUILD_VERSION=4
+RELEASE_DATE="20 July 2009"
 build_mode=release
 enable_memcheck=no
 enable_openssl=no

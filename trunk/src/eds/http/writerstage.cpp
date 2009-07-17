@@ -35,11 +35,24 @@
 #include "request.h"
 #include "response.h"
 
-class SHttpStageData : public SHttpModuleData
+//! Maintains request specific module data.
+class SHttpWriterState : public SHttpModuleData
 {
 public:
-    //! a new stage data
-    SHttpStageData() : pCurrRequest(NULL) { }
+    //! Creates a module data object.
+    SHttpWriterState() : pCurrRequest(NULL) { }
+
+public:
+    virtual void Reset()
+    {
+        SHttpModuleData::Reset();
+        // reset reader state
+        currState           = STATE_WRITING_IDLE;
+        bytesWritten        = 0;
+        currPayload         = "";
+        pCurrBodyPart       = NULL;
+        pCurrRequest        = NULL;
+    }
 
     //! Adds a new request to the queue.
     virtual void SetRequest(SHttpRequest *pReq) { pCurrRequest = pReq; }
@@ -50,9 +63,31 @@ public:
     //! Current request being handled
     inline SHttpRequest *Request() { return pCurrRequest; }
 
-protected:
-    //! Current request being processed
-    SHttpRequest *          pCurrRequest;
+public:
+    // Different states the writer can be in to 
+    // accomodate asynchronous writes
+    enum
+    {
+        STATE_IDLE,
+        STATE_WRITING_HEADERS,
+        STATE_WRITING_BODY,
+    }
+
+    //! Current writer state
+    int     currState;
+
+    //! How many bytes in the current state has been written?
+    int     bytesWritten;
+
+    //! The complete output of the headers that are being written - only
+    //  valid if we are in the WRITING_HEADERS state
+    SString currPayLoad;
+
+    //! Current body part being written - only used in WRITING_BODY stage
+    SBodyPart *pCurrBodyPart;
+
+    //! Current requests being processed
+    SHttpRequest *  pCurrRequest;
 };
 
 // Creates a new file io helper stage
@@ -63,14 +98,14 @@ SHttpWriterStage::SHttpWriterStage(const SString &name, int numThreads) : SWrite
 //! Creates a new reader state object
 void *SHttpWriterStage::CreateStageData()
 {
-    return new SHttpStageData();
+    return new SHttpWriterState();
 }
 
 //! Destroys reader state objects
 void SHttpWriterStage::DestroyStageData(void *pReaderState)
 {
     if (pReaderState != NULL)
-        delete ((SHttpStageData*)pReaderState);
+        delete ((SHttpWriterState*)pReaderState);
 }
 
 //! write a body part out
@@ -82,23 +117,83 @@ bool SHttpWriterStage::SendEvent_WriteBodyPart(SConnection *pConnection, SBodyPa
 //! Re orders and sends out http body parts to the socket
 void SHttpWriterStage::HandleEvent(const SEvent &event)
 {
-    SConnection *   pConnection = (SConnection *)(event.pSource);
-    SHttpStageData *pStageData  = (SHttpStageData *)pConnection->GetStageData(this);
-    SBodyPart *     pBodyPart   = (SBodyPart *)(event.pData);
-    int             result      = 0;
+    SConnection *       pConnection     = (SConnection *)(event.pSource);
+    SHttpWriterState *  pWriterState    = (SHttpWriterState *)pConnection->GetStageData(this);
+    SBodyPart *         pBodyPart       = (SBodyPart *)(event.pData);
+    int                 result          = 0;
+    int                 sock            = pConnection->Socket();
 
-    if (event.evType == EVT_WRITE_DATA)
+    if (pBodyPart != NULL)
+    {
+        pWriterState->PutBodyPart(pBodyPart);
+    }
+
+    while (true)
+    {
+        if (pWriterState->currState == STATE_IDLE)
+        {
+            if (pWriterState->pCurrBodyPart == NULL)
+            {
+                pWriterState->pCurrBodyPart = pWriterState->NextBodyPart();
+            }
+
+            SHttpRequest *  pRequest    = pWriterState->Request();
+            SHttpResponse * pResponse   = pRequest->Response();
+            SHeaderTable &  respHeaders = pResponse->Headers();
+            sstringstream   sstr;
+
+            pResponse->WriteHeaderLineToStream(sstr);
+            pResponse->WriteHeader(sstr);
+            respHeaders.WriteToStream(sstr);
+
+            pWriterState->currState == STATE_WRITING_HEADERS;
+            pWriterState->bytesWritten = 0;
+            pWriterState->currPayload = sstr.str();
+        }
+        else if (pWriterState->currState == STATE_WRITING_HEADERS)
+        {
+            int numWritten = send(sock, currPayload.c_str() + bytesWritten, currPayload.size() - bytesWritten, MSG_NOSIGNAL);
+            if (numWritten < 0)
+            {
+                if (errno == EPIPE || errno == ECONNRESET)
+                {
+                    pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_CLOSED);
+                }
+                else if (errno == EAGAIN)
+                {
+                    // come back again
+                    return ;
+                }
+                else
+                {
+                    assert("Some other error" && false);
+                }
+                return ;
+            }
+            bytesWritten += numWritten;
+            if (bytesWritten == currPayload.size())
+            {
+                // done go to the next stage
+                currState       = STATE_WRITING_BODY;
+                bytesWritten    = 0;
+                currPayload     = "";
+                pCurrBodyPart   = NULL;
+                pCurrRequest    = NULL;
+            }
+        }
+    }
+
+    else
     {
     }
+
     else if (event.evType == EVT_WRITE_BODY_PART)
     {
-        pStageData->SetRequest(pBodyPart->ExtraData<SHttpRequest *>());
-
         // first send the headers regardless of whether there are any 
         // body parts so it is done with
-        if (pStageData->nextBPToSend == 0)
+        if (pWriterState->nextBPToSend == 0)
         {
-            SHttpRequest *  pRequest    = pStageData->Request();
+            SHttpRequest *  pRequest    = pWriterState->Request();
             SHttpResponse * pResponse   = pRequest->Response();
             SHeaderTable &  respHeaders = pResponse->Headers();
             // write headers
@@ -120,13 +215,13 @@ void SHttpWriterStage::HandleEvent(const SEvent &event)
 
         if (result >= 0 || pBodyPart != NULL)
         {
-            pBodyPart               = pStageData->PutAndGetBodyPart(pBodyPart);
+            pBodyPart               = pWriterState->PutAndGetBodyPart(pBodyPart);
             while (pBodyPart != NULL)
             {
-                result = WriteBodyPart(pConnection, pStageData, pBodyPart);
+                result = WriteBodyPart(pConnection, pWriterState, pBodyPart);
                 if (result >= 0)
                 {
-                    pBodyPart = pStageData->NextBodyPart();
+                    pBodyPart = pWriterState->NextBodyPart();
                 }
                 else
                 {
@@ -137,10 +232,14 @@ void SHttpWriterStage::HandleEvent(const SEvent &event)
 
         if (result < 0)
         {
-            SLogger::Get()->Log("TRACE: send error: [%d], EPIPE/ECONNRESET = [%d]/[%d] - [%s]\n", errno, EPIPE, ECONNRESET, strerror(errno));
+            SLogger::Get()->Log("TRACE: send error: [%d], ENOMEM/EBADF = [%d]/[%d] - [%s]\n", errno, ENOMEM, EBADF, strerror(errno));
             if (errno == EPIPE || errno == ECONNRESET)
             {
                 pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_CLOSED);
+            }
+            else if (errno == EAGAIN)
+            {
+                assert("Asynch writes not yet implemented" && false);
             }
             else
             {
@@ -150,12 +249,12 @@ void SHttpWriterStage::HandleEvent(const SEvent &event)
     }
 }
 
-int SHttpWriterStage::WriteBodyPart(SConnection *     pConnection,
-                                     SHttpStageData *  pStageData,
-                                     SBodyPart *       pBodyPart)
+int SHttpWriterStage::WriteBodyPart(SConnection *       pConnection,
+                                     SHttpWriterState * pWriterState,
+                                     SBodyPart *        pBodyPart)
 {
     int             result      = 0;
-    SHttpRequest *  pRequest    = pStageData->Request();
+    SHttpRequest *  pRequest    = pWriterState->Request();
     SHttpResponse * pResponse   = pRequest->Response();
     SHeaderTable &reqHeaders    = pRequest->Headers();
     SHeaderTable &respHeaders   = pResponse->Headers();
@@ -167,13 +266,13 @@ int SHttpWriterStage::WriteBodyPart(SConnection *     pConnection,
         // reset last BP sent as no more packets will 
         // be sent for this request
         bool closeConnection        = reqHeaders.CloseConnection();
-        pStageData->nextBP          = 0;
-        pStageData->nextBPToSend    = 0;
+        pWriterState->nextBP          = 0;
+        pWriterState->nextBPToSend    = 0;
 
         // remove and destroy the request from the queue
         // Note this destroys pRequest - 
         // dont use pRequest or Request() after this
-        pStageData->DestroyRequest();
+        pWriterState->DestroyRequest();
 
         // do nothing - close connection only if close header found
         if (closeConnection ||
@@ -197,7 +296,7 @@ int SHttpWriterStage::WriteBodyPart(SConnection *     pConnection,
     else // treat as normal message
     {
         result = pBodyPart->WriteBodyToFD(pConnection->Socket());
-        pStageData->nextBPToSend++;
+        pWriterState->nextBPToSend++;
     }
 
     // now delete the body part - its no longer needed!

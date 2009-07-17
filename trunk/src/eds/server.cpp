@@ -402,7 +402,7 @@ int SEvServer::Run()
             {
                 SLogger::Get()->Log("TRACE: PollOut For Connection: [%x], Socket: [%d], State: [%d]:\n", pConnection, pConnection->Socket(), pConnection->GetState());
                 // we are writing out to a socket
-                pWriterStage->SendEvent_WriteData(pConnection);
+                pWriterStage->SendEvent_ResumeWrite(pConnection);
             }
         }
     }
