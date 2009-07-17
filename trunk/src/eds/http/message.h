@@ -35,9 +35,12 @@ class SBodyPart
 public:
     enum
     {
-        BP_NORMAL,  // a normal body is being sent
+        BP_NORMAL,              // a normal body is being sent
         BP_OPEN_SUB_MESSAGE,    // a command to open a sub message - boundary will in body part
         BP_CLOSE_SUB_MESSAGE,   // close the last sub message
+        BP_FILE_DATA,           // Denotes that content is a file so 
+                                // dont bother loading it with the 
+                                // filename in the body data
         BP_CLOSE_CONNECTION,    // close the connection
         BP_CONTENT_FINISHED,    // Denotes that content is finished (but dont have to close connection)
 

@@ -47,16 +47,9 @@ public:
 public:
     // Creates a new writer stage
     SWriterStage(const SString &name = "Writer", int numThreads = DEFAULT_NUM_THREADS);
-    
-    // Destroys the stage
-    virtual         ~SWriterStage();
 
     // Initiates another load of writing
     void            SendEvent_ResumeWrite(SConnection *pConnection);
-
-protected:
-    //! Does the actual event handling.
-    virtual void    HandleEvent(const SEvent &event);
 };
 
 #endif
