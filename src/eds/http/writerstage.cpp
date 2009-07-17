@@ -47,7 +47,7 @@ public:
     {
         SHttpModuleData::Reset();
         // reset reader state
-        currState           = STATE_WRITING_IDLE;
+        currState           = STATE_IDLE;
         bytesWritten        = 0;
         currPayload         = "";
         pCurrBodyPart       = NULL;
@@ -123,130 +123,7 @@ void SHttpWriterStage::HandleEvent(const SEvent &event)
     int                 result          = 0;
     int                 sock            = pConnection->Socket();
 
-    if (pBodyPart != NULL)
-    {
-        pWriterState->PutBodyPart(pBodyPart);
-    }
-
-    while (true)
-    {
-        if (pWriterState->currState == STATE_IDLE)
-        {
-            if (pWriterState->pCurrBodyPart == NULL)
-            {
-                pWriterState->pCurrBodyPart = pWriterState->NextBodyPart();
-            }
-
-            SHttpRequest *  pRequest    = pWriterState->Request();
-            SHttpResponse * pResponse   = pRequest->Response();
-            SHeaderTable &  respHeaders = pResponse->Headers();
-            sstringstream   sstr;
-
-            pResponse->WriteHeaderLineToStream(sstr);
-            pResponse->WriteHeader(sstr);
-            respHeaders.WriteToStream(sstr);
-
-            pWriterState->currState == STATE_WRITING_HEADERS;
-            pWriterState->bytesWritten = 0;
-            pWriterState->currPayload = sstr.str();
-        }
-        else if (pWriterState->currState == STATE_WRITING_HEADERS)
-        {
-            int numWritten = send(sock, currPayload.c_str() + bytesWritten, currPayload.size() - bytesWritten, MSG_NOSIGNAL);
-            if (numWritten < 0)
-            {
-                if (errno == EPIPE || errno == ECONNRESET)
-                {
-                    pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_CLOSED);
-                }
-                else if (errno == EAGAIN)
-                {
-                    // come back again
-                    return ;
-                }
-                else
-                {
-                    assert("Some other error" && false);
-                }
-                return ;
-            }
-            bytesWritten += numWritten;
-            if (bytesWritten == currPayload.size())
-            {
-                // done go to the next stage
-                currState       = STATE_WRITING_BODY;
-                bytesWritten    = 0;
-                currPayload     = "";
-                pCurrBodyPart   = NULL;
-                pCurrRequest    = NULL;
-            }
-        }
-    }
-
-    else
-    {
-    }
-
-    else if (event.evType == EVT_WRITE_BODY_PART)
-    {
-        // first send the headers regardless of whether there are any 
-        // body parts so it is done with
-        if (pWriterState->nextBPToSend == 0)
-        {
-            SHttpRequest *  pRequest    = pWriterState->Request();
-            SHttpResponse * pResponse   = pRequest->Response();
-            SHeaderTable &  respHeaders = pResponse->Headers();
-            // write headers
-            SString transferEncoding(respHeaders.Header("Transfer-Encoding"));
-            if (strcasecmp(transferEncoding.c_str(), "chunked") == 0)
-            {
-                respHeaders.RemoveHeader("Content-Length");
-            }
-
-            respHeaders.Lock();
-
-            result = pResponse->WriteHeaderLineToFD(pConnection->Socket());
-            if (result >= 0)
-            {
-                result = respHeaders.WriteToFD(pConnection->Socket());
-                SLogger::Get()->Log("DEBUG: ===============================\n\n");
-            }
-        }
-
-        if (result >= 0 || pBodyPart != NULL)
-        {
-            pBodyPart               = pWriterState->PutAndGetBodyPart(pBodyPart);
-            while (pBodyPart != NULL)
-            {
-                result = WriteBodyPart(pConnection, pWriterState, pBodyPart);
-                if (result >= 0)
-                {
-                    pBodyPart = pWriterState->NextBodyPart();
-                }
-                else
-                {
-                    pBodyPart = NULL;
-                }
-            }
-        }
-
-        if (result < 0)
-        {
-            SLogger::Get()->Log("TRACE: send error: [%d], ENOMEM/EBADF = [%d]/[%d] - [%s]\n", errno, ENOMEM, EBADF, strerror(errno));
-            if (errno == EPIPE || errno == ECONNRESET)
-            {
-                pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_CLOSED);
-            }
-            else if (errno == EAGAIN)
-            {
-                assert("Asynch writes not yet implemented" && false);
-            }
-            else
-            {
-                assert("Some other error" && false);
-            }
-        }
-    }
+    pWriterState->ResumeWriting(pConnection, pBodyPart);
 }
 
 int SHttpWriterStage::WriteBodyPart(SConnection *       pConnection,
@@ -304,3 +181,132 @@ int SHttpWriterStage::WriteBodyPart(SConnection *       pConnection,
     return result;
 }
 
+void SHttpWriterState::ResumeWriting(SConnection *pConnection, SBodyPart *pBodyPart)
+{
+    int                 result          = 0;
+    int                 sock            = pConnection->Socket();
+    if (pBodyPart != NULL)
+    {
+        PutBodyPart(pBodyPart);
+    }
+
+    while (true)
+    {
+        if (currState == SHttpWriterState::STATE_IDLE)
+        {
+            if (pCurrBodyPart == NULL)
+            {
+                pCurrBodyPart = NextBodyPart();
+            }
+
+            SHttpRequest *  pRequest    = Request();
+            SHttpResponse * pResponse   = pRequest->Response();
+            SHeaderTable &  respHeaders = pResponse->Headers();
+            stringstream    sstr;
+
+            pResponse->WriteHeaderLineToStream(sstr);
+            pResponse->WriteHeader(sstr);
+            respHeaders.WriteToStream(sstr);
+
+            currState == SHttpWriterState::STATE_WRITING_HEADERS;
+            bytesWritten = 0;
+            currPayload = sstr.str();
+        }
+        else if (currState == SHttpWriterState::STATE_WRITING_HEADERS)
+        {
+            int numWritten = send(sock, currPayload.c_str() + bytesWritten, currPayload.size() - bytesWritten, MSG_NOSIGNAL);
+            if (numWritten < 0)
+            {
+                if (errno == EPIPE || errno == ECONNRESET)
+                {
+                    pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_CLOSED);
+                }
+                else if (errno == EAGAIN)
+                {
+                    // come back again
+                    return ;
+                }
+                else
+                {
+                    assert("Some other error" && false);
+                }
+                return ;
+            }
+            bytesWritten += numWritten;
+            if (bytesWritten == currPayload.size())
+            {
+                // done go to the next stage
+                currState       = SHttpWriterState::STATE_WRITING_BODY;
+                bytesWritten    = 0;
+                currPayload     = "";
+                pCurrBodyPart   = NULL;
+                pCurrRequest    = NULL;
+            }
+        }
+    }
+
+    else
+    {
+    }
+
+    else if (event.evType == EVT_WRITE_BODY_PART)
+    {
+        // first send the headers regardless of whether there are any 
+        // body parts so it is done with
+        if (nextBPToSend == 0)
+        {
+            SHttpRequest *  pRequest    = Request();
+            SHttpResponse * pResponse   = pRequest->Response();
+            SHeaderTable &  respHeaders = pResponse->Headers();
+            // write headers
+            SString transferEncoding(respHeaders.Header("Transfer-Encoding"));
+            if (strcasecmp(transferEncoding.c_str(), "chunked") == 0)
+            {
+                respHeaders.RemoveHeader("Content-Length");
+            }
+
+            respHeaders.Lock();
+
+            result = pResponse->WriteHeaderLineToFD(pConnection->Socket());
+            if (result >= 0)
+            {
+                result = respHeaders.WriteToFD(pConnection->Socket());
+                SLogger::Get()->Log("DEBUG: ===============================\n\n");
+            }
+        }
+
+        if (result >= 0 || pBodyPart != NULL)
+        {
+            pBodyPart               = PutAndGetBodyPart(pBodyPart);
+            while (pBodyPart != NULL)
+            {
+                result = WriteBodyPart(pConnection, pBodyPart);
+                if (result >= 0)
+                {
+                    pBodyPart = pWriterState->NextBodyPart();
+                }
+                else
+                {
+                    pBodyPart = NULL;
+                }
+            }
+        }
+
+        if (result < 0)
+        {
+            SLogger::Get()->Log("TRACE: send error: [%d], ENOMEM/EBADF = [%d]/[%d] - [%s]\n", errno, ENOMEM, EBADF, strerror(errno));
+            if (errno == EPIPE || errno == ECONNRESET)
+            {
+                pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_CLOSED);
+            }
+            else if (errno == EAGAIN)
+            {
+                assert("Asynch writes not yet implemented" && false);
+            }
+            else
+            {
+                assert("Some other error" && false);
+            }
+        }
+    }
+}
