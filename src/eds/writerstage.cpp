@@ -42,24 +42,9 @@ SWriterStage::SWriterStage(const SString &name, int numThreads) : SStage(name, n
 {
 }
 
-//! Destroys writer data
-SWriterStage::~SWriterStage()
-{
-}
-
 //! Event to resume writing of left over data.
 void SWriterStage::SendEvent_ResumeWrite(SConnection *pConnection)
 {
     QueueEvent(SEvent(EVT_RESUME_WRITE, pConnection));
-}
-
-//! Handles "read request" events.
-//
-// Will call the RequestHandler stage when a complete request has been read.
-//
-// The previous model was to read requests and queue them in.
-void SWriterStage::HandleEvent(const SEvent &event)
-{
-    // The connection currently being processed
 }
 

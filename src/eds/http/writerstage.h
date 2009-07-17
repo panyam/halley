@@ -64,12 +64,6 @@ public:
 
     //! Send an event to send out a body part on the wire
     virtual bool SendEvent_WriteBodyPart(SConnection *pConnection, SBodyPart *pBodyPart);
-
-protected:
-    // Handles each body part writing
-    int WriteBodyPart(SConnection *         pConnection,
-                      SHttpWriterState *    pStageData,
-                      SBodyPart *           pBodyPart);
 };
 
 #endif

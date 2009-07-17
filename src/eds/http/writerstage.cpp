@@ -39,10 +39,23 @@
 class SHttpWriterState : public SHttpModuleData
 {
 public:
-    //! Creates a module data object.
-    SHttpWriterState() : pCurrRequest(NULL) { }
+    // Different states the writer can be in to 
+    // accomodate asynchronous writes
+    enum
+    {
+        STATE_IDLE,
+        STATE_WRITING_HEADERS,
+        STATE_WRITING_BODY,
+    };
 
 public:
+    //! Creates a module data object.
+    SHttpWriterState() :
+        currState(STATE_IDLE),
+        bytesWritten(0),
+        pCurrBodyPart(NULL),
+        pCurrRequest(NULL) { }
+
     virtual void Reset()
     {
         SHttpModuleData::Reset();
@@ -63,16 +76,10 @@ public:
     //! Current request being handled
     inline SHttpRequest *Request() { return pCurrRequest; }
 
-public:
-    // Different states the writer can be in to 
-    // accomodate asynchronous writes
-    enum
-    {
-        STATE_IDLE,
-        STATE_WRITING_HEADERS,
-        STATE_WRITING_BODY,
-    }
+    //! Resumes writing of data
+    void ResumeWriting(SConnection *pConnection, SBodyPart *pBodyPart);
 
+public:
     //! Current writer state
     int     currState;
 
@@ -81,13 +88,17 @@ public:
 
     //! The complete output of the headers that are being written - only
     //  valid if we are in the WRITING_HEADERS state
-    SString currPayLoad;
+    SString currPayload;
 
     //! Current body part being written - only used in WRITING_BODY stage
     SBodyPart *pCurrBodyPart;
 
     //! Current requests being processed
     SHttpRequest *  pCurrRequest;
+
+protected:
+    //! Writes data to the connection
+    int WriteData(SConnection *pConn, const char *buffer, int length);
 };
 
 // Creates a new file io helper stage
@@ -120,74 +131,23 @@ void SHttpWriterStage::HandleEvent(const SEvent &event)
     SConnection *       pConnection     = (SConnection *)(event.pSource);
     SHttpWriterState *  pWriterState    = (SHttpWriterState *)pConnection->GetStageData(this);
     SBodyPart *         pBodyPart       = (SBodyPart *)(event.pData);
-    int                 result          = 0;
-    int                 sock            = pConnection->Socket();
 
     pWriterState->ResumeWriting(pConnection, pBodyPart);
 }
 
-int SHttpWriterStage::WriteBodyPart(SConnection *       pConnection,
-                                     SHttpWriterState * pWriterState,
-                                     SBodyPart *        pBodyPart)
-{
-    int             result      = 0;
-    SHttpRequest *  pRequest    = pWriterState->Request();
-    SHttpResponse * pResponse   = pRequest->Response();
-    SHeaderTable &reqHeaders    = pRequest->Headers();
-    SHeaderTable &respHeaders   = pResponse->Headers();
-    SString transferEncoding(respHeaders.Header("Transfer-Encoding"));
-
-    if (pBodyPart->Type() == SBodyPart::BP_CONTENT_FINISHED ||
-        pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION)
-    {
-        // reset last BP sent as no more packets will 
-        // be sent for this request
-        bool closeConnection        = reqHeaders.CloseConnection();
-        pWriterState->nextBP          = 0;
-        pWriterState->nextBPToSend    = 0;
-
-        // remove and destroy the request from the queue
-        // Note this destroys pRequest - 
-        // dont use pRequest or Request() after this
-        pWriterState->DestroyRequest();
-
-        // do nothing - close connection only if close header found
-        if (closeConnection ||
-            pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION ||
-            pConnection->GetState() >= SConnection::STATE_PEER_CLOSED)
-        {
-            // a connection is to be closed -
-            // the problem is regardless of how many threads we or other stages
-            // have, killing it here will pose sever problems.  So instead of
-            // killing, we flag it as being closed so nothing else uses this
-            // connection
-            pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_CLOSED);
-        }
-        else
-        {
-            // tell the reader we are ready for more
-            // should we? or should we let the server take care of this?
-            pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_FINISHED);
-        }
-    }
-    else // treat as normal message
-    {
-        result = pBodyPart->WriteBodyToFD(pConnection->Socket());
-        pWriterState->nextBPToSend++;
-    }
-
-    // now delete the body part - its no longer needed!
-    delete pBodyPart;
-    return result;
-}
-
 void SHttpWriterState::ResumeWriting(SConnection *pConnection, SBodyPart *pBodyPart)
 {
-    int                 result          = 0;
-    int                 sock            = pConnection->Socket();
+    int numWritten = 0;
+
     if (pBodyPart != NULL)
     {
+        // A new body needs to be sent out - 
+        // if a body is being written then queue this...
         PutBodyPart(pBodyPart);
+        if (currState == STATE_IDLE)
+        {
+            assert("Why is current body not NULL??" && pCurrBodyPart == NULL);
+        }
     }
 
     while (true)
@@ -197,116 +157,160 @@ void SHttpWriterState::ResumeWriting(SConnection *pConnection, SBodyPart *pBodyP
             if (pCurrBodyPart == NULL)
             {
                 pCurrBodyPart = NextBodyPart();
-            }
-
-            SHttpRequest *  pRequest    = Request();
-            SHttpResponse * pResponse   = pRequest->Response();
-            SHeaderTable &  respHeaders = pResponse->Headers();
-            stringstream    sstr;
-
-            pResponse->WriteHeaderLineToStream(sstr);
-            pResponse->WriteHeader(sstr);
-            respHeaders.WriteToStream(sstr);
-
-            currState == SHttpWriterState::STATE_WRITING_HEADERS;
-            bytesWritten = 0;
-            currPayload = sstr.str();
-        }
-        else if (currState == SHttpWriterState::STATE_WRITING_HEADERS)
-        {
-            int numWritten = send(sock, currPayload.c_str() + bytesWritten, currPayload.size() - bytesWritten, MSG_NOSIGNAL);
-            if (numWritten < 0)
-            {
-                if (errno == EPIPE || errno == ECONNRESET)
+                if (pCurrBodyPart == NULL)
                 {
-                    pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_CLOSED);
-                }
-                else if (errno == EAGAIN)
-                {
-                    // come back again
+                    // no more body parts so just quit and come back later
                     return ;
                 }
-                else
-                {
-                    assert("Some other error" && false);
-                }
-                return ;
+                SetRequest(pCurrBodyPart->ExtraData<SHttpRequest *>());
             }
+
+            if (nextBPToSend == 0)
+            {
+                // first body part in the chain
+                SHttpResponse * pResponse   = pCurrRequest->Response();
+                SHeaderTable &  respHeaders = pResponse->Headers();
+                stringstream    sstr;
+
+                // write headers
+                SString transferEncoding(respHeaders.Header("Transfer-Encoding"));
+                if (strcasecmp(transferEncoding.c_str(), "chunked") == 0)
+                {
+                    respHeaders.RemoveHeader("Content-Length");
+                }
+
+                pResponse->WriteHeaderLineToStream(sstr);
+                respHeaders.WriteToStream(sstr);
+                respHeaders.Lock(); // no more changes allowed in response headers
+
+                currState       = STATE_WRITING_HEADERS;
+                bytesWritten    = 0;
+                currPayload     = sstr.str();
+            }
+            else
+            {
+                currState       = STATE_WRITING_BODY;
+                bytesWritten    = 0;
+            }
+        }
+        else if (currState == STATE_WRITING_HEADERS)
+        {
+            int length      = currPayload.size() - bytesWritten;
+            if ((numWritten = WriteData(pConnection, currPayload.c_str() + bytesWritten, length)) < 0)
+                return ;
             bytesWritten += numWritten;
-            if (bytesWritten == currPayload.size())
+            if (numWritten == length)
             {
                 // done go to the next stage
                 currState       = SHttpWriterState::STATE_WRITING_BODY;
                 bytesWritten    = 0;
                 currPayload     = "";
-                pCurrBodyPart   = NULL;
-                pCurrRequest    = NULL;
             }
         }
-    }
-
-    else
-    {
-    }
-
-    else if (event.evType == EVT_WRITE_BODY_PART)
-    {
-        // first send the headers regardless of whether there are any 
-        // body parts so it is done with
-        if (nextBPToSend == 0)
+        else if (currState == STATE_WRITING_BODY)
         {
-            SHttpRequest *  pRequest    = Request();
-            SHttpResponse * pResponse   = pRequest->Response();
-            SHeaderTable &  respHeaders = pResponse->Headers();
-            // write headers
-            SString transferEncoding(respHeaders.Header("Transfer-Encoding"));
-            if (strcasecmp(transferEncoding.c_str(), "chunked") == 0)
-            {
-                respHeaders.RemoveHeader("Content-Length");
-            }
+            assert("Request Cannot be NULL" && pCurrRequest != NULL);
 
-            respHeaders.Lock();
-
-            result = pResponse->WriteHeaderLineToFD(pConnection->Socket());
-            if (result >= 0)
+            if (pCurrBodyPart == NULL)
             {
-                result = respHeaders.WriteToFD(pConnection->Socket());
-                SLogger::Get()->Log("DEBUG: ===============================\n\n");
-            }
-        }
-
-        if (result >= 0 || pBodyPart != NULL)
-        {
-            pBodyPart               = PutAndGetBodyPart(pBodyPart);
-            while (pBodyPart != NULL)
-            {
-                result = WriteBodyPart(pConnection, pBodyPart);
-                if (result >= 0)
+                assert("On a new BP, bytesWritten MUST be 0" && bytesWritten == 0);
+                pCurrBodyPart = NextBodyPart();
+                if (pCurrBodyPart == NULL)
                 {
-                    pBodyPart = pWriterState->NextBodyPart();
+                    // no more body parts so just quit and come back later
+                    return ;
+                }
+                assert("Current request must be same as body's request" && pCurrRequest == pCurrBodyPart->ExtraData<SHttpRequest *>());
+            }
+
+            SHttpResponse * pResponse   = pCurrRequest->Response();
+            SHeaderTable &reqHeaders    = pCurrRequest->Headers();
+            SHeaderTable &respHeaders   = pResponse->Headers();
+            SString transferEncoding(respHeaders.Header("Transfer-Encoding"));
+
+            if (pCurrBodyPart->Type() == SBodyPart::BP_CONTENT_FINISHED ||
+                pCurrBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION)
+            {
+                // reset last BP sent as no more packets will 
+                // be sent for this request
+                bool closeConnection    = reqHeaders.CloseConnection() ||
+                                          pCurrBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION;
+                bytesWritten            = 0;
+                nextBP                  = 0;
+                nextBPToSend            = 0;
+                currState               = STATE_IDLE;
+
+                delete pCurrBodyPart;
+                pCurrBodyPart   = NULL;
+
+                // remove and destroy the request from the queue
+                // Note this destroys pRequest - 
+                // dont use pRequest or Request() after this
+                DestroyRequest();
+
+                // do nothing - close connection only if close header found
+                if (closeConnection || pConnection->GetState() >= SConnection::STATE_PEER_CLOSED)
+                {
+                    // a connection is to be closed -
+                    // the problem is regardless of how many threads we or other stages
+                    // have, killing it here will pose sever problems.  So instead of
+                    // killing, we flag it as being closed so nothing else uses this
+                    // connection
+                    pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_CLOSED);
                 }
                 else
                 {
-                    pBodyPart = NULL;
+                    // tell the reader we are ready for more
+                    // should we? or should we let the server take care of this?
+                    pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_FINISHED);
+                }
+            }
+            else // treat as normal message
+            {
+                const SCharVector &bodyData = pCurrBodyPart->Body();
+                int length      = bodyData.size() - bytesWritten;
+                if ((numWritten = WriteData(pConnection, &bodyData[bytesWritten], length)) < 0)
+                    return ;
+                bytesWritten += numWritten;
+                if (numWritten == length)
+                {
+                    // done go to the next body part, 
+                    // but state remains the same
+                    bytesWritten    = 0;
+                    nextBPToSend++;
+                    delete pCurrBodyPart;
+                    pCurrBodyPart = NULL;
                 }
             }
         }
-
-        if (result < 0)
+        else
         {
-            SLogger::Get()->Log("TRACE: send error: [%d], ENOMEM/EBADF = [%d]/[%d] - [%s]\n", errno, ENOMEM, EBADF, strerror(errno));
-            if (errno == EPIPE || errno == ECONNRESET)
-            {
-                pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_CLOSED);
-            }
-            else if (errno == EAGAIN)
-            {
-                assert("Asynch writes not yet implemented" && false);
-            }
-            else
-            {
-                assert("Some other error" && false);
-            }
+            assert("Invalid state" && false);
         }
     }
 }
+
+//! Writes data to the connection
+int SHttpWriterState::WriteData(SConnection *pConn, const char *buffer, int length)
+{
+    int numWritten = send(pConn->Socket(), buffer, length, MSG_NOSIGNAL);
+    if (numWritten < 0)
+    {
+        if (errno == EPIPE || errno == ECONNRESET)
+        {
+            pConn->Server()->SetConnectionState(pConn, SConnection::STATE_CLOSED);
+        }
+        else if (errno == EAGAIN)
+        {
+            SLogger::Get()->Log("DEBUG: Write Later...");
+        }
+        else
+        {
+            SLogger::Get()->Log("TRACE: send error: [%d] - [%s]\n",
+                                errno, strerror(errno));
+            assert("Some other error" && false);
+        }
+    }
+    return numWritten;
+}
+
