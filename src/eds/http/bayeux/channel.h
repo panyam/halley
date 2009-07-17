@@ -30,17 +30,6 @@
 #include "../httpfwd.h"
 #include "../../../json/json.h"
 
-//! Handles events sent to a channel
-class SChannelListener
-{
-public:
-    // Destructor
-    virtual ~SChannelListener() { }
-
-    //! Handles an event.
-    virtual void HandleEvent(const JsonNodePtr &event, JsonNodePtr &output) { }
-};
-
 //! A module that sends data as it comes from several data sources
 class SBayeuxChannel
 {
@@ -55,14 +44,9 @@ public:
     //! Sets the module we belong to
     virtual void SetBayeuxModule(SBayeuxModule *pMod) { pModule = pMod; }
 
-    //! Sets the channel listener
-    void SetChannelListener(SChannelListener *pList) { pListener = pList; }
-
     //! Handles an event
     virtual void HandleEvent(const JsonNodePtr &event, JsonNodePtr &output)
     {
-        if (pListener)
-            pListener->HandleEvent(event, output);
     }
 
     //! Get the channel name
@@ -73,9 +57,6 @@ protected:
     SBayeuxChannel(const SString &n) : name(n) { }
 
 protected:
-    //! The listener
-    SChannelListener *  pListener;
-
     //! The module to which this channel belongs
     SBayeuxModule *pModule;
 
