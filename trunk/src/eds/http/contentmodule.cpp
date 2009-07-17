@@ -143,11 +143,42 @@ void SContentModule::HandleBodyPart(SConnection *       pConnection,
     {
         // we have normal messages - so update the contentLength if
         // necessary and send to next module
-        if (!pResponse->IsMultipart())
+        if ( pResponse->IsMultipart() )
         {
+            assert("Not sure how to send files in multipart" && pBodyPart->Type() != SBodyPart::BP_FILE_DATA);
+            // prepend the 'current' boundary and send
+            assert("No boundaries found in multi part message" && !pModData->boundaries.empty());
+
+            SStringStream boundary;
+            boundary << HttpUtils::CRLF << "--" << pModData->boundaries.front() << HttpUtils::CRLF;
+            // boundary << "Content-Type: " << "text/text" << HttpUtils::CRLF;
+            boundary << "Content-Length: " << pBodyPart->Size() << HttpUtils::CRLF << HttpUtils::CRLF;
+
+            pBodyPart->InsertInBody(boundary.str());
+
+            SendBodyPartToModule(pConnection, pStage, pRequest, pBodyPart, pModData, pNextModule);
+        }
+        else
+        {
+            // TODO: take care of content encoding
+
             SHeaderTable &  respHeaders = pResponse->Headers();
+            int             bodySize    = 0;
+            if (pBodyPart->Type() == SBodyPart::BP_FILE_DATA)
+            {
+                SString fullpath(&pBodyPart->Body()[0]);
+                // do an fstat
+                struct stat fileStat;
+                memset(&fileStat, 0, sizeof(struct stat));
+                stat(fullpath.c_str(), &fileStat);
+                bodySize    = fileStat.st_size;
+            }
+            else
+            {
+                bodySize    = pBodyPart->Size();
+            }
+
             // append to body (can ignore sub messages as it is single part)
-            int bodySize    = pBodyPart->Size();
             if (bodySize > 0)
             {
                 int contLength = -1;
@@ -165,20 +196,6 @@ void SContentModule::HandleBodyPart(SConnection *       pConnection,
                     respHeaders.SetIntHeader("Content-Length", bodySize);
                 }
             }
-
-            SendBodyPartToModule(pConnection, pStage, pRequest, pBodyPart, pModData, pNextModule);
-        }
-        else
-        {
-            // prepend the 'current' boundary and send
-            assert("No boundaries found in multi part message" && !pModData->boundaries.empty());
-
-            SStringStream boundary;
-            boundary << HttpUtils::CRLF << "--" << pModData->boundaries.front() << HttpUtils::CRLF;
-            // boundary << "Content-Type: " << "text/text" << HttpUtils::CRLF;
-            boundary << "Content-Length: " << pBodyPart->Size() << HttpUtils::CRLF << HttpUtils::CRLF;
-
-            pBodyPart->InsertInBody(boundary.str());
 
             SendBodyPartToModule(pConnection, pStage, pRequest, pBodyPart, pModData, pNextModule);
         }
