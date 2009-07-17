@@ -47,29 +47,9 @@ SServer::RealStop()
 
     if (serverSocket >= 0)
     {
-        shutdown(serverSocket, SHUT_RDWR);
         close(serverSocket);
         serverSocket = -1;
     }
-
-    // Stop child threads first
-    SMutexLock    mutexLock(handlerListMutex);
-    for (std::list<SConnHandler *>::iterator iter=connHandlers.begin();
-            iter != connHandlers.end();
-            ++iter)
-    {
-        // stop the client first
-        if ((*iter)->Running())
-        {
-            (*iter)->Stop();
-        }
-
-        // then the client
-        delete (*iter);
-    }
-
-    // clear client list
-    connHandlers.clear();
 
     return 0;
 }
@@ -95,14 +75,6 @@ int SServer::CreateSocket()
         cerr << "ERROR: Cannot create server socket: [" << errno << "]: " << strerror(errno) << endl << endl;
         return -errno;
     }
-
-    /*
-    if (setnonblocking(newSocket))
-    {
-        cerr << "ERROR: Cannot make socket non blocking: [" << errno << "]: " << strerror(errno) << endl << endl;
-        return -1;
-    }
-    */
 
     // set it so we can reuse the socket immediately after closing it.
     int reuse = 1;
@@ -274,25 +246,6 @@ int SServer::Run()
     return result;
 }
 
-//*****************************************************************************
-/*!
- *  \brief  Called by the handler when it has finished in asynch mode.
- *
- *  \param  SConnHandler *  The handler that has just finished.
- *
- *  \version
- *      - Sri Panyam      10/02/2009
- *        Created.
- *
- *****************************************************************************/
-void SServer::HandlerFinished(SConnHandler *pHandler)
-{
-    cerr << "Done Handling Connection: " << pHandler->Socket() << endl;
-    pHandler->Reset();
-    if (connFactory != NULL)
-        connFactory->ReleaseHandler(pHandler);
-}
-
 
 //*****************************************************************************
 /*!
@@ -307,38 +260,10 @@ void SServer::HandlerFinished(SConnHandler *pHandler)
  *****************************************************************************/
 void SServer::HandleConnection(int clientSocket)
 {
-    bool handled = false;
-    std::cerr << "Handling Connection: " << clientSocket << std::endl;
-    if (connFactory != NULL)
-    {
-        SConnHandler *handler = connFactory->NewHandler();
-        if (handler != NULL)
-        {
-            handler->Init(this, clientSocket);
-            handled = handler->HandleConnection();
-            if (!handled)
-            {
-                // means handler is in asynchronous mode - so add it to our
-                // list so clients, so the handler will have to explicitly
-                // call back when it is done with
-                SMutexLock locker(handlerListMutex);
-
-                // TODO: assert if handler is already in the handler list!
-                connHandlers.push_back(handler);
-            }
-            else
-            {
-                connFactory->ReleaseHandler(handler);
-            }
-        }
-    }
-
-    if (handled)
-    {
-        shutdown(clientSocket, SHUT_RDWR);
-        close(clientSocket);
-        cerr << "Done Handling Connection: " << clientSocket << endl;
-    }
+    // do nothing - override to do task specific stuff
+    shutdown(clientSocket, SHUT_RDWR);
+    close(clientSocket);
+    cerr << "Done Handling Connection: " << clientSocket << endl;
 }
 
 /**************************************************************************************
@@ -351,19 +276,5 @@ void SServer::HandleConnection(int clientSocket)
 SServer::~SServer()
 {
     Stop();
-}
-
-/**************************************************************************************
-*   \brief  Sets a socket as non blocking.
-*
-*   \version
-*       - Sri Panyam  18/02/2009
-*         Created
-**************************************************************************************/
-int SServer::setnonblocking(int fd)
-{
-    if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFD, 0) | O_NONBLOCK) == -1)
-        return -1;
-    return 0;
 }
 

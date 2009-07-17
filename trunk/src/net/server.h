@@ -47,18 +47,11 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <iostream>
-#include <fstream>
-
 #include <list>
 #include <string>
 #include <vector>
 
 #include "thread/task.h"
-#include "thread/mutex.h"
-
-class SConnFactory;
-class SConnHandler;
 
 //*****************************************************************************
 /*!
@@ -70,11 +63,8 @@ class SConnHandler;
 class SServer : public STask
 {
 public:
-    static int setnonblocking(int fd);
-
-public:
     //! Constructor
-    SServer(int port_ = -1) : connFactory(NULL), serverPort(port_) { }
+    SServer(int port_ = -1) : serverPort(port_) { }
 
     //! Destructor
     ~SServer();
@@ -84,13 +74,6 @@ public:
 
     //! Set the server's port
     inline void SetPort(int port) { this->serverPort = port; }
-
-    //! Sets the connection pool to use.
-    // TODO: should this be allowed when the server is running?
-    void SetConnectionFactory(SConnFactory *factory) { connFactory = factory; }
-
-    //! Called by the handler when it has finished
-    virtual void HandlerFinished(SConnHandler *pHandler);
 
 protected:
     // Creates the socket
@@ -114,9 +97,6 @@ protected:
     // handle a new connection
     virtual void HandleConnection(int clientSocket);
 
-protected:
-    SConnFactory *          connFactory;
-
 private:
     //! Declared functions but not implemented.
     SServer(const SServer &);
@@ -131,13 +111,6 @@ private:
 
     //! To indicate whether the server has been stopped
     bool                serverStopped;
-
-private:
-    //! Child handlers currently handling connections
-    std::list<SConnHandler *>   connHandlers;
-
-    //! Mutex to lock children list when necessary
-    SMutex                      handlerListMutex;
 };
 
 #endif
