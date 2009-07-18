@@ -128,10 +128,9 @@ void SFileModule::ProcessInput(SConnection *        pConnection,
             else
             {
                 // SendFile(fullpath, fileStat, part, pResponse, respHeaders);
-                respHeaders.SetHeader("Content-Type", "text/text");
-                respHeaders.SetIntHeader("Content-Length", fullpath.size());
-                SFileBodyPart *pFilePart = pResponse->NewFileBodyPart(fullpath);
-                part = pFilePart;
+                // respHeaders.SetHeader("Content-Type", "text/text");
+                // respHeaders.SetIntHeader("Content-Length", fullpath.size());
+                part = pResponse->NewFileBodyPart(fullpath);
             }
         }
     }
