@@ -29,100 +29,8 @@
 #define _SHTTP_MESSAGE_H_
 
 #include "headers.h"
-
-class SBodyPart
-{
-public:
-    enum
-    {
-        BP_NORMAL,              // a normal body is being sent
-        BP_OPEN_SUB_MESSAGE,    // a command to open a sub message - boundary will in body part
-        BP_CLOSE_SUB_MESSAGE,   // close the last sub message
-        BP_FILE_DATA,           // Denotes that content is a file so 
-                                // dont bother loading it with the 
-                                // filename in the body data
-        BP_CLOSE_CONNECTION,    // close the connection
-        BP_CONTENT_FINISHED,    // Denotes that content is finished (but dont have to close connection)
-
-        BP_NUM_TYPES            // define new types after this
-    };
-
-    // A comparison functor for comparing two body parts based on the order
-    // of transmission.
-    class SBodyPartComparer
-    {
-    public:
-        bool operator()(const SBodyPart *a, const SBodyPart *b) const;
-    };
-
-public:
-    // Creates the body part
-    SBodyPart(unsigned index = 0, int btype = BP_NORMAL, void *data = NULL);
-
-    // Token Destructor
-    virtual ~SBodyPart()
-    {
-    }
-
-    //! Clears the body part for later use!
-    void Reset();
-
-    //! Sets a string as the body
-    void SetBody(const SString &data);
-
-    //! Sets raw bytes as the body
-    void SetBody(const char *buffer, unsigned size);
-
-    //! Inserts content at a given position
-    void InsertInBody(const SString &data, size_t offset = 0);
-
-    //! Insert raw bytes into the body
-    void InsertInBody(const char *buffer, unsigned size, size_t offset = 0);
-
-    //! Appends a string to the body
-    void AppendToBody(const SString &data);
-
-    //! Appends raw bytes to the body
-    void AppendToBody(const char *buffer, unsigned size);
-
-    //! Gets the body
-    const SCharVector &Body() const;
-
-    //! Writes the body to stream - override for multipart messages
-    virtual int WriteBodyToStream(std::ostream &output);
-
-    //! Writes the body to an FD - override for multipart messages
-    virtual int WriteBodyToFD(int fd);
-
-    //! Get the data size
-    inline int Size() { return data.size(); }
-
-    //! Gets the index of the bpart
-    inline BPIndexType Index() { return bpIndex; }
-
-    //! Body part type
-    inline int Type() { return bpType; }
-
-    //! Return the extra data.
-    template <typename T> T ExtraData() { return reinterpret_cast<T>(extra_data); }
-
-public:
-    // Index of the body part - for ordering of body part handling
-    BPIndexType bpIndex;
-
-    // Type of body part
-    int         bpType;
-
-    //! The data required for this body part
-    SCharVector data;
-
-    //! The handler data
-    void *      extra_data;
-};
-
-// A priority queue of body parts
-typedef std::priority_queue<SBodyPart *, std::vector<SBodyPart *>, SBodyPart::SBodyPartComparer>    SBodyPartQueue;
-
+#include "../bodypart.h"
+ 
 //*****************************************************************************
 /*!
  *  \class  SHttpMessage
@@ -132,6 +40,21 @@ typedef std::priority_queue<SBodyPart *, std::vector<SBodyPart *>, SBodyPart::SB
  *****************************************************************************/
 class SHttpMessage
 {
+public:
+    /**
+     * HTTP specific Body Part types.
+     */
+    enum
+    {
+        HTTP_BP_START = SBodyPart::BP_NUM_TYPES,
+        HTTP_BP_OPEN_SUB_MESSAGE,   // a command to open a sub message - 
+                                    // boundary will in body part
+        HTTP_BP_CLOSE_SUB_MESSAGE,  // close the last sub message
+        HTTP_BP_CLOSE_CONNECTION,   // close the connection
+        HTTP_BP_CONTENT_FINISHED,   // Denotes that content is finished 
+                                    // (but dont have to close connection)
+        HTTP_BP_NUM_TYPES           // Where HTTP specific body part ends
+    };
 public:
     SHttpMessage();
     virtual         ~SHttpMessage();

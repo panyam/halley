@@ -30,9 +30,6 @@
 
 #include "../fwd.h"
 
-//! A type to denote body part indices.
-typedef unsigned BPIndexType;
-
 class SMemBuff;
 class SHeaderTable;
 class SHttpMessage;
@@ -46,7 +43,6 @@ class SHttpHandlerStage;
 class SBayeuxModule;
 class SBayeuxChannel;
 class SChannelListener;
-class SBodyPart;
 
 #endif
 

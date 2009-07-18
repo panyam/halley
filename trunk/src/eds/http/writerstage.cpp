@@ -224,17 +224,18 @@ void SHttpWriterState::ResumeWriting(SConnection *pConnection, SBodyPart *pBodyP
             }
 
             SHttpResponse * pResponse   = pCurrRequest->Response();
-            SHeaderTable &reqHeaders    = pCurrRequest->Headers();
-            SHeaderTable &respHeaders   = pResponse->Headers();
+            SHeaderTable &  reqHeaders  = pCurrRequest->Headers();
+            SHeaderTable &  respHeaders = pResponse->Headers();
+            int             bpType      = pCurrBodyPart->Type();
             SString transferEncoding(respHeaders.Header("Transfer-Encoding"));
 
-            if (pCurrBodyPart->Type() == SBodyPart::BP_CONTENT_FINISHED ||
-                pCurrBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION)
+            if (bpType == SHttpMessage::HTTP_BP_CONTENT_FINISHED ||
+                bpType == SHttpMessage::HTTP_BP_CLOSE_CONNECTION)
             {
                 // reset last BP sent as no more packets will 
                 // be sent for this request
                 bool closeConnection    = reqHeaders.CloseConnection() ||
-                                          pCurrBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION;
+                                          bpType == SHttpMessage::HTTP_BP_CLOSE_CONNECTION;
                 bytesWritten            = 0;
                 nextBP                  = 0;
                 nextBPToSend            = 0;

@@ -33,6 +33,7 @@
 #include "eds/fwd.h"
 #include "eds/handler.h"
 #include "eds/job.h"
+#include "eds/bodypart.h"
 #include "eds/server.h"
 #include "eds/writerstage.h"
 #include "eds/http/bayeux/bayeuxmodule.h"

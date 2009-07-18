@@ -115,7 +115,8 @@ dep:
 ../bld/debug/halley.o: ../src/eds/equeue.h ../src/eds/http/request.h
 ../bld/debug/halley.o: ../src/eds/http/message.h ../src/eds/http/headers.h
 ../bld/debug/halley.o: ../src/eds/http/utils.h ../src/eds/http/httpfwd.h
-../bld/debug/halley.o: ../src/eds/utils.h ../src/eds/http/response.h
+../bld/debug/halley.o: ../src/eds/utils.h ../src/eds/bodypart.h
+../bld/debug/halley.o: ../src/eds/http/response.h
 ../bld/debug/halley.o: ../src/eds/http/readerstage.h ../src/eds/readerstage.h
 ../bld/debug/halley.o: ../src/eds/http/handlerstage.h
 ../bld/debug/halley.o: ../src/eds/http/writerstage.h ../src/eds/writerstage.h

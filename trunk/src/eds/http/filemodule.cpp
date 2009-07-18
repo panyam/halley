@@ -61,7 +61,6 @@ void SFileModule::ProcessInput(SConnection *        pConnection,
     else
     {
         SString fullpath = docroot + filename;
-        part = pResponse->NewBodyPart();
         struct stat fileStat;
         memset(&fileStat, 0, sizeof(struct stat));
         if (stat(fullpath.c_str(), &fileStat) != 0)
@@ -102,6 +101,7 @@ void SFileModule::ProcessInput(SConnection *        pConnection,
             pResponse->SetStatus(statcode, "Cannot read file");
             respHeaders.SetIntHeader("Content-Length", errormsg.size());
             respHeaders.SetHeader("Content-Type", "text/text");
+            part = pResponse->NewBodyPart();
             part->SetBody(errormsg);
         }
         else
@@ -120,18 +120,23 @@ void SFileModule::ProcessInput(SConnection *        pConnection,
                 respHeaders.SetHeader("Content-Type", (raw ? "text/text" : "text/html"));
                 respHeaders.SetHeader("Cache-Control", "no-cache");
 
+                part = pResponse->NewBodyPart();
                 part->SetBody(contents);
             }
             else
             {
-                SendFile(fullpath, fileStat, part, pResponse, respHeaders);
+                // SendFile(fullpath, fileStat, part, pResponse, respHeaders);
+                respHeaders.SetHeader("Content-Type", "text/text");
+                respHeaders.SetIntHeader("Content-Length", fullpath.size());
+                part = pResponse->NewBodyPart(SBodyPart::BP_FILE);
+                part->SetBody(fullpath);
             }
         }
     }
 
     pStage->SendEvent_OutputToModule(pConnection, pNextModule, part);
     pStage->SendEvent_OutputToModule(pConnection, pNextModule,
-                           pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED, pNextModule));
+                           pResponse->NewBodyPart(SHttpMessage::HTTP_BP_CONTENT_FINISHED, pNextModule));
 }
 
 //*****************************************************************************

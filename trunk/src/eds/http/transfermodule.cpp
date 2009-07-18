@@ -82,8 +82,8 @@ void STransferModule::HandleBodyPart(SConnection *      pConnection,
     SString transferEncoding    = respHeaders.Header("Transfer-Encoding");
 
     pBodyPart->bpIndex = pModData->nextBPToSend++;
-    if (pBodyPart->Type() == SBodyPart::BP_CLOSE_CONNECTION ||
-             pBodyPart->Type() == SBodyPart::BP_CONTENT_FINISHED)
+    if (pBodyPart->Type() == SHttpMessage::HTTP_BP_CLOSE_CONNECTION ||
+             pBodyPart->Type() == SHttpMessage::HTTP_BP_CONTENT_FINISHED)
     {
         SendBodyPartToModule(pConnection, pStage, pRequest, pBodyPart, pModData, pNextModule);
     }
