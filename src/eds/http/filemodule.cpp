@@ -75,7 +75,9 @@ void SFileModule::ProcessInput(SConnection *        pConnection,
                     errormsg = "Bad address.";
                     break;
                 case EACCES:
-                    errormsg = "Search permission is denied for one of the directories in the path prefix of path.  (See also path_resolution(2).)";
+                    errormsg = "Search permission is denied for one of "
+                               "the directories in the path prefix of path.  "
+                               "(See also path_resolution(2).)";
                     break;
                 case EBADF:
                     errormsg = "filedes is bad.";
