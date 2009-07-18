@@ -194,7 +194,7 @@ void SBayeuxModule::DeliverEvent(const SBayeuxChannel *pChannel, const JsonNodeP
         {
             SHttpRequest *      pRequest    = pHandlerData->Request();
             SHttpResponse *     pResponse   = pRequest->Response();
-            SBodyPart *         pBodyPart   = pResponse->NewBodyPart();
+            SRawBodyPart *      pBodyPart   = pResponse->NewRawBodyPart();
             pBodyPart->SetBody(msgbody);
             pHandlerStage->SendEvent_OutputToModule(pRequest->Connection(), pNextModule, pBodyPart);
         }
@@ -230,7 +230,8 @@ void SBayeuxModule::ProcessInput(SConnection *          pConnection,
 
     if (pContent != NULL)
     {
-        const SCharVector & reqBody         = pContent->Body();
+        SRawBodyPart *pRawPart = dynamic_cast<SRawBodyPart *>(pContent);
+        const SCharVector & reqBody         = pRawPart->Body();
         // parse the list of messages
         DefaultJsonInputStream<SCharVector::const_iterator> instream(reqBody.begin(),
                                                                      reqBody.end());
@@ -285,13 +286,12 @@ void SBayeuxModule::SendResponse(int                result,
         respHeaders.SetIntHeader("Content-Length", msgbody.size());
         respHeaders.SetHeader("Content-Type", "text/html");
 
-        SBodyPart * part        = pResponse->NewBodyPart();
+        SRawBodyPart * part     = pResponse->NewRawBodyPart();
         part->SetBody(msgbody);
 
         pStage->SendEvent_OutputToModule(pConnection, pNextModule, part);
         pStage->SendEvent_OutputToModule(pConnection, pNextModule,
-                               pResponse->NewBodyPart(SHttpMessage::HTTP_BP_CONTENT_FINISHED,
-                                                      pNextModule));
+                                         pResponse->NewContFinishedPart(pNextModule));
     }
     else
     {
@@ -311,12 +311,13 @@ void SBayeuxModule::SendResponse(int                result,
         formatter.Format(msgstream, realValue);
 
         // open a boundary body part 
-        SBodyPart *pBodyPart = pResponse->NewBodyPart(SHttpMessage::HTTP_BP_OPEN_SUB_MESSAGE);
+        SRawBodyPart *pBodyPart = pResponse->NewRawBodyPart();
+        pBodyPart->bpType = SHttpMessage::HTTP_BP_OPEN_SUB_MESSAGE;
         pBodyPart->SetBody(boundary);
         pStage->SendEvent_OutputToModule(pConnection, pNextModule, pBodyPart);
 
         // send the first message!
-        pBodyPart = pResponse->NewBodyPart();
+        pBodyPart = pResponse->NewRawBodyPart();
         pBodyPart->SetBody(msgstream.str());
         pStage->SendEvent_OutputToModule(pConnection, pNextModule, pBodyPart);
     }

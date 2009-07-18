@@ -50,9 +50,23 @@ void SHttpMessage::Reset()
 }
 
 // Creates a new body part for this message
-SBodyPart *SHttpMessage::NewBodyPart(int bptype, void *extra_data)
+SRawBodyPart *SHttpMessage::NewRawBodyPart(void *extra_data)
 {
-    return new SBodyPart(bpCount++, bptype, extra_data);
+    return new SRawBodyPart(bpCount++, extra_data);
+}
+
+// Creates a new body part for this message
+SFileBodyPart *SHttpMessage::NewFileBodyPart(const SString &filename, void *extra_data)
+{
+    return new SFileBodyPart(filename, bpCount++, extra_data);
+}
+
+//! Returns a part that indicates end of content
+SRawBodyPart *SHttpMessage::NewContFinishedPart(SHttpModule *pNextModule)
+{
+    SRawBodyPart *pPart = NewRawBodyPart(pNextModule);
+    pPart->bpType = SHttpMessage::HTTP_BP_CONTENT_FINISHED;
+    return pPart;
 }
 
 // Reads the message body

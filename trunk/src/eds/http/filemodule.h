@@ -95,7 +95,7 @@ public:
     //! Helper to send file
     static void SendFile(const SString &    fullpath,
                          struct stat        fileStat,
-                         SBodyPart *        pPart,
+                         SRawBodyPart *     pPart,
                          SHttpResponse *    pResponse,
                          SHeaderTable &     respHeaders);
 

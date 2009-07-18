@@ -128,6 +128,12 @@ public:
     //! Reads data from the socket
     int RefillBuffer(char *&pOutCurrPos, char *&pOutBuffEnd);
 
+    //! Read n-bytes from the connection
+    int ReadData(char *buffer, int nbytes);
+
+    //! Writes data to the connection
+    int WriteData(const char *buffer, int length);
+
 protected:
     //! Closes the underlying socket
     void CloseSocket();

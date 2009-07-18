@@ -95,10 +95,6 @@ public:
 
     //! Current requests being processed
     SHttpRequest *  pCurrRequest;
-
-protected:
-    //! Writes data to the connection
-    int WriteData(SConnection *pConn, const char *buffer, int length);
 };
 
 // Creates a new file io helper stage
@@ -196,7 +192,7 @@ void SHttpWriterState::ResumeWriting(SConnection *pConnection, SBodyPart *pBodyP
         else if (currState == STATE_WRITING_HEADERS)
         {
             int length      = currPayload.size() - bytesWritten;
-            if ((numWritten = WriteData(pConnection, currPayload.c_str() + bytesWritten, length)) < 0)
+            if ((numWritten = pConnection->WriteData(currPayload.c_str() + bytesWritten, length)) < 0)
                 return ;
             bytesWritten += numWritten;
             if (numWritten == length)
@@ -268,12 +264,13 @@ void SHttpWriterState::ResumeWriting(SConnection *pConnection, SBodyPart *pBodyP
             }
             else // treat as normal message
             {
-                const SCharVector &bodyData = pCurrBodyPart->Body();
-                int length      = bodyData.size() - bytesWritten;
-                if ((numWritten = WriteData(pConnection, &bodyData[bytesWritten], length)) < 0)
+                int numWritten = 0;
+                bool bytesLeft  = pCurrBodyPart->WriteToConnection(pConnection, numWritten, bytesWritten);
+                if (numWritten < 0)
                     return ;
+
                 bytesWritten += numWritten;
-                if (numWritten == length)
+                if (!bytesLeft)
                 {
                     // done go to the next body part, 
                     // but state remains the same
@@ -289,29 +286,5 @@ void SHttpWriterState::ResumeWriting(SConnection *pConnection, SBodyPart *pBodyP
             assert("Invalid state" && false);
         }
     }
-}
-
-//! Writes data to the connection
-int SHttpWriterState::WriteData(SConnection *pConn, const char *buffer, int length)
-{
-    int numWritten = send(pConn->Socket(), buffer, length, MSG_NOSIGNAL);
-    if (numWritten < 0)
-    {
-        if (errno == EPIPE || errno == ECONNRESET)
-        {
-            pConn->Server()->SetConnectionState(pConn, SConnection::STATE_CLOSED);
-        }
-        else if (errno == EAGAIN)
-        {
-            SLogger::Get()->Log("DEBUG: Write Later...");
-        }
-        else
-        {
-            SLogger::Get()->Log("TRACE: send error: [%d] - [%s]\n",
-                                errno, strerror(errno));
-            assert("Some other error" && false);
-        }
-    }
-    return numWritten;
 }
 

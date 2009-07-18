@@ -101,8 +101,9 @@ void SFileModule::ProcessInput(SConnection *        pConnection,
             pResponse->SetStatus(statcode, "Cannot read file");
             respHeaders.SetIntHeader("Content-Length", errormsg.size());
             respHeaders.SetHeader("Content-Type", "text/text");
-            part = pResponse->NewBodyPart();
-            part->SetBody(errormsg);
+            SRawBodyPart *pRawPart = pResponse->NewRawBodyPart();
+            pRawPart->SetBody(errormsg);
+            part = pRawPart;
         }
         else
         {
@@ -120,23 +121,24 @@ void SFileModule::ProcessInput(SConnection *        pConnection,
                 respHeaders.SetHeader("Content-Type", (raw ? "text/text" : "text/html"));
                 respHeaders.SetHeader("Cache-Control", "no-cache");
 
-                part = pResponse->NewBodyPart();
-                part->SetBody(contents);
+                SRawBodyPart *pRawPart = pResponse->NewRawBodyPart();
+                pRawPart->SetBody(contents);
+                part = pRawPart;
             }
             else
             {
                 // SendFile(fullpath, fileStat, part, pResponse, respHeaders);
                 respHeaders.SetHeader("Content-Type", "text/text");
                 respHeaders.SetIntHeader("Content-Length", fullpath.size());
-                part = pResponse->NewBodyPart(SBodyPart::BP_FILE);
-                part->SetBody(fullpath);
+                SFileBodyPart *pFilePart = pResponse->NewFileBodyPart(fullpath);
+                part = pFilePart;
             }
         }
     }
 
     pStage->SendEvent_OutputToModule(pConnection, pNextModule, part);
     pStage->SendEvent_OutputToModule(pConnection, pNextModule,
-                           pResponse->NewBodyPart(SHttpMessage::HTTP_BP_CONTENT_FINISHED, pNextModule));
+                           pResponse->NewContFinishedPart(pNextModule));
 }
 
 //*****************************************************************************
@@ -150,7 +152,7 @@ void SFileModule::ProcessInput(SConnection *        pConnection,
  *****************************************************************************/
 void SFileModule::SendFile(const SString &  fullpath,
                            struct stat      fileStat,
-                           SBodyPart *      pPart,
+                           SRawBodyPart *   pPart,
                            SHttpResponse *  pResponse,
                            SHeaderTable &   respHeaders)
 {

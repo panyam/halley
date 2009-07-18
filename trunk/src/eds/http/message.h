@@ -87,8 +87,14 @@ public:
     //! Sets the version
     void SetVersion(const SString &version);
 
-    //! Creates a new body part
-    SBodyPart *NewBodyPart(int bptype = SBodyPart::BP_NORMAL, void *extra_data = NULL);
+    //! Creates a new raw body part
+    SRawBodyPart *NewRawBodyPart(void *extra_data = NULL);
+
+    //! Creates a new file part
+    SFileBodyPart *NewFileBodyPart(const SString &filename, void *extra_data = NULL);
+
+    //! Returns a part that indicates end of content
+    SRawBodyPart *NewContFinishedPart(SHttpModule *pNextModule);
 
 public:
     //! Reads the next header

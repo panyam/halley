@@ -89,6 +89,8 @@ void STransferModule::HandleBodyPart(SConnection *      pConnection,
     }
     else
     {
+        assert("Transfer Module not yet implemented" && false);
+        /*
         // write size first then the content
         unsigned size = pBodyPart->Size();
         if (strcasecmp(transferEncoding.c_str(), "chunked") == 0)
@@ -98,6 +100,7 @@ void STransferModule::HandleBodyPart(SConnection *      pConnection,
             pBodyPart->InsertInBody(sizestr.str(), 0);
             pBodyPart->AppendToBody(HttpUtils::CRLF, 2);
         }
+        */
     }
 
     pStage->SendEvent_OutputToModule(pConnection, pNextModule, pBodyPart);
