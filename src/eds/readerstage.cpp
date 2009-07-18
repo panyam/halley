@@ -102,7 +102,7 @@ void SReaderStage::HandleReadRequestEvent(const SEvent &event)
 
         if (pConnection->pCurrPos >= pConnection->pBuffEnd)
         {
-            int buffLen = ReadData(pConnection, pConnection->pReadBuffer, MAXBUF);
+            int buffLen = pConnection->ReadData(pConnection->pReadBuffer, MAXBUF);
             if (buffLen <= 0)
                 return ;
 
@@ -131,36 +131,3 @@ void SReaderStage::HandleReadRequestEvent(const SEvent &event)
     }
 }
 
-//! Reads data from the connection
-int SReaderStage::ReadData(SConnection *pConnection, char *buffer, int nbytes)
-{
-    int buffLen = read(pConnection->Socket(), buffer, nbytes);
-    if (buffLen <= 0)
-    {
-        if (buffLen == 0)
-        {
-            // end of file
-            SLogger::Get()->Log("WARNING: read EOF reached\n\n");
-            pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_PEER_CLOSED);
-        }
-        else if (errno == EAGAIN)
-        {
-            // non blocking io - so quit till more data is available
-            SLogger::Get()->Log("DEBUG: read error EAGAIN = [%d]: %s\n\n", errno, strerror(errno));
-
-            // clear readable flag since there is no more data available
-            pConnection->dataConsumed = true;
-        }
-        else if (errno == ECONNRESET)
-        {
-            // non blocking io - so quit till more data is available
-            SLogger::Get()->Log("DEBUG: read error ECONNRESET = [%d]: %s\n\n", errno, strerror(errno));
-            pConnection->Server()->SetConnectionState(pConnection, SConnection::STATE_CLOSED);
-        }
-        else
-        {
-            SLogger::Get()->Log("ERROR: read error [%d]: %s\n\n", errno, strerror(errno));
-        }
-    }
-    return buffLen;
-}

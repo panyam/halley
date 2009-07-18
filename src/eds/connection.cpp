@@ -143,3 +143,61 @@ int SConnection::RefillBuffer(char *&pOutCurrPos, char *&pOutBuffEnd)
     return pOutBuffEnd - pOutCurrPos;
 }
 
+//! Writes data to the connection
+int SConnection::WriteData(const char *buffer, int length)
+{
+    int numWritten = send(Socket(), buffer, length, MSG_NOSIGNAL);
+    if (numWritten < 0)
+    {
+        if (errno == EPIPE || errno == ECONNRESET)
+        {
+            Server()->SetConnectionState(this, SConnection::STATE_CLOSED);
+        }
+        else if (errno == EAGAIN)
+        {
+            SLogger::Get()->Log("DEBUG: Write Later...");
+        }
+        else
+        {
+            SLogger::Get()->Log("TRACE: send error: [%d] - [%s]\n",
+                                errno, strerror(errno));
+            assert("Some other error" && false);
+        }
+    }
+    return numWritten;
+}
+
+//! Reads data from the connection
+int SConnection::ReadData(char *buffer, int nbytes)
+{
+    int buffLen = read(Socket(), buffer, nbytes);
+    if (buffLen <= 0)
+    {
+        if (buffLen == 0)
+        {
+            // end of file
+            SLogger::Get()->Log("WARNING: read EOF reached\n\n");
+            Server()->SetConnectionState(this, SConnection::STATE_PEER_CLOSED);
+        }
+        else if (errno == EAGAIN)
+        {
+            // non blocking io - so quit till more data is available
+            SLogger::Get()->Log("DEBUG: read error EAGAIN = [%d]: %s\n\n", errno, strerror(errno));
+
+            // clear readable flag since there is no more data available
+            dataConsumed = true;
+        }
+        else if (errno == ECONNRESET)
+        {
+            // non blocking io - so quit till more data is available
+            SLogger::Get()->Log("DEBUG: read error ECONNRESET = [%d]: %s\n\n", errno, strerror(errno));
+            Server()->SetConnectionState(this, SConnection::STATE_CLOSED);
+        }
+        else
+        {
+            SLogger::Get()->Log("ERROR: read error [%d]: %s\n\n", errno, strerror(errno));
+        }
+    }
+    return buffLen;
+}
+

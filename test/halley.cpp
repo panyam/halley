@@ -278,7 +278,7 @@ void SMyModule::ProcessInput(SConnection *          pConnection,
     }
 
     // pResponse->SetHeader("Connection", "Close");
-    SBodyPart *part = pResponse->NewBodyPart(0, pNextModule);
+    SRawBodyPart *part = pResponse->NewRawBodyPart(pNextModule);
     part->SetBody("<html><head><title>");
     part->AppendToBody(title);
     part->AppendToBody("</title></head><body bgcolor='" + bgcolor + "'>");
@@ -287,7 +287,6 @@ void SMyModule::ProcessInput(SConnection *          pConnection,
 
     pStage->SendEvent_OutputToModule(pConnection, pNextModule, part);
     pStage->SendEvent_OutputToModule(pConnection, pNextModule,
-                           pResponse->NewBodyPart(SHttpMessage::HTTP_BP_CONTENT_FINISHED,
-                                                  pNextModule));
+                           pResponse->NewContFinishedPart(pNextModule));
 }
 

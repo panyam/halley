@@ -80,11 +80,12 @@ void SContentModule::HandleBodyPart(SConnection *       pConnection,
 
     if (bpType == SHttpMessage::HTTP_BP_OPEN_SUB_MESSAGE)
     {
+        SRawBodyPart *pRawBodyPart = dynamic_cast<SRawBodyPart *>(pBodyPart);
         // cannot send an open sub message command 
         // if we dont have multi part messages
         assert ("Content-Type MUST be multipart" && pResponse->IsMultipart());
 
-        SString boundary(pBodyPart->data.begin(), pBodyPart->data.end());
+        SString boundary(pRawBodyPart->data.begin(), pRawBodyPart->data.end());
         pModData->boundaries.push_front(boundary);
 
         // done with the body part so delete it!
@@ -96,15 +97,16 @@ void SContentModule::HandleBodyPart(SConnection *       pConnection,
         // if we dont have multi part messages
         assert ("Content-Type MUST be multipart" && pResponse->IsMultipart());
 
+        SRawBodyPart *pRawBodyPart = dynamic_cast<SRawBodyPart *>(pBodyPart);
         if (!pModData->boundaries.empty())
         {
             SString boundary(pModData->boundaries.front());
             pModData->boundaries.pop_front();
-            pBodyPart->bpType = SBodyPart::BP_NORMAL;  // convert to normal message
-            pBodyPart->SetBody(HttpUtils::CRLF, 2);
-            pBodyPart->AppendToBody("--", 2);
-            pBodyPart->AppendToBody(boundary);
-            pBodyPart->AppendToBody("--", 2);
+            pRawBodyPart->bpType = SBodyPart::BP_RAW;  // convert to normal message
+            pRawBodyPart->SetBody(HttpUtils::CRLF, 2);
+            pRawBodyPart->AppendToBody("--", 2);
+            pRawBodyPart->AppendToBody(boundary);
+            pRawBodyPart->AppendToBody("--", 2);
 
             // send to next module
             SendBodyPartToModule(pConnection, pStage, pRequest, pBodyPart, pModData, pNextModule);
@@ -122,7 +124,7 @@ void SContentModule::HandleBodyPart(SConnection *       pConnection,
 
         if (!pModData->boundaries.empty())
         {
-            SBodyPart *pCloser = pResponse->NewBodyPart();
+            SRawBodyPart *pCloser = pResponse->NewRawBodyPart();
 
             while ( ! pModData->boundaries.empty())
             {
@@ -147,17 +149,19 @@ void SContentModule::HandleBodyPart(SConnection *       pConnection,
         // necessary and send to next module
         if ( pResponse->IsMultipart() )
         {
-            assert("Not sure how to send files in multipart" && pBodyPart->Type() != SBodyPart::BP_FILE);
+            assert("Not sure how to send files in multipart" && bpType != SBodyPart::BP_FILE);
 
             // prepend the 'current' boundary and send
             assert("No boundaries found in multi part message" && !pModData->boundaries.empty());
 
+            SRawBodyPart *pRawBodyPart = dynamic_cast<SRawBodyPart *>(pBodyPart);
+
             SStringStream boundary;
             boundary << HttpUtils::CRLF << "--" << pModData->boundaries.front() << HttpUtils::CRLF;
             // boundary << "Content-Type: " << "text/text" << HttpUtils::CRLF;
-            boundary << "Content-Length: " << pBodyPart->Size() << HttpUtils::CRLF << HttpUtils::CRLF;
+            boundary << "Content-Length: " << pRawBodyPart->Size() << HttpUtils::CRLF << HttpUtils::CRLF;
 
-            pBodyPart->InsertInBody(boundary.str());
+            pRawBodyPart->InsertInBody(boundary.str());
 
             SendBodyPartToModule(pConnection, pStage, pRequest, pBodyPart, pModData, pNextModule);
         }
@@ -165,20 +169,21 @@ void SContentModule::HandleBodyPart(SConnection *       pConnection,
         {
             // TODO: take care of content encoding
 
-            SHeaderTable &  respHeaders = pResponse->Headers();
-            int             bodySize    = 0;
-            if (pBodyPart->Type() == SBodyPart::BP_FILE)
+            SHeaderTable &  respHeaders     = pResponse->Headers();
+            int             bodySize        = 0;
+            if (bpType == SBodyPart::BP_FILE)
             {
-                SString fullpath(&pBodyPart->Body()[0]);
+                SFileBodyPart *  pFileBodyPart    = dynamic_cast<SFileBodyPart *>(pBodyPart);
                 // do an fstat
                 struct stat fileStat;
                 memset(&fileStat, 0, sizeof(struct stat));
-                stat(fullpath.c_str(), &fileStat);
+                stat(pFileBodyPart->filename.c_str(), &fileStat);
                 bodySize    = fileStat.st_size;
             }
             else
             {
-                bodySize    = pBodyPart->Size();
+                SRawBodyPart *  pRawBodyPart    = dynamic_cast<SRawBodyPart *>(pBodyPart);
+                bodySize    = pRawBodyPart->Size();
             }
 
             // append to body (can ignore sub messages as it is single part)

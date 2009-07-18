@@ -92,7 +92,7 @@ public:
     SHttpRequest        pCurrRequest;
 
     //! Current body part being read
-    SBodyPart *         pCurrBodyPart;
+    SRawBodyPart *      pCurrBodyPart;
 
     //! Size of the current body or chunk
     unsigned            currBodySize;
@@ -252,7 +252,7 @@ bool SHttpReaderState::ProcessBodyData(char *&pStart, char *&pLast)
     else if (minLength > 0)
     {
         if (pCurrBodyPart == NULL)
-            pCurrBodyPart = pCurrRequest.NewBodyPart();
+            pCurrBodyPart = pCurrRequest.NewRawBodyPart();
         pCurrBodyPart->AppendToBody(pStart, minLength);
     }
 

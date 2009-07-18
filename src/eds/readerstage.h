@@ -59,9 +59,6 @@ public:
     virtual void    HandleReadRequestEvent(const SEvent &event);
 
 protected:
-    //! Read n-bytes from the connection
-    virtual int     ReadData(SConnection *pConnection, char *buffer, int nbytes);
-
     //! Does the actual event handling.
     virtual void    HandleEvent(const SEvent &event);
 
