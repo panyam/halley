@@ -36,28 +36,58 @@ SMimeTypes *SMimeTypes::GetInstance()
 }
 
 //! Create a server and initialise mime tables
-SMimeTypes::SMimeTypes()
+SMimeTypes::SMimeTypes(const char *mimetypes)
 {
     // TODO: Need to this in a proper way that would query the system
     // (and loading the mime.conf file to memory) instead of
     // checking for filetypes manually!
-    mimeTypes.insert(std::pair<SString, SString>("xml", "text/xml"));
-    mimeTypes.insert(std::pair<SString, SString>("css", "text/css"));
-    mimeTypes.insert(std::pair<SString, SString>("js", "application/x-javascript"));
-    mimeTypes.insert(std::pair<SString, SString>("txt", "text/plain"));
-    mimeTypes.insert(std::pair<SString, SString>("cfg", "text/text"));
-    mimeTypes.insert(std::pair<SString, SString>("png", "image/png"));
-    mimeTypes.insert(std::pair<SString, SString>("gif", "image/gif"));
-    mimeTypes.insert(std::pair<SString, SString>("jpg", "image/jpeg"));
-    mimeTypes.insert(std::pair<SString, SString>("pdf", "application/pdf"));
-    mimeTypes.insert(std::pair<SString, SString>("doc", "application/msword"));
-    mimeTypes.insert(std::pair<SString, SString>("bin", "application/octet-stream"));
-    mimeTypes.insert(std::pair<SString, SString>("swf", "application/x-shockwave-flash"));
-    mimeTypes.insert(std::pair<SString, SString>("zip", "application/zip"));
-    mimeTypes.insert(std::pair<SString, SString>("bz2", "application/x-bzip2"));
-    mimeTypes.insert(std::pair<SString, SString>("html", "text/html"));
-    mimeTypes.insert(std::pair<SString, SString>("htm", "text/html"));
-    mimeTypes.insert(std::pair<SString, SString>("wav", "audio/x-wav"));
+    mimeTypes.insert(SStringPair("xml", "text/xml"));
+    mimeTypes.insert(SStringPair("css", "text/css"));
+    mimeTypes.insert(SStringPair("js", "application/x-javascript"));
+    mimeTypes.insert(SStringPair("txt", "text/plain"));
+    mimeTypes.insert(SStringPair("cfg", "text/text"));
+    mimeTypes.insert(SStringPair("png", "image/png"));
+    mimeTypes.insert(SStringPair("gif", "image/gif"));
+    mimeTypes.insert(SStringPair("jpg", "image/jpeg"));
+    mimeTypes.insert(SStringPair("pdf", "application/pdf"));
+    mimeTypes.insert(SStringPair("doc", "application/msword"));
+    mimeTypes.insert(SStringPair("bin", "application/octet-stream"));
+    mimeTypes.insert(SStringPair("swf", "application/x-shockwave-flash"));
+    mimeTypes.insert(SStringPair("zip", "application/zip"));
+    mimeTypes.insert(SStringPair("bz2", "application/x-bzip2"));
+    mimeTypes.insert(SStringPair("html", "text/html"));
+    mimeTypes.insert(SStringPair("htm", "text/html"));
+    mimeTypes.insert(SStringPair("wav", "audio/x-wav"));
+
+    FILE *mimefile = fopen(mimetypes, "r");
+    if (mimefile == NULL)
+    {
+        SLogger::Get()->Log("ERROR: Could not fopen file: %s, Error [%d]: %s\n",
+                            mimetypes, errno, strerror(errno));
+        return ;
+    }
+
+    // read entries from mime.types
+    char line[1025];
+    while (fgets(line, 1024, mimefile) != NULL)
+    {
+        const char *pStart = line;
+        while (*pStart != 0 && isspace(*pStart))
+            pStart++;
+
+        if (*pStart != '\n' && *pStart != 0 && *pStart != '#')
+        {
+            char *pSavePtr  = NULL;
+            char *ptr       = strtok_r(line, " \t", &pSavePtr);
+
+            SString mimetype(ptr);
+            while ((ptr = strtok_r(line, " \t", &pSavePtr)) != NULL)
+            {
+                mimeTypes.insert(SStringPair(ptr, mimetype));
+            }
+        }
+    }
+    fclose(mimefile);
 }
 
 // Removes mime types

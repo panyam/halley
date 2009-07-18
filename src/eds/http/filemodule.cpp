@@ -67,6 +67,8 @@ void SFileModule::ProcessInput(SConnection *        pConnection,
         {
             int statcode    = 500;
             int errnum      = errno;
+            SLogger::Get()->Log("ERROR: Could not stat file: %s, Error [%d]: %s\n",
+                                fullpath.c_str(), errno, strerror(errno));
             switch (errnum)
             {
                 case EFAULT:
@@ -85,7 +87,8 @@ void SFileModule::ProcessInput(SConnection *        pConnection,
                     errormsg = "File name too long.";
                     break;
                 case ENOENT:
-                    errormsg = "A component of the path path does not exist, or the path is an empty string.";
+                    errormsg = "A component of the path path does not exist, "
+                               "or the path is an empty string.";
                     break;
                 case ENOMEM:
                     errormsg = "Out of memory (i.e. kernel memory)." ;
@@ -128,8 +131,8 @@ void SFileModule::ProcessInput(SConnection *        pConnection,
             else
             {
                 // SendFile(fullpath, fileStat, part, pResponse, respHeaders);
-                // respHeaders.SetHeader("Content-Type", "text/text");
-                // respHeaders.SetIntHeader("Content-Length", fullpath.size());
+                // respHeaders.SetIntHeader("Content-Length", fileStat.st_size);
+                // respHeaders.SetHeader("Content-Type", SMimeTypes::GetInstance()->GetMimeType(fullpath));
                 part = pResponse->NewFileBodyPart(fullpath);
             }
         }

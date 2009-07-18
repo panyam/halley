@@ -265,7 +265,7 @@ void SHttpWriterState::ResumeWriting(SConnection *pConnection, SBodyPart *pBodyP
             else // treat as normal message
             {
                 int numWritten = 0;
-                bool bytesLeft  = pCurrBodyPart->WriteToConnection(pConnection, numWritten, bytesWritten);
+                bool bytesLeft  = pCurrBodyPart->WriteToConnection(pConnection, numWritten);
                 if (numWritten < 0)
                     return ;
 
