@@ -287,6 +287,7 @@ void SMyModule::ProcessInput(SConnection *          pConnection,
 
     pStage->SendEvent_OutputToModule(pConnection, pNextModule, part);
     pStage->SendEvent_OutputToModule(pConnection, pNextModule,
-                           pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED, pNextModule));
+                           pResponse->NewBodyPart(SHttpMessage::HTTP_BP_CONTENT_FINISHED,
+                                                  pNextModule));
 }
 

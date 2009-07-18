@@ -29,6 +29,7 @@
 #include "handlerstage.h"
 #include "request.h"
 #include "response.h"
+#include "eds/bodypart.h"
 
 void SContentModule::ProcessOutput(SConnection *        pConnection,
                                    SHttpHandlerData *   pHandlerData,
@@ -77,7 +78,7 @@ void SContentModule::HandleBodyPart(SConnection *       pConnection,
     SHttpResponse * pResponse   = pRequest->Response();
     int bpType                  = pBodyPart->Type();
 
-    if (bpType == SBodyPart::BP_OPEN_SUB_MESSAGE)
+    if (bpType == SHttpMessage::HTTP_BP_OPEN_SUB_MESSAGE)
     {
         // cannot send an open sub message command 
         // if we dont have multi part messages
@@ -89,7 +90,7 @@ void SContentModule::HandleBodyPart(SConnection *       pConnection,
         // done with the body part so delete it!
         delete pBodyPart;
     }
-    else if (bpType == SBodyPart::BP_CLOSE_SUB_MESSAGE)
+    else if (bpType == SHttpMessage::HTTP_BP_CLOSE_SUB_MESSAGE)
     {
         // cannot send an open sub message command 
         // if we dont have multi part messages
@@ -114,7 +115,8 @@ void SContentModule::HandleBodyPart(SConnection *       pConnection,
             delete pBodyPart;
         }
     }
-    else if (bpType == SBodyPart::BP_CLOSE_CONNECTION || bpType == SBodyPart::BP_CONTENT_FINISHED)
+    else if (bpType == SHttpMessage::HTTP_BP_CLOSE_CONNECTION ||
+             bpType == SHttpMessage::HTTP_BP_CONTENT_FINISHED)
     {
         // Send a whole bunch of Close boundary calls!!
 
@@ -145,7 +147,8 @@ void SContentModule::HandleBodyPart(SConnection *       pConnection,
         // necessary and send to next module
         if ( pResponse->IsMultipart() )
         {
-            assert("Not sure how to send files in multipart" && pBodyPart->Type() != SBodyPart::BP_FILE_DATA);
+            assert("Not sure how to send files in multipart" && pBodyPart->Type() != SBodyPart::BP_FILE);
+
             // prepend the 'current' boundary and send
             assert("No boundaries found in multi part message" && !pModData->boundaries.empty());
 
@@ -164,7 +167,7 @@ void SContentModule::HandleBodyPart(SConnection *       pConnection,
 
             SHeaderTable &  respHeaders = pResponse->Headers();
             int             bodySize    = 0;
-            if (pBodyPart->Type() == SBodyPart::BP_FILE_DATA)
+            if (pBodyPart->Type() == SBodyPart::BP_FILE)
             {
                 SString fullpath(&pBodyPart->Body()[0]);
                 // do an fstat

@@ -50,6 +50,7 @@
 class SJob;
 class SJobListener;
 class SConnection;
+class SBodyPart;
 
 class SEvent;
 class SEventDispatcher;
@@ -73,6 +74,9 @@ typedef std::pair<SString, SString>     SStringPair;
 // shortcut for a connection list and set
 typedef std::list<SConnection *>        TConnectionList;
 typedef std::set<SConnection *>         TConnectionSet;
+
+//! A type to denote body part indices.
+typedef unsigned BPIndexType;
 
 #endif
 

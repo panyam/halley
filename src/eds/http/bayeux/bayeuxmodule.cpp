@@ -290,7 +290,7 @@ void SBayeuxModule::SendResponse(int                result,
 
         pStage->SendEvent_OutputToModule(pConnection, pNextModule, part);
         pStage->SendEvent_OutputToModule(pConnection, pNextModule,
-                               pResponse->NewBodyPart(SBodyPart::BP_CONTENT_FINISHED,
+                               pResponse->NewBodyPart(SHttpMessage::HTTP_BP_CONTENT_FINISHED,
                                                       pNextModule));
     }
     else
@@ -311,7 +311,7 @@ void SBayeuxModule::SendResponse(int                result,
         formatter.Format(msgstream, realValue);
 
         // open a boundary body part 
-        SBodyPart *pBodyPart = pResponse->NewBodyPart(SBodyPart::BP_OPEN_SUB_MESSAGE);
+        SBodyPart *pBodyPart = pResponse->NewBodyPart(SHttpMessage::HTTP_BP_OPEN_SUB_MESSAGE);
         pBodyPart->SetBody(boundary);
         pStage->SendEvent_OutputToModule(pConnection, pNextModule, pBodyPart);
 
