@@ -174,11 +174,7 @@ void SContentModule::HandleBodyPart(SConnection *       pConnection,
             if (bpType == SBodyPart::BP_FILE)
             {
                 SFileBodyPart *  pFileBodyPart    = dynamic_cast<SFileBodyPart *>(pBodyPart);
-                // do an fstat
-                struct stat fileStat;
-                memset(&fileStat, 0, sizeof(struct stat));
-                stat(pFileBodyPart->filename.c_str(), &fileStat);
-                bodySize    = fileStat.st_size;
+                bodySize    = pFileBodyPart->Size();
             }
             else
             {

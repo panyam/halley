@@ -58,7 +58,15 @@ SRawBodyPart *SHttpMessage::NewRawBodyPart(void *extra_data)
 // Creates a new body part for this message
 SFileBodyPart *SHttpMessage::NewFileBodyPart(const SString &filename, void *extra_data)
 {
-    return new SFileBodyPart(filename, bpCount++, extra_data);
+    struct stat fileStat;
+    memset(&fileStat, 0, sizeof(struct stat));
+    if (stat(filename.c_str(), &fileStat) != 0)
+    {
+        SLogger::Get()->Log("ERROR: Could not stat file: %s, Error [%d]: %s\n",
+                            filename.c_str(), errno, strerror(errno));
+        return NULL;
+    }
+    return new SFileBodyPart(filename, fileStat.st_size, bpCount++, extra_data);
 }
 
 //! Returns a part that indicates end of content

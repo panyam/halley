@@ -98,10 +98,13 @@ int SRawBodyPart::WriteToStream(std::ostream &output, int from)
 }
 
 //! Writes body part to a FD
-bool SRawBodyPart::WriteToConnection(SConnection *pConn, int &numWritten, int from)
+bool SRawBodyPart::WriteToConnection(SConnection *pConn, int &numWritten)
 {
-    int length = data.size() - from;
-    return pConn->WriteData(&data[from], length) != length;
+    int length = data.size() - bytesWritten;
+    numWritten = pConn->WriteData(&data[bytesWritten], length);
+    if (numWritten > 0)
+        bytesWritten += numWritten;
+    return numWritten != length;
 }
 
 /************************************************************************
@@ -109,6 +112,18 @@ bool SRawBodyPart::WriteToConnection(SConnection *pConn, int &numWritten, int fr
  *                              File Body Parts
  *
  ***********************************************************************/
+//! Creates a new file body part
+SFileBodyPart::SFileBodyPart(const SString &fname, size_t fsize,
+                             unsigned index, void *data)
+:
+    SBodyPart(BP_FILE, index, data),
+    filename(fname),
+    readFD(-1),
+    filesize(fsize),
+    offset(0)
+{
+}
+
 //! Writes body part to a stream
 int SFileBodyPart::WriteToStream(std::ostream &output, int from)
 {
@@ -116,9 +131,28 @@ int SFileBodyPart::WriteToStream(std::ostream &output, int from)
 }
 
 //! Writes body part to a FD
-bool SFileBodyPart::WriteToConnection(SConnection *pConn, int &numWritten, int from)
+bool SFileBodyPart::WriteToConnection(SConnection *pConn, int &numWritten)
 {
-    return false;
+    if (readFD < 0)
+    {
+        // then open it
+        if ((readFD = open(filename.c_str(), O_RDONLY)) < 0)
+        {
+            // error
+            return readFD;
+        }
+    }
+
+    int length = filesize - offset;
+    numWritten = sendfile(pConn->Socket(), readFD, &offset, length);
+
+    if (numWritten == length)
+    {
+        // close the file if we are done with it
+        close(readFD);
+        readFD = -1;
+    }
+    return numWritten != length;
 }
 
 /************************************************************************
@@ -133,8 +167,8 @@ int SLazyBodyPart::WriteToStream(std::ostream &output, int from)
 }
 
 //! Writes body part to a FD
-bool SLazyBodyPart::WriteToConnection(SConnection *pConn, int &numWritten, int from)
+bool SLazyBodyPart::WriteToConnection(SConnection *pConn, int &numWritten)
 {
-    return 0;
+    return false;
 }
 

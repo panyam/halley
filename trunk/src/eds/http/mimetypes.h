@@ -39,7 +39,7 @@
 class SMimeTypes
 {
 public:
-    SMimeTypes();
+    SMimeTypes(const char *mimeconf = "/etc/mime.types");
     ~SMimeTypes();
 
     SString GetMimeType(const SString &filename);

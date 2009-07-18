@@ -64,7 +64,7 @@ public:
     virtual int WriteToStream(std::ostream &output, int from = 0) = 0;
 
     //! Writes the body to the connection from a given offset
-    virtual bool WriteToConnection(SConnection *pConn, int &numWritten, int from = 0) = 0;
+    virtual bool WriteToConnection(SConnection *pConn, int &numWritten) = 0;
 
     //! Clears the body part for later use!
     virtual void Reset() { }
@@ -114,10 +114,10 @@ class SRawBodyPart : public SBodyPart
 public:
     // Creates the body part
     SRawBodyPart(unsigned index = 0, void *data = NULL)
-        : SBodyPart(BP_RAW, index, data) { }
+        : SBodyPart(BP_RAW, index, data), bytesWritten(0) { }
 
     // Token Destructor
-    virtual ~SRawBodyPart() { data.clear(); }
+    virtual ~SRawBodyPart() { data.clear(); bytesWritten = 0; }
 
     //! Sets a string as the body
     void SetBody(const SString &data);
@@ -147,11 +147,16 @@ public:
     virtual int WriteToStream(std::ostream &output, int from = 0);
 
     //! Writes the body to an FD - override for multipart messages
-    virtual bool WriteToConnection(SConnection *pConn, int &numWritten, int from = 0);
+    virtual bool WriteToConnection(SConnection *pConn, int &numWritten);
 
 public:
     //! The data required for this body part
     SCharVector data;
+
+protected:
+    //! Keeps track of how many bytes have been written so far, so 
+    // the next call to WriteToConnection can continue from here
+    int bytesWritten;
 };
 
 //*****************************************************************************
@@ -165,8 +170,8 @@ public:
 class SFileBodyPart : public SBodyPart
 {
 public:
-    SFileBodyPart(const SString &fname, unsigned index = 0, void *data = NULL)
-        : SBodyPart(BP_FILE, index, data), filename(fname) { }
+    SFileBodyPart(const SString &fname, size_t fsize,
+                  unsigned index = 0, void *data = NULL);
 
     virtual ~SFileBodyPart() { }
 
@@ -174,10 +179,23 @@ public:
     virtual int WriteToStream(std::ostream &output, int from = 0);
 
     //! Writes the body to an FD from a given offset
-    virtual bool WriteToConnection(SConnection *pConn, int &numWritten, int from = 0);
+    virtual bool WriteToConnection(SConnection *pConn, int &numWritten);
+
+    //! Get the data size
+    inline int Size() { return filesize; }
 
 public:
     SString filename;
+
+protected:
+    //! FD of the file being sent
+    int     readFD;
+
+    //! Size of the file
+    size_t  filesize;
+
+    //! Offset in the file being read
+    off_t   offset;
 };
 
 //*****************************************************************************
@@ -200,7 +218,7 @@ public:
     virtual int WriteToStream(std::ostream &output, int from = 0);
 
     //! Writes the body to an FD from a given offset
-    virtual bool WriteToConnection(SConnection *pConn, int &numWritten, int from = 0);
+    virtual bool WriteToConnection(SConnection *pConn, int &numWritten);
 };
 
 #endif
