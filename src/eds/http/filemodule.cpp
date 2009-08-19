@@ -134,7 +134,7 @@ void SFileModule::ProcessInput(SConnection *        pConnection,
             {
                 // SendFile(fullpath, fileStat, part, pResponse, respHeaders);
                 // respHeaders.SetIntHeader("Content-Length", fileStat.st_size);
-                // respHeaders.SetHeader("Content-Type", SMimeTypes::GetInstance()->GetMimeType(fullpath));
+                respHeaders.SetHeader("Content-Type", SMimeTypes::GetInstance()->GetMimeType(fullpath));
                 part = pResponse->NewFileBodyPart(fullpath);
             }
         }
