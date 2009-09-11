@@ -81,7 +81,7 @@ SMimeTypes::SMimeTypes(const char *mimetypes)
             char *ptr       = strtok_r(line, " \t", &pSavePtr);
 
             SString mimetype(ptr);
-            while ((ptr = strtok_r(line, " \t", &pSavePtr)) != NULL)
+            while ((ptr = strtok_r(NULL, " \t", &pSavePtr)) != NULL)
             {
                 mimeTypes.insert(SStringPair(ptr, mimetype));
             }
