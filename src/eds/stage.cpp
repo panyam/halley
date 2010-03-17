@@ -30,7 +30,7 @@
 #include "handler.h"
 
 //! Number of threads to begin with in each stage
-const int SStage::DEFAULT_NUM_THREADS = 1;
+const int SStage::DEFAULT_NUM_THREADS = 0;
 
 //! The dispatcher handles events as they arrive.
 class SEventDispatcher : public STask
@@ -141,7 +141,7 @@ void SStage::Stop()
 //! Called before an event is handled
 void SStage::PreHandleEvent(const SEvent &event)
 {
-    SLogger::Get()->Log("DEBUG: PRE Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x, RefCount: %d\n", Name().c_str(), event.evType, event.pSource, event.pData, event.pSource->RefCount());
+    // SLogger::Get()->Log("DEBUG: PRE Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x, RefCount: %d\n", Name().c_str(), event.evType, event.pSource, event.pData, event.pSource->RefCount());
 
     // create the stage specific data if any
     SJob *pJob          = event.pSource;
@@ -158,7 +158,7 @@ void SStage::PreHandleEvent(const SEvent &event)
 void SStage::PostHandleEvent(const SEvent &event)
 {
     event.pSource->DecRef();
-    SLogger::Get()->Log("DEBUG: POST Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x, RefCount: %d\n", Name().c_str(), event.evType, event.pSource, event.pData, event.pSource->RefCount());
+    // SLogger::Get()->Log("DEBUG: POST Event Handling, Stage: %s, Type: %d, Source: %x, Data: %x, RefCount: %d\n", Name().c_str(), event.evType, event.pSource, event.pData, event.pSource->RefCount());
 }
 
 //! Handles events continuosly

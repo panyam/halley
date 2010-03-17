@@ -80,7 +80,7 @@ public:
         if (pInputStart == pInputEnd)
             return -1;
 
-        out = *pInputStart;
+        out = (unsigned char)(*pInputStart);
         pInputStart++;
 
         return out;

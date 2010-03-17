@@ -37,7 +37,6 @@ HALLEYTEST_SRCS     = halley.cpp
 HALLEYTEST_OBJS     = $(foreach obj, $(patsubst %.cpp,%.o,$(HALLEYTEST_SRCS)), $(OUTPUT_DIR)/$(obj))
 
 MAIN_OBJS       = $(HALLEYTEST_OBJS)
-
 MAIN_OUTPUT     = $(OUTPUT_DIR)/$(MAIN_EXE_NAME)
 
 # 
