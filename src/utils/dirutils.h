@@ -71,4 +71,11 @@ public:
     static bool ReadDirectory(const char *dirname, std::vector<DirEnt> &entries);
 };
 
+namespace FileUtils
+{
+
+FILE *OpenFile(const char *filename, const char *mode, std::string &errormsg);
+
+}
+
 #endif

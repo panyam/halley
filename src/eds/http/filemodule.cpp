@@ -30,7 +30,7 @@
 #include "handlerstage.h"
 #include "request.h"
 #include "response.h"
-#include "mimetypes.h"
+#include "utils/mimetypes.h"
 
 //! Called to handle input data from another module
 // This module simply writes out a given file and calls "ProcessOutput of
@@ -162,7 +162,7 @@ void SFileModule::SendFile(const SString &  fullpath,
                            SHeaderTable &   respHeaders)
 {
     SString errormsg;
-    FILE *fptr = OpenFile(fullpath.c_str(), "rb", errormsg);
+    FILE *fptr = FileUtils::OpenFile(fullpath.c_str(), "rb", errormsg);
     if (fptr == NULL)
     {
         pResponse->SetStatus(404, "Cannot read file");
