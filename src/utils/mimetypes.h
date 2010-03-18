@@ -48,7 +48,7 @@ public:
     void SetMimeType(const std::string &ext, const std::string &mtype);
 
     //! Get singleton instance.
-    static SMimeTypes *GetInstance();
+    static SMimeTypes *GetInstance(const char *initial_mimeconf = "/etc/mime.types");
 
 protected:
     typedef std::map<std::string, std::string> MimeTable;
