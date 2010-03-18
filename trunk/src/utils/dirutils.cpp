@@ -25,6 +25,9 @@
  *****************************************************************************/
 
 #include <dirent.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
 #include "dirutils.h"
 
 //! Reads a directory and stores contents in the entries vector.
@@ -56,6 +59,9 @@ bool DirEnt::ReadDirectory(const char *dirname, std::vector<DirEnt> &entries)
     return true;
 }
 
+namespace FileUtils
+{
+
 //*****************************************************************************
 /*!
  *  \brief  Tries to open a file.
@@ -65,7 +71,7 @@ bool DirEnt::ReadDirectory(const char *dirname, std::vector<DirEnt> &entries)
  *        Created.
  *
  *****************************************************************************/
-FILE *FileUtils::OpenFile(const char *filename, const char *mode, std::string &errormsg)
+FILE *OpenFile(const char *filename, const char *mode, std::string &errormsg)
 {
     errormsg    = "Unknown Error";
 
@@ -147,4 +153,6 @@ FILE *FileUtils::OpenFile(const char *filename, const char *mode, std::string &e
     }
 
     return fptr;
+}
+
 }

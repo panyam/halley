@@ -46,9 +46,6 @@ public:
                               SHttpHandlerStage *   pStage,
                               SBodyPart *           pBodyPart);
 
-    //! Tries to open a file.
-    static FILE *OpenFile(const char *filename, const char *mode, SString &errormsg);
-
     //! Helper to send file
     static void SendFile(const SString &    fullpath,
                          struct stat        fileStat,

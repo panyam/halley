@@ -27,7 +27,8 @@
 #ifndef MIME_TYPE_H
 #define MIME_TYPE_H
 
-#include "httpfwd.h"
+#include <string>
+#include <map>
 
 //*****************************************************************************
 /*!
@@ -42,15 +43,15 @@ public:
     SMimeTypes(const char *mimeconf = "/etc/mime.types");
     ~SMimeTypes();
 
-    SString GetMimeType(const SString &filename);
+    std::string GetMimeType(const std::string &filename);
 
-    void SetMimeType(const SString &ext, const SString &mtype);
+    void SetMimeType(const std::string &ext, const std::string &mtype);
 
     //! Get singleton instance.
     static SMimeTypes *GetInstance();
 
 protected:
-    typedef std::map<SString, SString> MimeTable;
+    typedef std::map<std::string, std::string> MimeTable;
     MimeTable    mimeTypes;
 };
 
