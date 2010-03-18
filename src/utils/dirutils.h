@@ -74,7 +74,9 @@ public:
 namespace FileUtils
 {
 
+std::string FileErrorNumToString(int errnum);
 FILE *OpenFile(const char *filename, const char *mode, std::string &errormsg);
+int OpenFD(const char *filename, int mode, std::string &errormsg);
 
 }
 
