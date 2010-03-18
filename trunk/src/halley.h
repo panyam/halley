@@ -68,6 +68,7 @@
 #include "utils/listeners.h"
 #include "utils/membuff.h"
 #include "utils/refcount.h"
+#include "utils/dirutils.h"
 
 #endif
 

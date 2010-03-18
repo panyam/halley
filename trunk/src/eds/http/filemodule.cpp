@@ -25,6 +25,7 @@
  *****************************************************************************/
 
 #include <dirent.h>
+#include "utils/dirutils.h"
 #include "filemodule.h"
 #include "handlerstage.h"
 #include "request.h"
@@ -307,35 +308,6 @@ FILE * SFileModule::OpenFile(const char *filename, const char *mode, SString &er
     return fptr;
 }
 
-//! Reads a directory and stores contents in the entries vector.
-// Returns false if directory could not be read.
-bool SFileModule::ReadDirectory(const char *dirname, std::vector<DirEnt> &entries)
-{
-    // read directory contents
-    DIR *pDir = opendir(dirname);
-    if (pDir == NULL)
-        return false;
-
-    struct dirent *pDirEnt = readdir(pDir);
-    while (pDirEnt != NULL)
-    {
-        // ignore "." and ".." entries
-        if (!(pDirEnt->d_name[0] == '.' && pDirEnt->d_name[1] == 0) &&
-            !(pDirEnt->d_name[0] == '.' && (pDirEnt->d_name[1] == '.' || pDirEnt->d_name[2] == 0)))
-        {
-            DirEnt entry(pDirEnt->d_name);
-            SStringStream entnamestream;
-            entnamestream << dirname << "/" << entry.entName;
-            stat(entnamestream.str().c_str(), &entry.entStat);
-            entries.push_back(entry);
-        }
-        pDirEnt = readdir(pDir);
-    }
-    closedir(pDir);
-
-    return true;
-}
-
 //*****************************************************************************
 /*!
  *  \brief  Returns directory contents as a html formatted string
@@ -375,7 +347,7 @@ SString SFileModule::PrintDirContents(const SString &docroot, const SString &fil
         output << "<hl></hl>";
     }
 
-    if (ReadDirectory(dirname.c_str(), entries))
+    if (DirEnt::ReadDirectory(dirname.c_str(), entries))
     {
         // sort it
         std::sort(entries.begin(), entries.end(), DirEnt::DirEntCmp);
