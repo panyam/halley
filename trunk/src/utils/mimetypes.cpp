@@ -30,9 +30,9 @@
 #include "logger/logger.h"
 
 //! Get singleton instance.
-SMimeTypes *SMimeTypes::GetInstance()
+SMimeTypes *SMimeTypes::GetInstance(const char *initial_mimeconf)
 {
-    static SMimeTypes theMimeTypes;
+    static SMimeTypes theMimeTypes(initial_mimeconf);
 
     return &theMimeTypes;
 }
