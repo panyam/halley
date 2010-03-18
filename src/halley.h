@@ -45,7 +45,6 @@
 #include "eds/http/httpfwd.h"
 #include "eds/http/httpmodule.h"
 #include "eds/http/message.h"
-#include "eds/http/mimetypes.h"
 #include "eds/http/readerstage.h"
 #include "eds/http/request.h"
 #include "eds/http/response.h"
@@ -69,6 +68,7 @@
 #include "utils/membuff.h"
 #include "utils/refcount.h"
 #include "utils/dirutils.h"
+#include "utils/mimetypes.h"
 
 #endif
 
