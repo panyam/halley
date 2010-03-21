@@ -108,6 +108,9 @@ protected:
     //! Does the thread stuff.
     void   Run();
 
+    //! Runs this if a task is not available
+    virtual int RealRun();
+
 private:
     // Waits for a stopped Thread to finish running.
     int             WaitForThreadBegin();
