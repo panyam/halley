@@ -198,21 +198,42 @@ void SThread::Run()
         }
     }
 
+    int result = 0;
     if (pTask)
     {
-        int result = pTask->Start();
+        result = pTask->Start();
+    }
+    else
+    {
+        result = RealRun();
+    }
 
+    {
+        SMutexLock listenerLock(listenerMutex);
+        for (Listeners::iterator iter = listeners.begin(); iter != listeners.end();++iter)
         {
-            SMutexLock listenerLock(listenerMutex);
-            for (Listeners::iterator iter = listeners.begin(); iter != listeners.end();++iter)
-            {
-                SThreadListener *pListener = *iter;
-                pListener->ThreadFinished(this, result);
-            }
+            SThreadListener *pListener = *iter;
+            pListener->ThreadFinished(this, result);
         }
     }
 
     SignalThreadFinish();
+}
+
+//*****************************************************************************
+/*!
+ *  \brief  Called if a task is not specified.
+ *
+ *  \return The return result.
+ *
+ *  \version
+ *      - Sri Panyam      21/03/2010
+ *        Created.
+ *
+ *****************************************************************************/
+int SThread::RealRun()
+{
+    return 0;
 }
 
 //*****************************************************************************
