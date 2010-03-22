@@ -206,3 +206,35 @@ std::string URLUtils::base64_decode(std::string const& encoded_string) {
 
   return ret;
 }
+
+/**
+ * Given a url query string (without the leading ? mark), this allows
+ * incremental (url decoded) extraction of each query name and its value.
+ * Returns true if a query was extracted, false otherwise.
+ * queryString is updated to point to the start of the next query.
+ * qName and qValue are updated with the values of the query parameter.
+ */
+bool URLUtils::ExtractNextQuery(const char *&queryString, std::string &qName, std::string &qValue)
+{
+    if (queryString == NULL) return false;
+
+    // skip initial spaces and '&'s
+    while (*queryString != 0 && (isspace(*queryString) || (*queryString == '&')))
+        queryString++;
+
+    if (*queryString == 0)
+        return false;
+
+    const char *eqPos = strchr(queryString, '=');
+    if (eqPos == NULL)
+        return false;
+
+    qName = Unescape(std::string(queryString, eqPos - queryString));
+    
+    const char *ampPos = strchr(eqPos + 1, '&');
+    qValue = Unescape(ampPos == NULL ? eqPos + 1 : std::string(eqPos + 1, ampPos - eqPos));
+
+    queryString = ampPos;
+    return true;
+}
+

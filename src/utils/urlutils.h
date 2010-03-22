@@ -49,6 +49,7 @@ public:
     static std::string base64_decode(std::string const& s);
     static std::string Escape(const std::string &);
     static std::string Unescape(const std::string &);
+    static bool ExtractNextQuery(const char *&queryString, std::string &qName, std::string &qValue);
 };
 
 
