@@ -180,14 +180,14 @@ bool SHttpReaderState::ProcessBytes(char *&pStart, char *&pLast)
         {
             // TODO: do all the single-line bits in a single pass instead of two
             // go to the first CRLF or LF
-            while ((pCurr < pLast) && (*pCurr != HttpUtils::CR) && (*pCurr != HttpUtils::LF)) pCurr++;
+            while ((pCurr < pLast) && (*pCurr != URLUtils::CR) && (*pCurr != URLUtils::LF)) pCurr++;
 
             currentLine << SString(pStart, pCurr - pStart);
-            if (*pCurr == HttpUtils::CR)
+            if (*pCurr == URLUtils::CR)
             {
                 pCurr += 2;
             }
-            else if (*pCurr == HttpUtils::LF)
+            else if (*pCurr == URLUtils::LF)
             {
                 pCurr++;
             }

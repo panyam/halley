@@ -25,6 +25,7 @@
  *
  *****************************************************************************/
 
+#include "../utils.h"
 #include "headers.h"
 
 const SString TRUE_STRING = "true";
@@ -45,11 +46,11 @@ int SHeaderTable::WriteToStream(std::ostream &output)
     HeaderMap::const_iterator iter = headers.begin();
     for (;iter != headers.end();++iter)
     {
-        output << iter->first << ": " << iter->second << HttpUtils::CRLF;
+        output << iter->first << ": " << iter->second << URLUtils::CRLF;
         SLogger::Get()->Log("DEBUG: Header      %s: %s\n", iter->first.c_str(), iter->second.c_str());
     }
-    // and an extra HttpUtils::CRLF
-    output << HttpUtils::CRLF;
+    // and an extra URLUtils::CRLF
+    output << URLUtils::CRLF;
     output.flush();
 
     return 0;
@@ -68,7 +69,7 @@ int SHeaderTable::WriteToFD(int fd)
 // Headers are read till a line with only a CRLF is found.
 bool SHeaderTable::ReadNextHeader(std::istream &input, SString &name, SString &value)
 {
-    SString line = HttpUtils::ReadTillCrLf(input);
+    SString line = URLUtils::ReadTillCrLf(input);
 
     return ParseHeaderLine(line, name, value);
 }
@@ -95,7 +96,7 @@ bool SHeaderTable::ParseHeaderLine(const SString &line, SString &name, SString &
     // empty line?
     if (*pCurr == 0) return false;
 
-    while (!HttpUtils::iscontrol(*pCurr) && !HttpUtils::isseperator(*pCurr))
+    while (!URLUtils::iscontrol(*pCurr) && !URLUtils::isseperator(*pCurr))
         pCurr++;
 
     // found a colon?

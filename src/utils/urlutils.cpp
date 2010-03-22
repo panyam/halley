@@ -14,10 +14,9 @@
  *
  *****************************************************************************
  *
- *  \file   utils.cpp
+ *  \file   urlutils.cpp
  *
- *  \brief
- *  A HTTP utilities.
+ *  \brief  URL utilities.
  *
  *  \version
  *      - S Panyam      05/03/2009
@@ -25,19 +24,19 @@
  *
  *****************************************************************************/
 
-#include "utils.h"
+#include "urlutils.h"
 
-const char   HttpUtils::CR          = '\r';
-const char   HttpUtils::LF          = '\n';
-const char * HttpUtils::CRLF        = "\r\n";
-const char * HttpUtils::SEPARATORS  = "()<>@,;:\\\"/[]?={} \t";
-static const SString base64_chars   = 
+const char   URLUtils::CR          = '\r';
+const char   URLUtils::LF          = '\n';
+const char * URLUtils::CRLF        = "\r\n";
+const char * URLUtils::SEPARATORS  = "()<>@,;:\\\"/[]?={} \t";
+static const std::string base64_chars   = 
                          "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                          "abcdefghijklmnopqrstuvwxyz"
                          "0123456789+/";
 
-static const SString reserved_chars = ";/?:@&=+$,";
-static const SString mark_chars = "-_.!~*'()";
+static const std::string reserved_chars = ";/?:@&=+$,";
+static const std::string mark_chars = "-_.!~*'()";
 
 
 //! Tells if a character is a reserved character
@@ -51,7 +50,7 @@ bool IsUnreservedChar(char ch)
     return isalnum(ch) || (mark_chars.find(ch) > 0);
 }
 
-SString HttpUtils::Escape(const SString &str)
+std::string URLUtils::Escape(const std::string &str)
 {
     return str;
 }
@@ -67,12 +66,12 @@ char hex2dec(char ch)
     return -1;
 }
 
-SString HttpUtils::Unescape(const SString &str)
+std::string URLUtils::Unescape(const std::string &str)
 {
     const char *buff    = str.c_str();
     const char *pStart  = buff;
     const char *pEnd    = pStart + str.size();
-    SStringStream out;
+    std::stringstream out;
 
     while (pStart < pEnd)
     {
@@ -84,7 +83,7 @@ SString HttpUtils::Unescape(const SString &str)
         }
         else
         {
-            out << SString(pStart, pos - pStart);
+            out << std::string(pStart, pos - pStart);
 
             pStart = pos;
             // skip the '%'
@@ -106,9 +105,9 @@ SString HttpUtils::Unescape(const SString &str)
 }
 
 // Reads a line till the CRLF
-SString HttpUtils::ReadTillCrLf(std::istream &input)
+std::string URLUtils::ReadTillCrLf(std::istream &input)
 {
-    SStringStream out;
+    std::stringstream out;
     int ch = input.get();
     while (!input.bad() && !input.eof() && ch != CR && ch != LF)
     {
@@ -124,8 +123,8 @@ static inline bool is_base64(unsigned char c) {
   return (isalnum(c) || (c == '+') || (c == '/'));
 }
 
-SString HttpUtils::base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
-  SString ret;
+std::string URLUtils::base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
+  std::string ret;
   int i = 0;
   int j = 0;
   unsigned char char_array_3[3];
@@ -167,13 +166,13 @@ SString HttpUtils::base64_encode(unsigned char const* bytes_to_encode, unsigned 
 
 }
 
-SString HttpUtils::base64_decode(SString const& encoded_string) {
+std::string URLUtils::base64_decode(std::string const& encoded_string) {
   int in_len = encoded_string.size();
   int i = 0;
   int j = 0;
   int in_ = 0;
   unsigned char char_array_4[4], char_array_3[3];
-  SString ret;
+  std::string ret;
 
   while (in_len-- && ( encoded_string[in_] != '=') && is_base64(encoded_string[in_])) {
     char_array_4[i++] = encoded_string[in_]; in_++;

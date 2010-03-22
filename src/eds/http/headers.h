@@ -28,7 +28,7 @@
 #ifndef _SHTTP_HEADERS_H_
 #define _SHTTP_HEADERS_H_
 
-#include "utils.h"
+#include "utils/urlutils.h"
 #include "httpfwd.h"
 
 typedef std::map<SString, SString>   HeaderMap;
