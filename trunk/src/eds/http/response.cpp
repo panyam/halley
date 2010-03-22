@@ -25,6 +25,7 @@
  *
  *****************************************************************************/
 
+#include "../utils.h"
 #include "response.h"
 #include "json/json.h"
 
@@ -71,7 +72,7 @@ void SHttpResponse::SetStatus(int status, const SString &msg)
 //! Writes the response to a stream
 int SHttpResponse::WriteHeaderLineToStream(std::ostream &output)
 {
-    output << version << " " << statusCode << " " << statusMessage << HttpUtils::CRLF;
+    output << version << " " << statusCode << " " << statusMessage << URLUtils::CRLF;
 
     SLogger::Get()->Log("\nDEBUG: ===============================\n");
     SLogger::Get()->Log("DEBUG: Response: %s %d %s\n",

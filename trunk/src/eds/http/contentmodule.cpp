@@ -27,6 +27,7 @@
 #include "eds/connection.h"
 #include "contentmodule.h"
 #include "handlerstage.h"
+#include "utils/urlutils.h"
 #include "request.h"
 #include "response.h"
 #include "eds/bodypart.h"
@@ -103,7 +104,7 @@ void SContentModule::HandleBodyPart(SConnection *       pConnection,
             SString boundary(pModData->boundaries.front());
             pModData->boundaries.pop_front();
             pRawBodyPart->bpType = SBodyPart::BP_RAW;  // convert to normal message
-            pRawBodyPart->SetBody(HttpUtils::CRLF, 2);
+            pRawBodyPart->SetBody(URLUtils::CRLF, 2);
             pRawBodyPart->AppendToBody("--", 2);
             pRawBodyPart->AppendToBody(boundary);
             pRawBodyPart->AppendToBody("--", 2);
@@ -131,7 +132,7 @@ void SContentModule::HandleBodyPart(SConnection *       pConnection,
                 SString boundary(pModData->boundaries.front());
                 pModData->boundaries.pop_front();
 
-                pCloser->AppendToBody(HttpUtils::CRLF, 2);
+                pCloser->AppendToBody(URLUtils::CRLF, 2);
                 pCloser->AppendToBody("--", 2);
                 pCloser->AppendToBody(boundary);
                 pCloser->AppendToBody("--", 2);
@@ -157,9 +158,9 @@ void SContentModule::HandleBodyPart(SConnection *       pConnection,
             SRawBodyPart *pRawBodyPart = dynamic_cast<SRawBodyPart *>(pBodyPart);
 
             SStringStream boundary;
-            boundary << HttpUtils::CRLF << "--" << pModData->boundaries.front() << HttpUtils::CRLF;
-            // boundary << "Content-Type: " << "text/text" << HttpUtils::CRLF;
-            boundary << "Content-Length: " << pRawBodyPart->Size() << HttpUtils::CRLF << HttpUtils::CRLF;
+            boundary << URLUtils::CRLF << "--" << pModData->boundaries.front() << URLUtils::CRLF;
+            // boundary << "Content-Type: " << "text/text" << URLUtils::CRLF;
+            boundary << "Content-Length: " << pRawBodyPart->Size() << URLUtils::CRLF << URLUtils::CRLF;
 
             pRawBodyPart->InsertInBody(boundary.str());
 

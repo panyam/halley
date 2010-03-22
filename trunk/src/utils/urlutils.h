@@ -14,7 +14,7 @@
  *
  *****************************************************************************
  *
- *  \file   utils.h
+ *  \file   urlutils.h
  *
  *  \brief
  *  A HTTP utilities.
@@ -25,14 +25,14 @@
  *
  *****************************************************************************/
 
-#ifndef HTTP_UTILS_H
-#define HTTP_UTILS_H
+#ifndef URL_UTILS_H
+#define URL_UTILS_H
 
-#include "httpfwd.h"
-#include "../utils.h"
+#include <string>
+#include <sstream>
 
-//! Generic utilities for HTTP
-class HttpUtils
+//! Generic URL utilities 
+class URLUtils
 {
 public:
     const static char   CR;
@@ -44,11 +44,11 @@ public:
     static inline bool iscontrol(char ch)       { return ( ((ch) == 127) || (((ch) >= 0) && ((ch) <= 31))); }
 
 public:
-    static SString ReadTillCrLf(std::istream &input);
-    static SString base64_encode(unsigned char const* , unsigned int len);
-    static SString base64_decode(SString const& s);
-    static SString Escape(const SString &);
-    static SString Unescape(const SString &);
+    static std::string ReadTillCrLf(std::istream &input);
+    static std::string base64_encode(unsigned char const* , unsigned int len);
+    static std::string base64_decode(std::string const& s);
+    static std::string Escape(const std::string &);
+    static std::string Unescape(const std::string &);
 };
 
 
