@@ -42,10 +42,10 @@ int DirEnt::filterDotAndDotDot(const struct dirent *pDirEnt)
     return 1;
 }
 
-//! Reads a directory and stores contents in the entries deque
+//! Reads a directory and stores contents in the entries list
 // Returns false if directory could not be read.
 bool DirEnt::ReadDirectory(const char *dirname,
-                           std::deque<DirEnt> &entries,
+                           std::list<DirEnt> &entries,
                            int(*compareFunc)(const struct dirent **, const struct dirent **),
                            int(*filterFunc)(const struct dirent *))
 {
