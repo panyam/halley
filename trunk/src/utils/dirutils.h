@@ -29,12 +29,14 @@
 
 #include <string>
 #include <sstream>
-#include <vector>
+#include <deque>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 
+typedef int(*DirEntFilterFunc)(const struct dirent *);
+typedef int(*DirEntCompareFunc)(const struct dirent **,const struct dirent **);
 
 //! Simple structure info about a directory.
 class DirEnt
@@ -67,8 +69,14 @@ public:
         return lhs.entStat.st_mode > rhs.entStat.st_mode;
     }
 
-    //! Reads directory contents.
-    static bool ReadDirectory(const char *dirname, std::vector<DirEnt> &entries);
+    //! Filters out "." and ".."
+    static int filterDotAndDotDot(const struct dirent *);
+
+    //! Read directory contents with optional filtering and sorting options
+    static bool ReadDirectory(const char *dirname,
+                              std::deque<DirEnt> &entries,
+                              int(*compar)(const struct dirent **, const struct dirent **) = NULL,
+                              int(*filter)(const struct dirent *) = filterDotAndDotDot);
 };
 
 namespace FileUtils
