@@ -60,9 +60,9 @@ char hex2dec(char ch)
     if (ch >= '0' && ch <= '9')
         return ch - '0';
     else if (ch >= 'A' && ch <= 'F')
-        return ch - 'A';
+        return 10 + (ch - 'A');
     else if (ch >= 'a' && ch <= 'f')
-        return ch - 'a';
+        return 10 + (ch - 'a');
     return -1;
 }
 
