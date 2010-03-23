@@ -229,4 +229,27 @@ int OpenFD(const char *filename, int flags, std::string &errormsg)
     return fd;
 }
 
+//*****************************************************************************
+/*!
+ *  \brief  Gets file size.  Use where fstat/stat/lstat is not working
+ *  properly.
+ *
+ *  \version
+ *      - Sri Panyam      23/03/2010
+ *        Created.
+ *
+ *****************************************************************************/
+size_t FileSize(const char *filename)
+{
+    FILE *fptr = fopen(filename, "rb");
+    size_t filesize = 0;
+    if (fptr != NULL)
+    {
+        fseek(fptr, 0L, SEEK_END);
+        filesize = ftell(fptr);
+        fclose(fptr);
+    }
+    return filesize;
+}
+
 }
