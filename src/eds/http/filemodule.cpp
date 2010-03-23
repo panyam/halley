@@ -233,7 +233,6 @@ SString SFileModule::PrintDirContents(const SString &docroot, const SString &fil
     SString dirname(docroot + filename);
     int filenamelen = filename.size();
     SStringStream output;
-    std::vector<DirEnt> entries;
 
     if (raw)
     {
@@ -254,11 +253,11 @@ SString SFileModule::PrintDirContents(const SString &docroot, const SString &fil
         output << "<hl></hl>";
     }
 
-    if (DirEnt::ReadDirectory(dirname.c_str(), entries))
+    std::deque<DirEnt> entries;
+    if (DirEnt::ReadDirectory(dirname.c_str(), entries, (DirEntCompareFunc)alphasort))
     {
         // sort it
-        std::sort(entries.begin(), entries.end(), DirEnt::DirEntCmp);
-        std::vector<DirEnt>::iterator iter = entries.begin();
+        std::deque<DirEnt>::iterator iter = entries.begin();
 
         if (!raw)
         {

@@ -31,31 +31,75 @@
 #include <fcntl.h>
 #include "dirutils.h"
 
-//! Reads a directory and stores contents in the entries vector.
-// Returns false if directory could not be read.
-bool DirEnt::ReadDirectory(const char *dirname, std::vector<DirEnt> &entries)
-{
-    // read directory contents
-    DIR *pDir = opendir(dirname);
-    if (pDir == NULL)
-        return false;
+typedef int(*VoidPtrCompareFunc)(const void *a, const void *b);
 
-    struct dirent *pDirEnt = readdir(pDir);
-    while (pDirEnt != NULL)
+int DirEnt::filterDotAndDotDot(const struct dirent *pDirEnt)
+{
+    // ignore "." and ".." entries
+    if ((pDirEnt->d_name[0] == '.' && pDirEnt->d_name[1] == 0) ||
+        (pDirEnt->d_name[0] == '.' && (pDirEnt->d_name[1] == '.' && pDirEnt->d_name[2] == 0)))
+        return 0;
+    return 1;
+}
+
+//! Reads a directory and stores contents in the entries deque
+// Returns false if directory could not be read.
+bool DirEnt::ReadDirectory(const char *dirname,
+                           std::deque<DirEnt> &entries,
+                           int(*compareFunc)(const struct dirent **, const struct dirent **),
+                           int(*filterFunc)(const struct dirent *))
+{
+    if (compareFunc == NULL && (filterFunc == NULL || filterFunc == filterDotAndDotDot))
     {
-        // ignore "." and ".." entries
-        if (!(pDirEnt->d_name[0] == '.' && pDirEnt->d_name[1] == 0) &&
-            !(pDirEnt->d_name[0] == '.' && (pDirEnt->d_name[1] == '.' || pDirEnt->d_name[2] == 0)))
+        // better version with JUST reading and no sorting
+        DIR *pDir = opendir(dirname);
+        if (pDir == NULL)
+            return false;
+
+        struct dirent *pDirEnt = readdir(pDir);
+        while (pDirEnt != NULL)
         {
-            DirEnt entry(pDirEnt->d_name);
-            std::stringstream entnamestream;
-            entnamestream << dirname << "/" << entry.entName;
-            stat(entnamestream.str().c_str(), &entry.entStat);
-            entries.push_back(entry);
+            // ignore "." and ".." entries
+            if (filterDotAndDotDot(pDirEnt) != 0)
+            {
+                DirEnt entry(pDirEnt->d_name);
+                std::stringstream entnamestream;
+                entnamestream << dirname << "/" << entry.entName;
+                stat(entnamestream.str().c_str(), &entry.entStat);
+                entries.push_back(entry);
+            }
+            pDirEnt = readdir(pDir);
         }
-        pDirEnt = readdir(pDir);
+        closedir(pDir);
     }
-    closedir(pDir);
+    else
+    {
+        struct dirent **namelist;
+
+        int numFiles = scandir(dirname, &namelist, filterFunc, (VoidPtrCompareFunc)compareFunc);
+        if (numFiles >= 0)
+        {
+            if (numFiles > 0)
+            {
+                for (int i = 0;i < numFiles;i++)
+                {
+                    struct dirent *pDirEnt = namelist[i + 1];
+                    // ignore "." and ".." entries
+                    if (filterDotAndDotDot(pDirEnt) != 0)
+                    {
+                        DirEnt entry(pDirEnt->d_name);
+                        std::stringstream entnamestream;
+                        entnamestream << dirname << "/" << entry.entName;
+                        stat(entnamestream.str().c_str(), &entry.entStat);
+                        entries.push_back(entry);
+                    }
+                    free(namelist[i + 1]);
+                }
+                free(namelist[0]);
+            }
+            free(namelist);
+        }
+    }
 
     return true;
 }
