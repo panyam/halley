@@ -79,23 +79,19 @@ bool DirEnt::ReadDirectory(const char *dirname,
         int numFiles = scandir(dirname, &namelist, filterFunc, (VoidPtrCompareFunc)compareFunc);
         if (numFiles >= 0)
         {
-            if (numFiles > 0)
+            for (int i = 0;i < numFiles;i++)
             {
-                for (int i = 0;i < numFiles;i++)
+                struct dirent *pDirEnt = namelist[i];
+                // ignore "." and ".." entries
+                if (filterDotAndDotDot(pDirEnt) != 0)
                 {
-                    struct dirent *pDirEnt = namelist[i + 1];
-                    // ignore "." and ".." entries
-                    if (filterDotAndDotDot(pDirEnt) != 0)
-                    {
-                        DirEnt entry(pDirEnt->d_name);
-                        std::stringstream entnamestream;
-                        entnamestream << dirname << "/" << entry.entName;
-                        stat(entnamestream.str().c_str(), &entry.entStat);
-                        entries.push_back(entry);
-                    }
-                    free(namelist[i + 1]);
+                    DirEnt entry(pDirEnt->d_name);
+                    std::stringstream entnamestream;
+                    entnamestream << dirname << "/" << entry.entName;
+                    stat(entnamestream.str().c_str(), &entry.entStat);
+                    entries.push_back(entry);
                 }
-                free(namelist[0]);
+                free(namelist[i]);
             }
             free(namelist);
         }
