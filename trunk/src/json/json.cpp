@@ -48,6 +48,102 @@ JsonNode::~JsonNode()
 
 //*****************************************************************************
 /*!
+ *  \brief  Convert's a node's value to a bool otherwise returns the
+ *  fallback value.
+ *
+ *  Also if the required value is missing as a bool, it is searched for as
+ *  a string to see if it exists.
+ *
+ *  \version
+ *      - Sri Panyam     10/02/2009
+ *        Created.
+ *
+ *****************************************************************************/
+bool JsonNode::ValueToBool(const JsonNodePtr &node, const bool &valOnInvalid)
+{
+    if (!node)
+        return valOnInvalid;
+
+    if (node->Type() == JNT_STRING)
+    {
+        std::string value(static_cast<const JsonBasicNode<JNT_STRING, std::string> *>(node.Data())->Value());
+        if (value == "true")
+            return true;
+        else if (value == "false")
+            return false;
+        return valOnInvalid;
+    }
+
+    if (node->Type() != JNT_BOOL)
+        return valOnInvalid;
+
+    return static_cast<const JsonBasicNode<JNT_BOOL, bool> *>(node.Data())->Value();
+}
+
+//*****************************************************************************
+/*!
+ *  \brief  Convert's a node's value to a int otherwise returns the
+ *  fallback value.
+ *
+ *  Also if the required value is missing as a int, it is searched for as
+ *  a string to see if it exists.
+ *
+ *  \version
+ *      - Sri Panyam     10/02/2009
+ *        Created.
+ *
+ *****************************************************************************/
+int JsonNode::ValueToInt(const JsonNodePtr &node, const int &valOnInvalid)
+{
+    if (!node)
+        return valOnInvalid;
+
+    if (node->Type() == JNT_STRING)
+    {
+        std::string value(static_cast<const JsonBasicNode<JNT_STRING, std::string> *>(node.Data())->Value());
+        return atoi(value.c_str());
+        // return valOnInvalid;
+    }
+
+    if (node->Type() != JNT_INT)
+        return valOnInvalid;
+
+    return static_cast<const JsonBasicNode<JNT_INT, int> *>(node.Data())->Value();
+}
+
+//*****************************************************************************
+/*!
+ *  \brief  Convert's a node's value to a double otherwise returns the
+ *  fallback value.
+ *
+ *  Also if the required value is missing as a double, it is searched for as
+ *  a string to see if it exists.
+ *
+ *  \version
+ *      - Sri Panyam     10/02/2009
+ *        Created.
+ *
+ *****************************************************************************/
+double JsonNode::ValueToDouble(const JsonNodePtr &node, const double &valOnInvalid)
+{
+    if (!node)
+        return valOnInvalid;
+
+    if (node->Type() == JNT_STRING)
+    {
+        std::string value(static_cast<const JsonBasicNode<JNT_STRING, std::string> *>(node.Data())->Value());
+        return atoi(value.c_str());
+        // return valOnInvalid;
+    }
+
+    if (node->Type() != JNT_DOUBLE)
+        return valOnInvalid;
+
+    return static_cast<const JsonBasicNode<JNT_DOUBLE, double> *>(node.Data())->Value();
+}
+
+//*****************************************************************************
+/*!
  *  \brief  Return value of the node at a given index.  If the node is
  *  invalid, the specific valOnInvalid is returned instead.
  *
@@ -63,11 +159,7 @@ template <> bool
 JsonNode::Get(unsigned index, const bool & valOnInvalid) const
 {
     JsonNodePtr node = Get(index);
-
-    if (!node || node->Type() != JNT_BOOL)
-        return valOnInvalid;
-
-    return static_cast<const JsonBasicNode<JNT_BOOL, bool> *>(node.Data())->Value();
+    return ValueToBool(node, valOnInvalid);
 }
 
 //*****************************************************************************
@@ -87,11 +179,7 @@ template <> bool
 JsonNode::Get(const std::string &key, const bool & valOnInvalid) const
 {
     JsonNodePtr node = Get(key);
-
-    if (!node || node->Type() != JNT_BOOL)
-        return valOnInvalid;
-
-    return static_cast<const JsonBasicNode<JNT_BOOL, bool> *>(node.Data())->Value();
+    return ValueToBool(node, valOnInvalid);
 }
 
 
@@ -112,11 +200,7 @@ template <> int
 JsonNode::Get(unsigned index, const int & valOnInvalid) const
 {
     JsonNodePtr node = Get(index);
-
-    if (!node || node->Type() != JNT_INT)
-        return valOnInvalid;
-
-    return static_cast<const JsonBasicNode<JNT_INT, int> *>(node.Data())->Value();
+    return ValueToInt(node, valOnInvalid);
 }
 
 //*****************************************************************************
@@ -136,11 +220,7 @@ template <> int
 JsonNode::Get(const std::string &key, const int & valOnInvalid) const
 {
     JsonNodePtr node = Get(key);
-
-    if (!node || node->Type() != JNT_INT)
-        return valOnInvalid;
-
-    return static_cast<const JsonBasicNode<JNT_INT, int> *>(node.Data())->Value();
+    return ValueToInt(node, valOnInvalid);
 }
 
 //*****************************************************************************
@@ -160,11 +240,7 @@ template <> double
 JsonNode::Get(unsigned index, const double & valOnInvalid) const
 {
     JsonNodePtr node = Get(index);
-
-    if (!node || node->Type() != JNT_DOUBLE)
-        return valOnInvalid;
-
-    return static_cast<const JsonBasicNode<JNT_DOUBLE, double> *>(node.Data())->Value();
+    return ValueToDouble(node, valOnInvalid);
 }
 
 //*****************************************************************************
@@ -184,11 +260,7 @@ template <> double
 JsonNode::Get(const std::string &key, const double & valOnInvalid) const
 {
     JsonNodePtr node = Get(key);
-
-    if (!node || node->Type() != JNT_DOUBLE)
-        return valOnInvalid;
-
-    return static_cast<const JsonBasicNode<JNT_DOUBLE, double> *>(node.Data())->Value();
+    return ValueToDouble(node, valOnInvalid);
 }
 
 //*****************************************************************************

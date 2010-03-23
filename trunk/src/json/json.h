@@ -110,6 +110,15 @@ public:
     // Tells if a certain attrib exists (only valid on object nodes)
     virtual bool            Contains(const std::string &attr);
 
+    // Find a bool value or fallback to parsed string value.
+    static bool ValueToBool(const JsonNodePtr &node, const bool &valOnInvalid);
+
+    // Find a int value or fallback to parsed string value.
+    static int ValueToInt(const JsonNodePtr &node, const int &valOnInvalid);
+
+    // Find a double value or fallback to parsed string value.
+    static double ValueToDouble(const JsonNodePtr &node, const double &valOnInvalid);
+
 protected:
     JsonNode() { }
 };
