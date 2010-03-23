@@ -232,7 +232,7 @@ bool URLUtils::ExtractNextQuery(const char *&queryString, std::string &qName, st
     qName = Unescape(std::string(queryString, eqPos - queryString));
     
     const char *ampPos = strchr(eqPos + 1, '&');
-    qValue = Unescape(ampPos == NULL ? eqPos + 1 : std::string(eqPos + 1, ampPos - eqPos));
+    qValue = Unescape(ampPos == NULL ? eqPos + 1 : std::string(eqPos + 1, ampPos - (eqPos + 1)));
 
     queryString = ampPos;
     return true;
