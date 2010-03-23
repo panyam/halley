@@ -29,7 +29,7 @@
 
 #include <string>
 #include <sstream>
-#include <deque>
+#include <list>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -74,7 +74,7 @@ public:
 
     //! Read directory contents with optional filtering and sorting options
     static bool ReadDirectory(const char *dirname,
-                              std::deque<DirEnt> &entries,
+                              std::list<DirEnt> &entries,
                               int(*compar)(const struct dirent **, const struct dirent **) = NULL,
                               int(*filter)(const struct dirent *) = filterDotAndDotDot);
 };

@@ -253,11 +253,11 @@ SString SFileModule::PrintDirContents(const SString &docroot, const SString &fil
         output << "<hl></hl>";
     }
 
-    std::deque<DirEnt> entries;
+    std::list<DirEnt> entries;
     if (DirEnt::ReadDirectory(dirname.c_str(), entries, (DirEntCompareFunc)alphasort))
     {
         // sort it
-        std::deque<DirEnt>::iterator iter = entries.begin();
+        std::list<DirEnt>::iterator iter = entries.begin();
 
         if (!raw)
         {
