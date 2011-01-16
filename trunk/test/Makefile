@@ -37,6 +37,7 @@ HALLEYTEST_SRCS     = halley.cpp
 HALLEYTEST_OBJS     = $(foreach obj, $(patsubst %.cpp,%.o,$(HALLEYTEST_SRCS)), $(OUTPUT_DIR)/$(obj))
 
 MAIN_OBJS       = $(HALLEYTEST_OBJS)
+
 MAIN_OUTPUT     = $(OUTPUT_DIR)/$(MAIN_EXE_NAME)
 
 # 
@@ -100,33 +101,3 @@ help:
 dep:
 	makedepend -Y -p"$(OUTPUT_DIR)/" -I../src   -- $(HALLEYTEST_SRCS)
 
-# DO NOT DELETE
-
-../bld/debug/halley.o: ../src/logger/logger.h ../src/eds/server.h
-../bld/debug/halley.o: ../src/thread/thread.h ../src/utils/listeners.h
-../bld/debug/halley.o: ../src/thread/mutex.h ../src/thread/task.h
-../bld/debug/halley.o: ../src/thread/mutex.h ../src/eds/utils.h
-../bld/debug/halley.o: ../src/eds/fwd.h ../src/eds/fwd.h
-../bld/debug/halley.o: ../src/eds/http/httpfwd.h ../src/eds/fwd.h
-../bld/debug/halley.o: ../src/eds/connection.h ../src/net/sockbuff.h
-../bld/debug/halley.o: ../src/eds/job.h ../src/utils/refcount.h
-../bld/debug/halley.o: ../src/eds/stage.h ../src/eds/event.h
-../bld/debug/halley.o: ../src/eds/equeue.h ../src/eds/http/request.h
-../bld/debug/halley.o: ../src/eds/http/message.h ../src/eds/http/headers.h
-../bld/debug/halley.o: ../src/utils/urlutils.h ../src/eds/http/httpfwd.h
-../bld/debug/halley.o: ../src/eds/bodypart.h ../src/eds/http/response.h
-../bld/debug/halley.o: ../src/eds/http/readerstage.h ../src/eds/readerstage.h
-../bld/debug/halley.o: ../src/eds/http/handlerstage.h
-../bld/debug/halley.o: ../src/eds/http/writerstage.h ../src/eds/writerstage.h
-../bld/debug/halley.o: ../src/eds/http/urlrouter.h
-../bld/debug/halley.o: ../src/eds/http/httpmodule.h
-../bld/debug/halley.o: ../src/eds/http/filemodule.h
-../bld/debug/halley.o: ../src/eds/http/bayeux/bayeuxmodule.h
-../bld/debug/halley.o: ../src/eds/http/httpmodule.h ../src/json/json.h
-../bld/debug/halley.o: ../src/utils/membuff.h
-../bld/debug/halley.o: ../src/eds/http/bayeux/channel.h
-../bld/debug/halley.o: ../src/eds/http/httpfwd.h ../src/json/json.h
-../bld/debug/halley.o: ../src/eds/http/contentmodule.h
-../bld/debug/halley.o: ../src/eds/http/transfermodule.h
-../bld/debug/halley.o: ../src/net/connhandler.h ../src/thread/task.h
-../bld/debug/halley.o: ../src/net/connfactory.h ../src/net/server.h

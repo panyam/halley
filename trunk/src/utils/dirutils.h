@@ -28,6 +28,7 @@
 #define __SDIR_UTILITIES_H__
 
 #include <string>
+#include <string.h>
 #include <sstream>
 #include <list>
 #include <sys/types.h>
