@@ -29,6 +29,7 @@
 #define URL_UTILS_H
 
 #include <string>
+#include <string.h>
 #include <sstream>
 
 //! Generic URL utilities 

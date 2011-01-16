@@ -76,7 +76,7 @@ bool DirEnt::ReadDirectory(const char *dirname,
     {
         struct dirent **namelist;
 
-        int numFiles = scandir(dirname, &namelist, filterFunc, (VoidPtrCompareFunc)compareFunc);
+        int numFiles = scandir(dirname, &namelist, filterFunc, compareFunc);
         if (numFiles >= 0)
         {
             for (int i = 0;i < numFiles;i++)
